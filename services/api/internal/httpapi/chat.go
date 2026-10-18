@@ -68,13 +68,19 @@ func (s *Server) snapshot(ctx context.Context, user string) map[string]any {
 	for _, t := range recent {
 		tx = append(tx, map[string]any{"date": t.At.Format("2 Jan"), "merchant": mask(t.Merchant), "category": t.Category, "amount": t.Amount, "direction": t.Direction})
 	}
-	return map[string]any{
+	snap := map[string]any{
 		"first_name": name, "business": bizName, "today": time.Now().Format("Monday 2 January 2006"),
 		"accounts": acc, "this_month": map[string]any{"in": month.In, "out": month.Out, "by_category": month.Categories, "last_month_same_days_out": month.PrevOut},
 		"this_week":    map[string]any{"in": week.In, "out": week.Out, "by_category": week.Categories},
 		"three_months": cmp, "forecast_30_days": fc, "upcoming": rem, "loans": loans, "recent_transactions": tx,
 		"insights": s.computeInsights(ctx, user),
 	}
+	if bizName != "" {
+		if b, err := s.computeSummary(ctx, user, "month", true); err == nil {
+			snap["business_month"] = map[string]any{"in": b.In, "out": b.Out, "by_category": b.Categories}
+		}
+	}
+	return snap
 }
 
 func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
