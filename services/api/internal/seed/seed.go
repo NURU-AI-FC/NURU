@@ -188,5 +188,8 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 			return err
 		}
 	}
+	if err := Money(ctx, tx, userID); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
