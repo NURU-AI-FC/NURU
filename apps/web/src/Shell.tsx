@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { api, type ChatMsg } from './api'
 import type { Key } from './i18n'
 import { useApp } from './store'
@@ -16,20 +16,31 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
   const [mini, setMini] = useState(() => { try { return localStorage.getItem('nuru.side') === 'mini' } catch { return false } })
   const [recent, setRecent] = useState<string[]>([])
   const [q, setQ] = useState('')
+  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
 
   useEffect(() => { try { localStorage.setItem('nuru.side', mini ? 'mini' : 'full') } catch { /* ignore */ } }, [mini])
+  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    if (!open) return
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    addEventListener('keydown', esc)
+    return () => removeEventListener('keydown', esc)
+  }, [open])
   useEffect(() => {
     api<ChatMsg[]>('/chat').then((m) => setRecent([...new Set(m.filter((x) => x.role === 'user').map((x) => x.content).reverse())].slice(0, 5))).catch(() => {})
   }, [])
 
   const initials = (user?.name || '').split(' ').map((p) => p[0]).slice(0, 2).join('')
   const dark = document.documentElement.dataset.theme === 'dark'
+  const small = mini && !open
   const items = user?.role === 'staff' ? [['/console', 'shield', 'console'] as [string, string, Key]] : NAV
 
   return (
     <div className="app">
-      <aside className={'side' + (mini ? ' mini' : '')} aria-label="Main">
-        {mini ? (
+      {open && <div className="scrim" onClick={() => setOpen(false)} />}
+      <aside className={'side' + (small ? ' mini' : '') + (open ? ' open' : '')} aria-label="Main">
+        {small ? (
           <div className="col center g8">
             <span className="mark">N</span>
             <button className="ib" style={{ background: 'transparent', marginTop: 6 }} onClick={() => setMini(false)} aria-label="Expand sidebar"><Icon name="panel" size={20} color="var(--text2)" /></button>
@@ -40,24 +51,24 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
           <>
             <div className="row between" style={{ padding: '0 6px' }}>
               <Logo />
-              <button className="ib" style={{ width: 34, height: 34, background: 'transparent' }} onClick={() => setMini(true)} aria-label="Collapse sidebar"><Icon name="panel" size={20} color="var(--text2)" /></button>
+              <button className="ib" style={{ width: 34, height: 34, background: 'transparent' }} onClick={() => open ? setOpen(false) : setMini(true)} aria-label="Collapse sidebar"><Icon name="panel" size={20} color="var(--text2)" /></button>
             </div>
             {user?.role !== 'staff' && <Link to="/ask?new=1" className="btn pri sm" style={{ marginTop: 18, height: 42, justifyContent: 'flex-start', fontSize: 14 }}><Icon name="plus" color="#fff" />{t('newChat')}</Link>}
           </>
         )}
-        <nav className="col" style={{ marginTop: mini ? 0 : 14, gap: 2 }}>
+        <nav className="col" style={{ marginTop: small ? 0 : 14, gap: 2 }}>
           {items.map(([to, ic, k]) => (
             <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => 'nav' + (isActive ? ' on' : '')} title={t(k)}><Icon name={ic} /><span>{t(k)}</span></NavLink>
           ))}
         </nav>
-        {!mini && recent.length > 0 && (
+        {!small && recent.length > 0 && (
           <>
             <span className="xs mu w6 upper" style={{ margin: '18px 10px 6px' }}>{t('recent')}</span>
             <div className="col" style={{ gap: 2 }}>{recent.map((r) => <Link key={r} className="recent" to={'/ask?q=' + encodeURIComponent(r)}>{r}</Link>)}</div>
           </>
         )}
         <div className="grow" />
-        {mini ? (
+        {small ? (
           <div className="col center g8">
             <NavLink to="/settings" className="nav" title={t('settings')}><Icon name="settings" /></NavLink>
             <span className="av">{initials}</span>
@@ -73,7 +84,8 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
 
       <div className="main">
         <header className="top">
-          <div className="col g4" style={{ minWidth: 0 }}>
+          <button className="ib menu" onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" /></button>
+          <div className="col g4 grow" style={{ minWidth: 0 }}>
             <h1 className="h2" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</h1>
             {sub && <span className="xs mu">{sub}</span>}
           </div>
