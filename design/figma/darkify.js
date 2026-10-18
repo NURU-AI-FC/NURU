@@ -9,13 +9,16 @@ const pg=await figma.getNodeByIdAsync(PAGE);await figma.setCurrentPageAsync(pg);
 await Promise.all(['Regular','Medium','Semi Bold','Bold','Extra Bold'].map(st=>figma.loadFontAsync({family:'Inter',style:st})));
 const walk=(node,inInst)=>{if(inInst&&'strokes' in node&&Array.isArray(node.strokes)&&node.strokes.length)node.strokes=remap(node.strokes,ST);
  if('children' in node)for(const c of node.children)walk(c,inInst||node.type==='INSTANCE');};
+const inHero=(n)=>{for(let p=n.parent;p;p=p.parent){if(p.name==='hero')return true;if(p.type==='FRAME'&&/ dark$/.test(p.name))return false;}return false;};
 const out=[];
 for(const [id,dx,dy] of SRC){const src=await figma.getNodeByIdAsync(id);const d=src.clone();d.name=src.name.replace('/ light','/ dark');d.x=src.x+dx;d.y=src.y+dy;
  d.fills=remap(d.fills,{ffffff:'0d0d0f'});
  for(const n of d.findAll(()=>true)){
   const vec=n.type==='VECTOR'||n.type==='ELLIPSE'||n.type==='RECTANGLE'||n.type==='LINE'||n.type==='BOOLEAN_OPERATION';
-  if(n.type==='TEXT'){if(n.parent&&(n.parent.name==='av'||n.parent.name==='hero'))continue;if(n.fills===figma.mixed){for(const s of n.getStyledTextSegments(['fills']))n.setRangeFills(s.start,s.end,remap(s.fills,TX));}else n.fills=remap(n.fills,TX);continue;}
-  if(n.name==='toggle'||(n.parent&&n.parent.name==='toggle'))continue;
+  if(inHero(n))continue;
+  if(n.type==='TEXT'){if(n.parent&&n.parent.name==='av')continue;if(n.fills===figma.mixed){for(const s of n.getStyledTextSegments(['fills']))n.setRangeFills(s.start,s.end,remap(s.fills,TX));}else n.fills=remap(n.fills,TX);continue;}
+  if(n.name==='toggle'){n.fills=remap(n.fills,{efeff2:'3a3a42'});continue;}
+  if(n.parent&&n.parent.name==='toggle')continue;
   if(n.name==='av'&&n.fills.length&&n.fills[0].type==='SOLID'&&hx(n.fills[0].color)==='141416'){n.fills=[{type:'SOLID',color:C('3a3a42')}];continue;}
   if(n.name==='hero'){n.fills=remap(n.fills,{e30613:'c2000f',a3000d:'5c0008'});continue;}
   if('fills' in n&&Array.isArray(n.fills)&&n.fills.length)n.fills=remap(n.fills,vec?VF:FR);
