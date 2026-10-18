@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "NURU",
+    "slug": "nuru",
+    "scheme": "nuru",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFFFF",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.nuru.mobile",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves."
+      }
+    },
+    "android": {
+      "package": "app.nuru.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#E30613",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "backgroundColor": "#E30613",
+          "dark": { "backgroundColor": "#5C0008" }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
