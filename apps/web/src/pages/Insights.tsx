@@ -1,12 +1,18 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Compare, Forecast, Insight, Summary, Tx } from '../api'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Bars, COLORS, Icon, Lines, Seg, Skeleton, Stat, useLoad } from '../ui'
 import { TxTable } from './Home'
+import { SubNav } from './insights/parts'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 const toneIcon: Record<string, string> = { amber: 'trendup', blue: 'refresh', green: 'check', red: 'zap' }
+const insightLink: Record<string, [string, string]> = {
+  unusual: ['/insights/alert', 'Check this payment'], subscriptions: ['/insights/bills', 'See bills and subscriptions'],
+  over: ['/insights/budgets', 'See budgets'], saving: ['/insights/goals', 'See goals'],
+}
 
 export default function Insights() {
   const { t } = useApp()
@@ -26,6 +32,7 @@ export default function Insights() {
 
   return (
     <Shell title={t('insights')} sub="Your accounts, analysed" right={<Seg value={period} onChange={setPeriod} options={[['day', t('daily')], ['week', t('weekly')], ['month', t('monthly')], ['year', t('yearly')]]} />}>
+      <SubNav area="insights" />
       <div className="grid g-4">
         {sum ? <>
           <Stat icon="down" label={t('moneyIn')} value={money(sum.in)} note={labels[period]} />
@@ -41,6 +48,7 @@ export default function Insights() {
             <div key={i.title} className="card col g8 flat">
               <span className={'chip ' + i.tone} style={{ alignSelf: 'flex-start' }}><Icon name={toneIcon[i.tone] || 'sparkles'} size={14} />{i.title}</span>
               <span className="s t2">{i.body}</span>
+              {insightLink[i.kind] && <Link to={insightLink[i.kind][0]} className="xs lnk">{insightLink[i.kind][1]}</Link>}
             </div>
           ))}
         </div>
@@ -52,7 +60,7 @@ export default function Insights() {
           {sum ? <Bars labels={sum.series.map((p) => p.label)} series={[{ name: t('moneyIn'), values: sum.series.map((p) => p.in) }, { name: t('moneyOut'), values: sum.series.map((p) => p.out) }]} colors={['var(--c5)', 'var(--c1)']} /> : <Skeleton h={220} />}
         </div>
         <div className="card col g12">
-          <span className="h3">By category</span>
+          <div className="row between"><span className="h3">By category</span>{cat && <Link to={'/insights/category/' + encodeURIComponent(cat)} className="xs lnk">Open {cat}</Link>}</div>
           {sum?.categories.map((c, i) => (
             <button key={c.category} className="col g6" style={{ background: 'none', border: 0, padding: 0, textAlign: 'left' }} onClick={() => setCat(cat === c.category ? '' : c.category)} aria-pressed={cat === c.category}>
               <span className="row between s"><span className={cat === c.category ? 'w7 red' : 'w6'}>{c.category}</span><span className="num t2">{money(c.amount)}</span></span>
