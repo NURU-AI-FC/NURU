@@ -83,7 +83,7 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/chat", s.chatHistory)
 		r.Delete("/chat", s.clearChat)
 
-		r.Method("GET", "/console/overview", auth.RequireRole("staff", http.HandlerFunc(s.consoleOverview)))
+		s.consoleRoutes(r)
 	})
 	return r
 }

@@ -272,39 +272,3 @@ func (s *Server) fxRates(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, 200, map[string]any{"base": "NGN", "rates": s.fx.rates, "updated_at": s.fx.at, "source": "open.er-api.com"})
 }
-
-// consoleOverview gives bank staff anonymised totals across opted in users.
-func (s *Server) consoleOverview(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var users, chats, blocked int
-	s.db.QueryRow(ctx, `select count(*) from users where role='customer'`).Scan(&users)
-	s.db.QueryRow(ctx, `select count(*) from chats where role='user'`).Scan(&chats)
-	s.db.QueryRow(ctx, `select count(*) from security_events where kind like 'ai_%'`).Scan(&blocked)
-	langs := map[string]int{}
-	rows, _ := s.db.Query(ctx, `select lang, count(*) from chats where role='user' group by lang`)
-	for rows.Next() {
-		var l string
-		var n int
-		rows.Scan(&l, &n)
-		langs[l] = n
-	}
-	rows.Close()
-	cats := []catTotal{}
-	rows, _ = s.db.Query(ctx, `select category, sum(amount)::float8 from transactions where direction='debit' and created_at>=date_trunc('month',now()) group by 1 order by 2 desc limit 8`)
-	for rows.Next() {
-		var c catTotal
-		rows.Scan(&c.Category, &c.Amount)
-		cats = append(cats, c)
-	}
-	rows.Close()
-	events := []map[string]any{}
-	rows, _ = s.db.Query(ctx, `select kind, detail, created_at from security_events order by id desc limit 20`)
-	for rows.Next() {
-		var k, d string
-		var at time.Time
-		rows.Scan(&k, &d, &at)
-		events = append(events, map[string]any{"kind": k, "detail": d, "at": at})
-	}
-	rows.Close()
-	writeJSON(w, 200, map[string]any{"customers": users, "questions": chats, "ai_blocked": blocked, "languages": langs, "categories": cats, "events": events})
-}
