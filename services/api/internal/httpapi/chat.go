@@ -75,6 +75,16 @@ func (s *Server) snapshot(ctx context.Context, user string) map[string]any {
 		"three_months": cmp, "forecast_30_days": fc, "upcoming": rem, "loans": loans, "recent_transactions": tx,
 		"insights": s.computeInsights(ctx, user),
 	}
+	payees := []string{}
+	if prow, err := s.db.Query(ctx, `select name from payees where user_id=$1 order by name`, user); err == nil {
+		for prow.Next() {
+			var n string
+			prow.Scan(&n)
+			payees = append(payees, n)
+		}
+		prow.Close()
+	}
+	snap["payees"] = payees
 	if bizName != "" {
 		if b, err := s.computeSummary(ctx, user, "month", true); err == nil {
 			snap["business_month"] = map[string]any{"in": b.In, "out": b.Out, "by_category": b.Categories}
