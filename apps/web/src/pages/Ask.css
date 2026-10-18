@@ -16,3 +16,7 @@
 .asktgl.on { background: var(--red); }
 .asktgl.on i { left: 21px; }
 @media (max-width: 640px) { .ib.askwide { display: none; } }
+
+/* describe a payment, and send-for-me cards */
+.dcard { margin-left: 36px; max-width: 380px; padding: 16px; }
+@media (max-width: 640px) { .dcard { margin-left: 0; max-width: none; } }

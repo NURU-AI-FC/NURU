@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api, type Account, type ChatAction, type ChatMsg, type ChatReply, type Lang, type Payee, type Source, type Thread } from '../api'
+import { api, type Account, type ChatAction, type ChatMsg, type ChatReply, type Lang, type Payee, type Pending, type Source, type Thread } from '../api'
 import { TransferGuard, type Draft } from '../Guard'
 import { langNames, suggestions } from '../i18n'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { ChartView, Icon, Modal, useGreeting, useLoad } from '../ui'
+import { askLine, DescribeCard, type Described } from '../Describe'
 import { Listener, speak as speakAloud } from '../voice'
+import { BANKS } from './pay/common'
 import './Ask.css'
 
 const voiceName: Record<Lang, string> = { en: 'Nigerian English voice', yo: 'Ohùn Yorùbá', ig: 'Olu Igbo', ha: 'Muryar Hausa' }
@@ -60,6 +62,11 @@ export default function Ask() {
   const end = useRef<HTMLDivElement>(null)
   const rec = useRef<Listener | null>(null)
   const asked = useRef('')
+  const money = useMoney()
+  const [pending, setPending] = useState<Pending | null>(null)
+  const [later, setLater] = useState(false)
+  const [focus, setFocus] = useState(() => !!params.get('describe'))
+  const [declined, setDeclined] = useState<string[]>([])
 
   useEffect(() => {
     const id = params.get('thread')
@@ -73,6 +80,33 @@ export default function Ask() {
     const q = params.get('q')
     if (q && asked.current !== q) { asked.current = q; setParams({}, { replace: true }); send(q) }
   }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // payments that came with no description: NURU asks about the newest one
+  useEffect(() => {
+    const focus = params.get('describe')
+    api<Pending>('/transactions/undescribed').then((p) => {
+      if (focus) { p.items.sort((a, b) => (a.id === focus ? -1 : b.id === focus ? 1 : 0)); setLater(false) }
+      setPending(p)
+    }).catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function described(r: Described, item: string) {
+    const left = r.count
+    setPending({ items: r.items.filter((x) => x.id !== item), count: left })
+    const what = r.label && r.label !== 'Other' ? r.label.toLowerCase() : `"${r.purpose}"`
+    setFocus(false)
+    const text = `Saved. I will count it as ${what} from now on.` + (left ? ` ${left} more ${left === 1 ? 'payment needs' : 'payments need'} a description.` : ' Every recent payment is explained now.')
+    setMsgs((x) => [...x, { role: 'assistant', content: text, lang, at: new Date().toISOString(), actions: left ? [{ kind: 'describe', label: 'Describe the next one' }] : [] }])
+  }
+
+  // After advice, NURU offers to send the money. It collects the recipient in
+  // the chat; nothing moves before the PIN and face check.
+  function offer(a: ChatAction) {
+    setMsgs((m) => [...m,
+      { role: 'user', content: 'Yes, send it for me', lang, at: new Date().toISOString() },
+      { role: 'assistant', content: 'Sure. Who should I send it to? Pick a saved payee or give me their bank and account number, and tell me what the payment is for.', lang, at: new Date().toISOString(),
+        actions: [{ kind: 'transfer', label: 'Send', amount: a.amount || undefined, new: true }] }])
+  }
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs, busy])
 
@@ -223,14 +257,28 @@ export default function Ask() {
                 <button className="row g6 xs mu askbtn asksrc" onClick={() => setSources(m.sources!)}><Icon name="info" size={12} />From: {m.sources.map((s) => s.detail).join(', ')}</button>
               )}
               <div className="row g6 wrap" style={{ marginLeft: 36 }}>
-                {m.actions?.filter((a) => a.kind !== 'transfer' && a.kind !== 'reminder').map((a) => (
-                  <button key={a.label} className="btn sm" onClick={() => nav(a.kind === 'save' ? `/pay/send?save=${a.amount}` : a.to || '/')}>{a.label}</button>
+                {m.actions?.filter((a) => a.kind === 'offer' && !declined.includes(m.at)).map((a) => <span key="offer" className="row g6">
+                  <button className="btn sm pri" onClick={() => { setDeclined((d) => [...d, m.at]); offer(a) }}><Icon name="send" size={14} color="#fff" />{a.label}{a.amount ? ` (${money(a.amount)})` : ''}</button>
+                  <button className="btn sm" onClick={() => setDeclined((d) => [...d, m.at])}>Not now</button>
+                </span>)}
+                {m.actions?.filter((a) => !['transfer', 'reminder', 'offer'].includes(a.kind)).map((a) => (
+                  <button key={a.label} className="btn sm" onClick={() => a.kind === 'describe' ? (setFocus(true), setLater(false)) : nav(a.kind === 'save' ? `/pay/send?save=${a.amount}` : a.to || '/')}>{a.label}</button>
                 ))}
                 <button className="btn sm ghost" onClick={() => speak(m.content, m.lang)} aria-label="Read aloud" title="Read aloud"><Icon name="volume" size={16} /></button>
                 <button className="btn sm ghost" onClick={() => copy(m.content)} aria-label="Copy" title="Copy"><Icon name="copy" size={16} /></button>
               </div>
             </div>
           ))}
+          {!busy && !later && (focus || msgs.length === 0) && pending?.items[0] && (() => {
+            const p = pending.items[0]
+            return (
+              <div key={p.id} className="col g8" style={{ alignSelf: 'flex-start', maxWidth: 680, width: '100%' }}>
+                <div className="row g8 start"><span className="mark askmark">N</span><div className="bubble ai">{askLine(p, money)}</div></div>
+                <DescribeCard item={p} onSaved={(r) => described(r, p.id)} onUnknown={() => nav('/history/' + p.id + '?report=1')} />
+                <div className="row g6" style={{ marginLeft: 36 }}><button className="btn sm ghost" onClick={() => setLater(true)}>Later</button></div>
+              </div>
+            )
+          })()}
           {busy && <div className="row g8"><span className="mark askmark">N</span><div className="bubble ai mu">Thinking…</div></div>}
           <div ref={end} />
         </div>
@@ -329,8 +377,10 @@ function ReminderCard({ action, onSet }: { action: ChatAction; onSet: (text: str
   )
 }
 
-// TransferCard is the draft NURU proposes in chat. Nothing moves until the
-// customer confirms and passes the PIN and face check.
+// TransferCard is the draft NURU proposes in chat. A saved payee is filled in;
+// someone new is collected right here. Every transfer needs a description, and
+// nothing moves until the customer confirms and passes the PIN and face check
+// (the first time, TransferGuard sets both up).
 function TransferCard({ action, onSent }: { action: ChatAction; onSent: (text: string) => void }) {
   const money = useMoney()
   const payees = useLoad<Payee[]>('/payees').data
@@ -338,30 +388,65 @@ function TransferCard({ action, onSent }: { action: ChatAction; onSent: (text: s
   const [from, setFrom] = useState('')
   const [guard, setGuard] = useState(false)
   const [ref, setRef] = useState('')
-  const payee = payees?.find((p) => p.name === action.payee)
+  const [pick, setPick] = useState(action.new ? 'new' : '')
+  const [bank, setBank] = useState(BANKS[0])
+  const [account, setAccount] = useState('')
+  const [name, setName] = useState('')
+  const [note, setNote] = useState(action.note || '')
+  const [amt, setAmt] = useState(action.amount ? String(action.amount) : '')
+  const payee = pick === 'new' ? undefined : payees?.find((p) => (pick ? p.id === pick : p.name === action.payee))
   const acct = accts?.find((a) => a.id === from) || accts?.[0]
-  if (!payee || !acct) return null
-  const amount = action.amount || 0
-  const draft: Draft = { from: acct.id, payeeId: payee.id, toName: payee.name, toBank: payee.bank, amount, note: action.note }
-  const initials = payee.name.split(/[\s,]+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  if (!payees || !acct) return null
+  const fresh = !payee
+  const amount = Number(amt) || 0
+  const ready = amount > 0 && note.trim().length >= 2 && acct.balance >= amount && (!fresh || (account.length === 10 && name.trim().length >= 2))
+  const draft: Draft = payee
+    ? { from: acct.id, payeeId: payee.id, toName: payee.name, toBank: payee.bank, amount, note: note.trim() }
+    : { from: acct.id, toName: name.trim(), toBank: bank, toAccount: account, amount, note: note.trim() }
+  const shown = payee?.name || name.trim() || 'New recipient'
+  const initials = shown.split(/[\s,]+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  const lock = !!ref
   return (
-    <div className="card col g12" style={{ marginLeft: 36, maxWidth: 380, padding: 16 }}>
-      <div className="row between"><span className="xs mu w6 upper">Transfer draft</span><span className="chip amber">Sandbox</span></div>
-      <div className="row g12"><span className="av" style={{ width: 40, height: 40, background: 'var(--blue)' }}>{initials}</span><span className="col"><span className="w6 s">{payee.name}</span><span className="xs mu">{payee.bank} {payee.account} · {payee.times ? `paid ${payee.times} ${payee.times === 1 ? 'time' : 'times'}` : 'saved payee'}</span></span></div>
-      <div className="row between"><span className="s t2">Amount</span><span className="h3 num">{money(amount)}</span></div>
-      {action.note && <div className="row between"><span className="s t2">For</span><span className="s w6">{action.note}</span></div>}
+    <div className="card col g12 dcard">
+      <div className="row between"><span className="xs mu w6 upper">{fresh ? 'New recipient' : 'Transfer draft'}</span><span className="chip amber">Sandbox</span></div>
+      {(action.new || !payee) && (
+        <div className="field"><label htmlFor="tto">Send to</label>
+          <select id="tto" className="input" style={{ height: 44 }} value={pick || (payee ? payee.id : 'new')} disabled={lock} onChange={(e) => setPick(e.target.value)}>
+            <option value="new">Someone new</option>
+            {payees.map((p) => <option key={p.id} value={p.id}>{p.name}, {p.bank}</option>)}
+          </select></div>
+      )}
+      {fresh ? <>
+        <div className="field"><label htmlFor="tbank">Bank</label>
+          <select id="tbank" className="input" style={{ height: 44 }} value={bank} disabled={lock} onChange={(e) => setBank(e.target.value)}>{BANKS.map((b) => <option key={b}>{b}</option>)}</select></div>
+        <div className="field"><label htmlFor="tacct">Account number</label>
+          <input id="tacct" className="input num" style={{ height: 44 }} inputMode="numeric" maxLength={10} placeholder="10 digits" value={account} disabled={lock} onChange={(e) => setAccount(e.target.value.replace(/\D/g, ''))} /></div>
+        <div className="field"><label htmlFor="tname">Account name</label>
+          <input id="tname" className="input" style={{ height: 44 }} maxLength={60} placeholder="As the bank shows it" value={name} disabled={lock} onChange={(e) => setName(e.target.value)} /></div>
+      </> : (
+        <div className="row g12"><span className="av" style={{ width: 40, height: 40, background: 'var(--blue)' }}>{initials}</span><span className="col"><span className="w6 s">{payee.name}</span><span className="xs mu">{payee.bank} {payee.account} · {payee.times ? `paid ${payee.times} ${payee.times === 1 ? 'time' : 'times'}` : 'saved payee'}</span></span></div>
+      )}
+      <div className="field"><label htmlFor="tnote">What is it for?</label>
+        <input id="tnote" className="input" style={{ height: 44 }} maxLength={60} placeholder="For example, December rent" value={note} disabled={lock} onChange={(e) => setNote(e.target.value)} /></div>
+      {action.amount ? (
+        <div className="row between"><span className="s t2">Amount</span><span className="h3 num">{money(amount)}</span></div>
+      ) : (
+        <div className="field"><label htmlFor="tamt">Amount (₦)</label>
+          <input id="tamt" className="input num" style={{ height: 44 }} inputMode="decimal" value={amt} disabled={lock} onChange={(e) => setAmt(e.target.value.replace(/[^\d.]/g, ''))} /></div>
+      )}
       <div className="row between g8"><span className="s t2">From</span>
-        <select className="input" style={{ height: 36, width: 'auto', fontSize: 13 }} value={acct.id} onChange={(e) => setFrom(e.target.value)} disabled={!!ref}>
+        <select className="input" style={{ height: 36, width: 'auto', minWidth: 0, fontSize: 13 }} value={acct.id} onChange={(e) => setFrom(e.target.value)} disabled={lock}>
           {accts!.map((a) => <option key={a.id} value={a.id}>{a.name} {a.number}</option>)}
         </select>
       </div>
       <div className="row between"><span className="s t2">Balance after</span><span className={'s w6 num' + (acct.balance < amount ? ' red' : '')}>{money(acct.balance - amount)}</span></div>
       {ref ? (
         <div className="row g8" style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--green50)', color: 'var(--green)' }}><Icon name="check" size={18} /><span className="s w6">Sent · Ref {ref}</span></div>
-      ) : (
-        <button className="btn pri sm" disabled={acct.balance < amount} onClick={() => setGuard(true)}><Icon name="shieldcheck" size={16} color="#fff" />Confirm and send</button>
-      )}
-      {guard && <TransferGuard draft={draft} onClose={() => setGuard(false)} onDone={(r) => { setGuard(false); setRef(r.reference); onSent(`Done. ${money(r.amount)} is on its way to ${r.to}. Reference ${r.reference}.`) }} />}
+      ) : <>
+        <button className="btn pri sm" disabled={!ready} onClick={() => setGuard(true)}><Icon name="shieldcheck" size={16} color="#fff" />{fresh ? 'Review and send' : 'Confirm and send'}</button>
+        {fresh && <span className="row g6 xs mu"><Icon name="shieldcheck" size={12} />Saved to your payees once sent. Your first transfer sets up a PIN and face check.</span>}
+      </>}
+      {guard && <TransferGuard draft={draft} onClose={() => setGuard(false)} onDone={(r) => { setGuard(false); setRef(r.reference); onSent(`Done. ${money(r.amount)} for ${note.trim()} is on its way to ${r.to}. Reference ${r.reference}.`) }} />}
     </div>
   )
 }
