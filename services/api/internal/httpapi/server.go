@@ -74,6 +74,9 @@ func (s *Server) Routes() http.Handler {
 		r.Delete("/accounts/{id}", s.unlinkAccount)
 
 		r.Get("/accounts", s.accounts)
+		r.Get("/voice/status", s.voiceStatus)
+		r.With(httprate.LimitByIP(60, time.Minute)).Post("/voice/speak", s.speak)
+		r.With(httprate.LimitByIP(30, time.Minute)).Post("/voice/listen", s.listen)
 		r.Get("/transactions", s.transactions)
 		r.Get("/transactions/{id}", s.getTx)
 		r.Post("/transactions/{id}/report", s.reportTx)
