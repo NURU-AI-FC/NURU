@@ -1,6 +1,6 @@
 # Team NURU
 
-Bolaji Omotayo leads the build. Each teammate owns one small, well defined piece and works on their own branch
+Bolaji (@Bolajiomo99) leads the build. Each teammate owns one small, well defined piece and works on their own branch
 under their own GitHub account; Bolaji reviews and merges.
 
 | Teammate | Owns | Where |
