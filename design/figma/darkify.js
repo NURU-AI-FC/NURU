@@ -9,7 +9,7 @@ const pg=await figma.getNodeByIdAsync(PAGE);await figma.setCurrentPageAsync(pg);
 await Promise.all(['Regular','Medium','Semi Bold','Bold','Extra Bold'].map(st=>figma.loadFontAsync({family:'Inter',style:st})));
 const walk=(node,inInst)=>{if(inInst&&'strokes' in node&&Array.isArray(node.strokes)&&node.strokes.length)node.strokes=remap(node.strokes,ST);
  if('children' in node)for(const c of node.children)walk(c,inInst||node.type==='INSTANCE');};
-const inHero=(n)=>{for(let p=n.parent;p;p=p.parent){if(p.name==='hero')return true;if(p.type==='FRAME'&&/ dark$/.test(p.name))return false;}return false;};
+const inHero=(n)=>{if(n.name==='pane')return true;for(let p=n.parent;p;p=p.parent){if(p.name==='hero'||p.name==='pane')return true;if(p.type==='FRAME'&&/ dark$/.test(p.name))return false;}return false;};
 const out=[];
 for(const [id,dx,dy] of SRC){const src=await figma.getNodeByIdAsync(id);const d=src.clone();d.name=src.name.replace('/ light','/ dark');d.x=src.x+dx;d.y=src.y+dy;
  d.fills=remap(d.fills,{ffffff:'0d0d0f'});

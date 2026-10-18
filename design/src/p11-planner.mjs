@@ -129,7 +129,7 @@ const plan = mobile('08 Monthly plan', th, `
 const recap = mobile('09 Weekly recap', th, `
   ${topbar('Your week', { right: `<div class="ib">${icon('volume')}</div>` })}
   <div class="col g14 px20" style="margin-top:8px;gap:14px">
-    <div class="col g4"><span class="xs mu">12 to 18 October</span><span class="h2">A good week, Tolani</span></div>
+    <div class="col g4"><span class="xs mu">12 to 18 October</span><span class="h2">A good week, Adaeze</span></div>
     <div class="row g12">
       <div class="card col g4 grow" style="padding:14px"><span class="xs mu">Spent</span><span class="h4 num">${naira(84200)}</span><span class="xs gr w6">12% less</span></div>
       <div class="card col g4 grow" style="padding:14px"><span class="xs mu">Saved</span><span class="h4 num">${naira(57500)}</span><span class="xs gr w6">On target</span></div>
