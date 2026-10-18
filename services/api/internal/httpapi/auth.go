@@ -192,7 +192,7 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Name, Language, Theme, Currency *string
+		Name, Phone, Language, Theme, Currency *string
 	}
 	if !decode(w, r, &in) {
 		return
@@ -209,6 +209,15 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 	}
 	if in.Name != nil && strings.TrimSpace(*in.Name) != "" {
 		set("name", in.Name)
+	}
+	if in.Phone != nil {
+		p := strings.Join(strings.Fields(*in.Phone), "")
+		digits := strings.TrimPrefix(p, "+")
+		if p != "" && (len(digits) < 7 || len(digits) > 15 || strings.Trim(digits, "0123456789") != "") {
+			fail(w, 400, "enter a valid phone number")
+			return
+		}
+		set("phone", &p)
 	}
 	set("language", in.Language)
 	set("theme", in.Theme)

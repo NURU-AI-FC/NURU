@@ -27,6 +27,12 @@ const en = {
   demo: 'Judges: use the demo account', noAccount: 'New to NURU?', haveAccount: 'Already have an account?',
   overview: 'Overview', bills: 'Bills', whereSpend: 'Where you spend', healthScore: 'Health score', budgets: 'Budgets', goals: 'Goals', report: 'Monthly report',
   calendar: 'Calendar', budget: 'Budget', savingsGoal: 'Savings goal', monthlyPlan: 'Monthly plan', weeklyRecap: 'Weekly recap', newGoal: 'New goal', newBudget: 'New budget',
+  connectedAccounts: 'Connected accounts', historyTitle: 'History', txTitle: 'Transaction', notificationsTitle: 'Notifications',
+  notifySettingsTitle: 'Notification settings', alertTitle: 'Alert', profileTitle: 'Profile', searchTitle: 'Search',
+  hideBalance: 'Hide balance', showBalance: 'Show balance', netWorth: 'Net worth', linkAnother: 'Link another account',
+  linkBank: 'Link a bank account', tryDemoBank: 'Try the demo bank instead', connectFirst: 'Connect your first account',
+  searchTx: 'Search transactions', askAboutThis: 'Ask NURU about this', reportProblem: 'Report a problem', markAllRead: 'Mark all read',
+  loadMore: 'Load more', noMatches: 'Nothing matches yet', memberSince: 'Member since', editProfile: 'Edit profile',
 }
 export default en
 export type Dict = typeof en
