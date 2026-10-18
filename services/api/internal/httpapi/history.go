@@ -183,6 +183,15 @@ func (s *Server) reportTx(w http.ResponseWriter, r *http.Request) {
 		in.Note = in.Note[:500]
 	}
 	s.event(r.Context(), uid(r), "tx_report", reason+": "+t.Reference)
+	// the support queue sees the reason and reference only, never the payee
+	kind := "report"
+	if strings.Contains(strings.ToLower(reason), "did not make") {
+		kind = "security"
+	}
+	if len([]rune(reason)) > 80 {
+		reason = string([]rune(reason)[:80])
+	}
+	s.db.Exec(r.Context(), `insert into support_tickets(ref,user_id,kind,subject,transaction_id) values('',$1,$2,$3,$4)`, uid(r), kind, reason, t.ID)
 	s.notify(r.Context(), uid(r), note{Key: "report:" + t.ID, Kind: "alert", Tone: "blue", Icon: "shieldcheck", Title: "We got your report",
 		Body: "Zenith support will look into " + naira(t.Amount) + " to " + t.Merchant + " (" + t.Reference + ") within 24 hours.", Amount: t.Amount, TxID: t.ID, Link: "/history/" + t.ID})
 	writeJSON(w, 200, map[string]any{"ok": true, "reference": t.Reference})

@@ -267,6 +267,8 @@ func (s *Server) addDispute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.event(r.Context(), uid(r), "dispute_opened", naira(amt)+" "+merchant)
+	s.db.Exec(r.Context(), `insert into support_tickets(ref,user_id,kind,subject,transaction_id,dispute_id)
+		select '',user_id,'dispute',reason,transaction_id,id from disputes where transaction_id::text=$1 and user_id=$2`, in.TransactionID, uid(r))
 	s.disputes(w, r)
 }
 

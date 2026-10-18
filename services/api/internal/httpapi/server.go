@@ -17,17 +17,18 @@ import (
 )
 
 type Server struct {
-	cfg    config.Config
-	db     *pgxpool.Pool
-	tokens *auth.Signer
-	box    *secure.Box
-	http   *http.Client
-	fx     *fxCache
+	cfg     config.Config
+	db      *pgxpool.Pool
+	tokens  *auth.Signer
+	box     *secure.Box
+	http    *http.Client
+	fx      *fxCache
+	metrics *metrics
 }
 
 func New(cfg config.Config, db *pgxpool.Pool, box *secure.Box) *Server {
 	return &Server{cfg: cfg, db: db, tokens: auth.NewSigner(cfg.JWTSecret), box: box,
-		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}}
+		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}, metrics: newMetrics()}
 }
 
 func (s *Server) Routes() http.Handler {
@@ -40,7 +41,7 @@ func (s *Server) Routes() http.Handler {
 		AllowCredentials: false,
 		MaxAge:           600,
 	}))
-	r.Use(securityHeaders)
+	r.Use(securityHeaders, s.metrics.record)
 
 	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
 	r.Get("/fx", s.fxRates)
@@ -53,6 +54,7 @@ func (s *Server) Routes() http.Handler {
 		r.Post("/auth/verify", s.verifyOTP)
 		r.Post("/auth/forgot", s.forgot)
 		r.Post("/auth/reset", s.reset)
+		r.Post("/auth/staff", s.staffStart)
 	})
 
 	r.Group(func(r chi.Router) {
@@ -163,6 +165,7 @@ func (s *Server) Routes() http.Handler {
 		r.Delete("/chat", s.clearChat)
 
 		s.consoleRoutes(r)
+		s.hqRoutes(r)
 	})
 	return r
 }

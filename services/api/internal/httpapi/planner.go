@@ -224,6 +224,8 @@ func (s *Server) applyPlan(w http.ResponseWriter, r *http.Request) {
 		s.db.Exec(r.Context(), `insert into budgets(user_id,category,monthly_limit) values($1,$2,$3)
 			on conflict (user_id,category) do update set monthly_limit=excluded.monthly_limit`, uid(r), l.Category, l.Limit)
 	}
+	// counted by NURU HQ as acting on a tip
+	s.event(r.Context(), uid(r), "tip_acted", "plan applied")
 	s.budgets(w, r)
 }
 
