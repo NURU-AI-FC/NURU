@@ -1,0 +1,32 @@
+.kit-back { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; margin-bottom: -6px; }
+.kit-back:hover { color: var(--text); }
+.kit-badge { height: 24px; font-size: 11px; padding: 0 9px; }
+.kit-ic { border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--surface2); color: var(--text); }
+.kit-ic.red { background: var(--red50); color: var(--red); }
+.kit-ic.green { background: var(--green50); color: var(--green); }
+.kit-ic.amber { background: var(--amber50); color: var(--amber); }
+.kit-ic.blue { background: var(--blue50); color: var(--blue); }
+.kit-tip.amber { background: var(--amber50); }
+.kit-tip.green { background: var(--green50); }
+.kit-hero { background: linear-gradient(135deg, var(--red) 0%, var(--red600) 100%); color: #fff; border-radius: 20px; padding: 20px; }
+.kit-hero .bar { background: rgba(255,255,255,.25); }
+.kit-hero .bar > i { background: #fff; }
+.kit-narrow { max-width: 720px; width: 100%; }
+.kit-actions { display: flex; gap: 10px; }
+.kit-actions > * { flex: 1; }
+.kit-list > * + * { border-top: 1px solid var(--border); }
+.kit-list > * { padding: 12px 0; }
+.kit-click { cursor: pointer; text-align: left; width: 100%; border: 1px solid var(--border); background: var(--bg); }
+.kit-click:hover { background: var(--surface); }
+.kit-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.kit-pick button { border: 1px solid var(--border); background: var(--bg); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 500; color: var(--text2); }
+.kit-pick button.on { border-color: var(--red); background: var(--red50); color: var(--red); font-weight: 600; }
+.kit-range { width: 100%; accent-color: var(--red); }
+.kit-thumbs { display: flex; gap: 10px; flex-wrap: wrap; }
+.kit-thumbs > * { width: 80px; height: 80px; border-radius: 14px; object-fit: cover; background: var(--surface); border: 1.5px dashed var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.kit-num { width: 26px; height: 26px; border-radius: 13px; background: var(--red50); color: var(--red); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+textarea.input { height: 96px; padding: 12px 14px; resize: vertical; }
+@media print {
+  .side, .top, .tabbar, .no-print { display: none !important; }
+  .page { padding: 0 !important; }
+}

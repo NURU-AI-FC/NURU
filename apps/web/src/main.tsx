@@ -9,6 +9,14 @@ import Home from './pages/Home'
 import Insights from './pages/Insights'
 import Landing from './pages/Landing'
 import Money from './pages/Money'
+import Borrow from './pages/money/Borrow'
+import Claim from './pages/money/Claim'
+import Deposit from './pages/money/Deposit'
+import Insurance from './pages/money/Insurance'
+import LoanDetail from './pages/money/LoanDetail'
+import Pension from './pages/money/Pension'
+import Refunds from './pages/money/Refunds'
+import Vaults from './pages/money/Vaults'
 import Pay from './pages/Pay'
 import Planner from './pages/Planner'
 import Settings from './pages/Settings'
@@ -42,6 +50,14 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/ask" element={<Private><Ask /></Private>} />
           <Route path="/pay" element={<Private><Pay /></Private>} />
           <Route path="/money" element={<Private><Money /></Private>} />
+          <Route path="/money/loans/:id" element={<Private><LoanDetail /></Private>} />
+          <Route path="/money/borrow" element={<Private><Borrow /></Private>} />
+          <Route path="/money/refunds" element={<Private><Refunds /></Private>} />
+          <Route path="/money/deposit" element={<Private><Deposit /></Private>} />
+          <Route path="/money/pension" element={<Private><Pension /></Private>} />
+          <Route path="/money/insurance" element={<Private><Insurance /></Private>} />
+          <Route path="/money/insurance/claim/:id" element={<Private><Claim /></Private>} />
+          <Route path="/money/vaults" element={<Private><Vaults /></Private>} />
           <Route path="/business" element={<Private><Business /></Private>} />
           <Route path="/planner" element={<Private><Planner /></Private>} />
           <Route path="/settings" element={<Private any><Settings /></Private>} />

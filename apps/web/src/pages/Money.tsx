@@ -3,8 +3,13 @@ import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Donut, Icon, Legend, Skeleton, useLoad } from '../ui'
 
-type Loan = { lender: string; principal: number; rate_pct: number; months: number; disbursed_at: string; next_due_at: string; monthly: number; balance: number; paid_instalments: number; total_interest: number }
+import type { Loan } from './money/LoanDetail'
 type Inv = { kind: string; name: string; value: number; contributed: number; monthly: number; growth: number }
+const tools: [string, string, string, string][] = [
+  ['/money/borrow', 'percent', 'Borrow', 'See how much you qualify for'], ['/money/vaults', 'target', 'Savings vaults', 'Save for rent, japa and more'],
+  ['/money/deposit', 'landmark', 'Fixed deposit', 'Lock money for up to 19%'], ['/money/pension', 'shield', 'Pension', 'RSA balance and projection'],
+  ['/money/insurance', 'umbrella', 'Insurance', 'Policies, renewals and claims'], ['/money/refunds', 'undo', 'Refunds', 'Dispute a payment'],
+]
 const d = (s: string) => new Date(s).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function Money() {
@@ -16,13 +21,22 @@ export default function Money() {
 
   return (
     <Shell title={t('money')} sub="Loans, investments, pension and savings goals">
+      <div className="grid g-3">
+        {tools.map(([to, ic, h, p]) => (
+          <Link key={to} to={to} className="card flat row g12" style={{ padding: 16 }}>
+            <span className="tile" style={{ background: 'var(--red50)', color: 'var(--red)' }}><Icon name={ic} /></span>
+            <span className="col grow"><span className="s w6">{h}</span><span className="xs mu">{p}</span></span>
+            <Icon name="chevr" size={16} color="var(--muted)" />
+          </Link>
+        ))}
+      </div>
       <div className="grid g-2">
         <div className="col g20">
           <span className="h3">{t('loans')}</span>
           {loans ? loans.length ? loans.map((l) => {
             const owed = l.principal + l.total_interest
             return (
-              <div key={l.lender} className="card col g16">
+              <Link key={l.id} to={`/money/loans/${l.id}`} className="card col g16">
                 <div className="row between"><span className="row g10"><span className="tile" style={{ background: 'var(--red50)', color: 'var(--red)' }}><Icon name="landmark" /></span><span className="col"><span className="w6">{l.lender}</span><span className="xs mu">{money(l.principal)} at {l.rate_pct}% · {l.months} months</span></span></span><span className="chip green">On track</span></div>
                 <div className="col g6">
                   <div className="row between s"><span className="t2">{l.paid_instalments} of {l.months} {t('paid')}</span><span className="w6 num">{money(owed - l.balance)} / {money(owed)}</span></div>
@@ -33,13 +47,13 @@ export default function Money() {
                     <div key={k} className="soft col g4"><span className="xs mu">{k}</span><span className="s w6 num">{v}</span></div>
                   ))}
                 </div>
-              </div>
+              </Link>
             )
           }) : <div className="card flat t2">No active loans.</div> : <Skeleton h={260} />}
           <div className="card col g10 flat">
             <span className="h3">Can I afford a new loan?</span>
             <span className="s t2">Ask NURU with an amount and it checks your income, bills and current repayments.</span>
-            <Link className="btn sm" style={{ alignSelf: 'flex-start' }} to="/ask?q=Can%20I%20afford%20a%20%E2%82%A65m%20loan%3F"><Icon name="sparkles" size={16} />Ask NURU</Link>
+            <div className="row g8 wrap"><Link className="btn pri sm" to="/money/borrow"><Icon name="percent" size={16} color="#fff" />Check what I can borrow</Link><Link className="btn sm" to="/ask?q=Can%20I%20afford%20a%20%E2%82%A65m%20loan%3F"><Icon name="sparkles" size={16} />Ask NURU</Link></div>
           </div>
         </div>
 
