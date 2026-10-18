@@ -168,6 +168,11 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 		($1,'fund','Zenith Money Market Fund',465000,430000,20000)`, userID); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(ctx, `insert into payees(user_id,name,bank,account) values
+		($1,'Tunde Bakare','GTBank','0123456621'),($1,'Mile 12 Market','Wema Bank','0034561290'),
+		($1,'Mama Ngozi','OPay','8123457788'),($1,'Mr Adeyemi, landlord','First Bank','3012349981') on conflict do nothing`, userID); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `insert into reminders(user_id,title,kind,amount,due_at) values
 		($1,'Loan repayment, Zenith','loan',140400,$2),
 		($1,'DStv renewal','bill',25000,$3),

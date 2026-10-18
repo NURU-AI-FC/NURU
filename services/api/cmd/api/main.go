@@ -61,12 +61,15 @@ func ensureDemoUsers(ctx context.Context, pool *pgxpool.Pool) {
 		name, email, password, pin, role string
 		business                         bool
 	}{
-		{"Adaeze Okafor", "judge@nuru.app", "Zecathon-2026", "1234", "customer", true},
+		{"Adaeze Okafor", "judge@nuru.app", "Zecathon-2026", "", "customer", true},
 		{"Tunde Bakare", "staff@nuru.app", "Zecathon-2026", "1234", "staff", false},
 	}
 	for _, d := range demo {
 		pw, _ := auth.Hash(d.password)
-		pin, _ := auth.Hash(d.pin)
+		pin := ""
+		if d.pin != "" {
+			pin, _ = auth.Hash(d.pin)
+		}
 		biz, kind := "", ""
 		if d.business {
 			biz, kind = "Kemi Foods Ltd", "Restaurant and catering"
