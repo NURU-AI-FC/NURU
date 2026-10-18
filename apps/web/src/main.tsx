@@ -5,6 +5,11 @@ import Ask from './pages/Ask'
 import Auth from './pages/Auth'
 import Business from './pages/Business'
 import Console from './pages/Console'
+import Campaigns from './pages/console/Campaigns'
+import Customers, { CustomerDetail } from './pages/console/Customers'
+import ConsoleData from './pages/console/Data'
+import Risk from './pages/console/Risk'
+import Segments from './pages/console/Segments'
 import Home from './pages/Home'
 import Insights from './pages/Insights'
 import Landing from './pages/Landing'
@@ -46,6 +51,12 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/planner" element={<Private><Planner /></Private>} />
           <Route path="/settings" element={<Private any><Settings /></Private>} />
           <Route path="/console" element={<Private staff><Console /></Private>} />
+          <Route path="/console/segments" element={<Private staff><Segments /></Private>} />
+          <Route path="/console/customers" element={<Private staff><Customers /></Private>} />
+          <Route path="/console/customers/:id" element={<Private staff><CustomerDetail /></Private>} />
+          <Route path="/console/campaigns" element={<Private staff><Campaigns /></Private>} />
+          <Route path="/console/risk" element={<Private staff><Risk /></Private>} />
+          <Route path="/console/data" element={<Private staff><ConsoleData /></Private>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
