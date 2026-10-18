@@ -6,14 +6,13 @@ import { langNames, suggestions } from '../i18n'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { ChartView, Icon, Modal, useGreeting, useLoad } from '../ui'
+import { Listener, speak as speakAloud } from '../voice'
 import './Ask.css'
 
-const speechLang = { en: 'en-NG', yo: 'yo-NG', ig: 'ig-NG', ha: 'ha-NG' }
 const voiceName: Record<Lang, string> = { en: 'Nigerian English voice', yo: 'Ohùn Yorùbá', ig: 'Olu Igbo', ha: 'Muryar Hausa' }
 const starterIcons = ['pie', 'target', 'briefcase', 'calendar', 'wallet', 'trendup']
 const srcIcon: Record<string, string> = { transactions: 'database', accounts: 'landmark', bills: 'receipt', loans: 'landmark', forecast: 'trendup', business: 'briefcase', payees: 'users', goals: 'target' }
 
-type Rec = { lang: string; interimResults: boolean; onresult: (e: { results: { 0: { transcript: string } }[] }) => void; onend: () => void; onerror: () => void; start: () => void; stop: () => void }
 
 const store = {
   get: (k: string) => { try { return localStorage.getItem(k) || '' } catch { return '' } },
@@ -59,7 +58,7 @@ export default function Ask() {
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
   const end = useRef<HTMLDivElement>(null)
-  const rec = useRef<Rec | null>(null)
+  const rec = useRef<Listener | null>(null)
   const asked = useRef('')
 
   useEffect(() => {
@@ -116,35 +115,15 @@ export default function Ask() {
   }
 
   function listen() {
-    const W = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec }
-    const R = W.SpeechRecognition || W.webkitSpeechRecognition
-    if (!R) { toast('Voice input needs Chrome or Edge'); return }
     if (listening) { rec.current?.stop(); return }
-    const r = new R()
-    r.lang = speechLang[lang]
-    r.interimResults = false
-    r.onresult = (e) => { const said = e.results[0][0].transcript; setText(said); send(said) }
-    r.onend = () => setListening(false)
-    r.onerror = () => { setListening(false); toast('Could not hear that, try again') }
-    rec.current = r
+    const l = new Listener()
+    rec.current = l
     setListening(true)
-    r.start()
-  }
-
-  function pickVoice(l: Lang) {
-    const all = speechSynthesis.getVoices()
-    return all.find((x) => x.voiceURI === voice && x.lang.toLowerCase().startsWith(l)) || all.find((x) => x.lang.toLowerCase().startsWith(l))
-      || all.find((x) => x.voiceURI === voice) || all.find((x) => x.lang === 'en-NG')
+    l.start(lang, (said) => { setText(said); send(said) }, (err) => { setListening(false); rec.current = null; if (err) toast(err) })
   }
 
   function speak(s: string, l: Lang = lang) {
-    if (!('speechSynthesis' in window)) { toast('Reading aloud is not supported in this browser'); return }
-    speechSynthesis.cancel()
-    const u = new SpeechSynthesisUtterance(s)
-    u.lang = speechLang[l]
-    const v = pickVoice(l)
-    if (v) u.voice = v
-    speechSynthesis.speak(u)
+    speakAloud(s, l, voice).then((ok) => { if (!ok) toast('Reading aloud is not supported in this browser') })
   }
 
   async function copy(s: string) { try { await navigator.clipboard.writeText(s); toast('Copied') } catch { toast('Could not copy') } }
