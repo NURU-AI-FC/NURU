@@ -71,15 +71,15 @@ def answer(q: Question):
     lang = q.lang if q.lang in LANGS else "en"
     blocked = guard.classify(q.message)
     if blocked:
-        return {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": []}
+        return {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": [], "sources": []}
 
     intent = replies.intent(q.message)
     chart = replies.chart(intent, q.context)
     actions = replies.actions(intent, q.context, q.message)
 
-    # Transfers always use the template so the confirmation quotes exactly
-    # the payee and amount the app will send.
-    text = ask_claude(q, lang) if client and intent != "transfer" else None
+    # Transfers and reminders always use the template so the confirmation quotes exactly
+    # the payee, amount and date the app will use.
+    text = ask_claude(q, lang) if client and intent not in ("transfer", "reminder") else None
     if text and guard.unsupported_amounts(text, q.context):
         # A figure we cannot trace back to the data is worse than a plainer
         # answer, so fall back to the template that only quotes our numbers.
@@ -87,7 +87,7 @@ def answer(q: Question):
         text = None
     if not text:
         text = replies.template(intent, q.context, lang, q.message)
-    return {"answer": text, "blocked": "", "chart": chart, "actions": actions}
+    return {"answer": text, "blocked": "", "chart": chart, "actions": actions, "sources": replies.sources(intent, q.context)}
 
 
 def ask_claude(q: Question, lang: str) -> str | None:

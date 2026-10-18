@@ -6,10 +6,12 @@ Translations are reviewed by the language owners listed in docs/TEAM.md.
 """
 
 import re
+from datetime import date, timedelta
 
 from lang import LANGS
 
 INTENTS = [
+    ("reminder", r"\bremind( me)?\b|\bset (a |up a )?reminder\b|\bdon'?t let me forget\b"),
     ("transfer", r"(?=.*(\b(send|transfer|pay|give|ziga|zipu|kwụọ|kwuo|aika|tura|biya)\b|ránṣẹ́|ranse|sanwó))(?=.*(₦|\d+\s?k\b|\d{3,}))"),
     ("injectionless_greeting", r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|bawo|ndewo|sannu|kedu)\b"),
     ("business", r"business|sales|profit|payroll|staff|salar(y|ies) for|runway|kemi|vendor|advert|investor"),
@@ -62,6 +64,117 @@ def parse_transfer(message: str, ctx: dict) -> dict:
     return {"payee": payee, "amount": amount, "note": note}
 
 
+MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+
+def parse_date(text: str, today: date) -> date | None:
+    """Read "on 20 Oct", "October 20th", "the 28th", "tomorrow", "next
+    Friday" or "in 3 days". Dates already past roll into the next period."""
+    t = text.lower()
+    if "tomorrow" in t:
+        return today + timedelta(days=1)
+    if re.search(r"\btoday\b|\btonight\b", t):
+        return today
+    m = re.search(r"\bin (\d{1,2}) (day|week)s?\b", t)
+    if m:
+        return today + timedelta(days=int(m.group(1)) * (7 if m.group(2) == "week" else 1))
+    mon = r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*"
+    m = re.search(r"\b(\d{1,2})(?:st|nd|rd|th)?(?: of)? " + mon + r"\b", t) or re.search(r"\b" + mon + r" (\d{1,2})(?:st|nd|rd|th)?\b", t)
+    if m:
+        a, b = m.groups()
+        day, month = (int(a), MONTHS.index(b[:3]) + 1) if a.isdigit() else (int(b), MONTHS.index(a[:3]) + 1)
+        try:
+            d = date(today.year, month, day)
+        except ValueError:
+            return None
+        return d if d >= today else d.replace(year=today.year + 1)
+    for i, name in enumerate(DAYS):
+        if re.search(r"\b" + name[:3] + r"(" + name[3:] + r")?\b", t):
+            ahead = (i - today.weekday()) % 7 or 7
+            return today + timedelta(days=ahead)
+    m = re.search(r"\b(?:on )?the (\d{1,2})(?:st|nd|rd|th)\b", t)
+    if m:
+        day = int(m.group(1))
+        y, mo = today.year, today.month
+        if day < today.day:
+            y, mo = (y + 1, 1) if mo == 12 else (y, mo + 1)
+        try:
+            return date(y, mo, day)
+        except ValueError:
+            return None
+    return None
+
+
+def parse_reminder(message: str, ctx: dict, today: date | None = None) -> dict:
+    """Pull a title, amount and date out of "remind me to pay DStv ₦25,000
+    on 20 Oct". Without a date it suggests three days from today."""
+    today = today or date.today()
+    amount = 0.0
+    for num, unit in AMT.findall(message):
+        v = float(num.replace(",", ""))
+        v *= {"k": 1e3, "thousand": 1e3, "m": 1e6, "million": 1e6}.get(unit.lower(), 1)
+        if v >= 100:
+            amount = v
+            break
+    title = re.sub(r"^.*?\bremind(?: me)?\b\s*(?:to |about |of )?", "", message, flags=re.I)
+    title = re.sub(r"^.*?\bset (?:a |up a )?reminder\b\s*(?:to |for |about )?", "", title, flags=re.I)
+    title = re.sub(r"(₦|\bn)\s?\d[\d,]*(\.\d+)?\s?(k|m|thousand|million)?\b", "", title, flags=re.I)
+    before = re.match(r"\s*(\d{1,2}|a|one|two|three) (day|week)s? before (.+)$", title, re.I)
+    if before:
+        title = before.group(3)
+    title = re.sub(r"\b(on|by|next|this|tomorrow|today|tonight|in \d+ \w+)\b.*$", "", title, flags=re.I)
+    title = re.sub(r"^(pay|my|the)\s+", "", re.sub(r"\s+", " ", title).strip(" .,"), flags=re.I)
+    title = re.sub(r"^(my|the)\s+", "", title, flags=re.I)
+    title = (title[:1].upper() + title[1:])[:60] or "Payment reminder"
+    due = parse_date(message, today)
+    match = None
+    for u in ctx.get("upcoming") or []:
+        if any(w in u.get("title", "").lower() for w in title.lower().split() if len(w) > 3):
+            match = u
+            break
+    if match and not amount:
+        amount = float(match.get("amount") or 0)
+    if before and match and not due:
+        lead = {"a": 1, "one": 1, "two": 2, "three": 3}.get(before.group(1).lower()) or int(before.group(1))
+        lead *= 7 if before.group(2).lower() == "week" else 1
+        found = parse_date("on " + str(match.get("due", "")), today)
+        if found:
+            due = max(today, found - timedelta(days=lead))
+    due = due or today + timedelta(days=3)
+    return {"title": title, "amount": amount, "due": due.isoformat()}
+
+
+def sources(name: str, ctx: dict) -> list[dict]:
+    """The parts of the snapshot an answer drew on, shown under the reply."""
+    month = date.today().strftime("%B")
+    accts = ctx.get("accounts") or []
+    names = ", ".join(f"{a['name']} {a.get('number', '')}".strip() for a in accts[:3])
+    acc = {"type": "accounts", "label": "Accounts", "detail": names} if names else None
+    tx = {"type": "transactions", "label": "Transactions", "detail": f"{month} transactions"}
+    out: list[dict | None] = []
+    if name in ("spend", "save", "general", "subscriptions"):
+        out = [tx, acc]
+    elif name == "week":
+        out = [{"type": "transactions", "label": "Transactions", "detail": "This week's transactions"}, acc]
+    elif name == "balance":
+        out = [acc]
+    elif name == "compare":
+        out = [{"type": "transactions", "label": "Transactions", "detail": "Last 3 months of transactions"}]
+    elif name == "forecast":
+        out = [acc, {"type": "forecast", "label": "Forecast", "detail": "Daily spending and bills, next 30 days"}]
+    elif name in ("loan",):
+        loans = ctx.get("loans") or []
+        out = [{"type": "loans", "label": "Loans", "detail": ", ".join(l["lender"] for l in loans) or "No active loans"}]
+    elif name in ("upcoming", "reminder"):
+        out = [{"type": "bills", "label": "Bills and reminders", "detail": f"{len(ctx.get('upcoming') or [])} upcoming"}]
+    elif name == "business" and ctx.get("business"):
+        out = [{"type": "business", "label": "Business", "detail": f"{ctx['business']}, {month} business account"}]
+    elif name == "transfer":
+        out = [{"type": "payees", "label": "Payees", "detail": "Saved payees"}, acc]
+    return [s for s in out if s]
+
+
 def naira(v) -> str:
     try:
         return "₦{:,.0f}".format(float(v))
@@ -92,6 +205,8 @@ def chart(name: str, ctx: dict):
 
 def actions(name: str, ctx: dict, message: str = "") -> list[dict]:
     out = []
+    if name == "reminder":
+        return [{"kind": "reminder", "label": "Set reminder", **parse_reminder(message, ctx)}]
     if name == "transfer":
         t = parse_transfer(message, ctx)
         if t["payee"] and t["amount"]:
@@ -136,6 +251,10 @@ def template(name: str, ctx: dict, lang: str, message: str = "") -> str:
         else:
             personal = sum(a["balance"] for a in ctx.get("accounts") or [] if "Ltd" not in a["name"])
             v.update(amt=naira(t["amount"]), payee=t["payee"], left=naira(personal - t["amount"]))
+    elif name == "reminder":
+        r = parse_reminder(message, ctx)
+        d = date.fromisoformat(r["due"])
+        v.update(title=r["title"], amt=f" ({naira(r['amount'])})" if r["amount"] else "", date=f"{d.day} {d.strftime('%b')}")
     elif name == "balance":
         accts = ctx.get("accounts") or []
         v.update(total=naira(sum(a["balance"] for a in accts)), n=len(accts),
