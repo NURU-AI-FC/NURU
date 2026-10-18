@@ -1,0 +1,17 @@
+.askmark { width: 28px; height: 28px; font-size: 15px; border-radius: 8px; flex: none; }
+.askbtn { border: 0; background: transparent; color: inherit; padding: 0; cursor: pointer; font: inherit; text-align: left; }
+.askbtn.card { background: var(--bg); }
+.asksrc { margin-left: 36px; align-self: flex-start; text-decoration: underline dotted; text-underline-offset: 3px; }
+.askblock { border: 1px solid var(--red); background: var(--red50); box-shadow: none; }
+.asklang { font-size: 12px; font-weight: 700; }
+.askbare { border: 0; outline: 0; background: transparent; color: inherit; flex: 1; font: inherit; min-width: 0; }
+.askthread { padding: 6px 0; }
+.askclip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asklangrow { padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border); cursor: pointer; }
+.asklangrow.on { border-color: var(--red); }
+.askradio { width: 22px; height: 22px; border-radius: 11px; border: 2px solid var(--border); flex: none; }
+.asklangrow.on .askradio { border: 7px solid var(--red); }
+.asktgl { width: 44px; height: 26px; border-radius: 13px; border: 0; background: var(--surface2); position: relative; flex: none; cursor: pointer; }
+.asktgl i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 10px; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.asktgl.on { background: var(--red); }
+.asktgl.on i { left: 21px; }
