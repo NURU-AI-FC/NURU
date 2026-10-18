@@ -81,6 +81,7 @@ func (s *Server) Routes() http.Handler {
 
 		r.With(httprate.LimitByIP(30, time.Minute)).Post("/chat", s.chat)
 		r.Get("/chat", s.chatHistory)
+		r.Get("/chat/threads", s.chatThreads)
 		r.Delete("/chat", s.clearChat)
 
 		r.Method("GET", "/console/overview", auth.RequireRole("staff", http.HandlerFunc(s.consoleOverview)))

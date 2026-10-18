@@ -11,10 +11,13 @@ import (
 )
 
 type chatMsg struct {
-	Role    string    `json:"role"`
-	Content string    `json:"content"`
-	Lang    string    `json:"lang"`
-	At      time.Time `json:"at"`
+	Role    string          `json:"role"`
+	Content string          `json:"content"`
+	Lang    string          `json:"lang"`
+	At      time.Time       `json:"at"`
+	Thread  string          `json:"thread,omitempty"`
+	Blocked string          `json:"blocked,omitempty"`
+	Sources json.RawMessage `json:"sources,omitempty"`
 }
 
 var digits = regexp.MustCompile(`\d{6,}`)
@@ -93,8 +96,10 @@ func (s *Server) snapshot(ctx context.Context, user string) map[string]any {
 	return snap
 }
 
+var uuidRe = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+
 func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
-	var in struct{ Message, Lang string }
+	var in struct{ Message, Lang, Thread string }
 	if !decode(w, r, &in) {
 		return
 	}
@@ -107,7 +112,12 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		in.Lang = "en"
 	}
 	user := uid(r)
-	history := s.loadChat(r.Context(), user, 8)
+	var history []chatMsg
+	if uuidRe.MatchString(in.Thread) {
+		history = s.loadChat(r.Context(), user, in.Thread, 8)
+	} else {
+		s.db.QueryRow(r.Context(), `select gen_random_uuid()::text`).Scan(&in.Thread)
+	}
 	hist := []map[string]string{}
 	for _, h := range history {
 		hist = append(hist, map[string]string{"role": h.Role, "content": h.Content})
@@ -120,6 +130,8 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		Blocked string           `json:"blocked"`
 		Chart   json.RawMessage  `json:"chart"`
 		Actions []map[string]any `json:"actions"`
+		Sources json.RawMessage  `json:"sources"`
+		Thread  string           `json:"thread"`
 	}
 	resp, err := s.http.Do(req)
 	if err != nil {
@@ -138,21 +150,33 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		}
 		s.event(r.Context(), user, "ai_"+out.Blocked, snippet)
 	}
-	s.saveChat(r.Context(), user, "user", in.Lang, in.Message)
-	s.saveChat(r.Context(), user, "assistant", in.Lang, out.Answer)
+	if len(out.Sources) == 0 || string(out.Sources) == "null" {
+		out.Sources = json.RawMessage("[]")
+	}
+	out.Thread = in.Thread
+	s.saveChat(r.Context(), user, in.Thread, "user", in.Lang, in.Message, "", nil)
+	s.saveChat(r.Context(), user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources)
 	writeJSON(w, 200, out)
 }
 
-func (s *Server) saveChat(ctx context.Context, user, role, lang, text string) {
+func (s *Server) saveChat(ctx context.Context, user, thread, role, lang, text, blocked string, sources json.RawMessage) {
 	nonce, ct, err := s.box.Seal(user, text)
 	if err != nil {
 		return
 	}
-	s.db.Exec(ctx, `insert into chats(user_id,role,lang,nonce,ciphertext) values($1,$2,$3,$4,$5)`, user, role, lang, nonce, ct)
+	var src any
+	if len(sources) > 0 {
+		src = string(sources)
+	}
+	s.db.Exec(ctx, `insert into chats(user_id,thread_id,role,lang,nonce,ciphertext,blocked,sources) values($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
+		user, thread, role, lang, nonce, ct, blocked, src)
 }
 
-func (s *Server) loadChat(ctx context.Context, user string, limit int) []chatMsg {
-	rows, err := s.db.Query(ctx, `select role, lang, nonce, ciphertext, created_at from (select * from chats where user_id=$1 order by id desc limit $2) c order by id`, user, limit)
+// loadChat returns the latest messages of one conversation, or across all
+// of them when thread is empty.
+func (s *Server) loadChat(ctx context.Context, user, thread string, limit int) []chatMsg {
+	rows, err := s.db.Query(ctx, `select role, lang, nonce, ciphertext, created_at, coalesce(thread_id::text,''), blocked, coalesce(sources::text,'')
+		from (select * from chats where user_id=$1 and ($2 = '' or thread_id::text = $2) order by id desc limit $3) c order by id`, user, thread, limit)
 	if err != nil {
 		return nil
 	}
@@ -161,7 +185,11 @@ func (s *Server) loadChat(ctx context.Context, user string, limit int) []chatMsg
 	for rows.Next() {
 		var m chatMsg
 		var nonce, ct []byte
-		rows.Scan(&m.Role, &m.Lang, &nonce, &ct, &m.At)
+		var src string
+		rows.Scan(&m.Role, &m.Lang, &nonce, &ct, &m.At, &m.Thread, &m.Blocked, &src)
+		if src != "" {
+			m.Sources = json.RawMessage(src)
+		}
 		if txt, err := s.box.Open(user, nonce, ct); err == nil {
 			m.Content = txt
 			out = append(out, m)
@@ -171,10 +199,55 @@ func (s *Server) loadChat(ctx context.Context, user string, limit int) []chatMsg
 }
 
 func (s *Server) chatHistory(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, s.loadChat(r.Context(), uid(r), 100))
+	thread := r.URL.Query().Get("thread")
+	if thread != "" && !uuidRe.MatchString(thread) {
+		fail(w, 400, "unknown conversation")
+		return
+	}
+	writeJSON(w, 200, s.loadChat(r.Context(), uid(r), thread, 100))
+}
+
+// chatThreads lists conversations, titled by their first question, which is
+// decrypted here so titles never sit in the database in plain text.
+func (s *Server) chatThreads(w http.ResponseWriter, r *http.Request) {
+	user := uid(r)
+	rows, err := s.db.Query(r.Context(), `select c.thread_id::text, c.lang, c.nonce, c.ciphertext, t.started, t.last, t.n, t.blocked
+		from (select thread_id, min(id) first, min(created_at) started, max(created_at) last, count(*) n, count(*) filter (where blocked<>'') blocked
+		      from chats where user_id=$1 and thread_id is not null group by thread_id) t
+		join chats c on c.id = t.first order by t.last desc limit 100`, user)
+	if err != nil {
+		fail(w, 500, "could not load chats")
+		return
+	}
+	defer rows.Close()
+	out := []map[string]any{}
+	for rows.Next() {
+		var id, lang string
+		var nonce, ct []byte
+		var started, last time.Time
+		var n, blocked int
+		rows.Scan(&id, &lang, &nonce, &ct, &started, &last, &n, &blocked)
+		title, err := s.box.Open(user, nonce, ct)
+		if err != nil {
+			continue
+		}
+		if rs := []rune(title); len(rs) > 80 {
+			title = string(rs[:80]) + "…"
+		}
+		out = append(out, map[string]any{"id": id, "title": title, "lang": lang, "started_at": started, "at": last, "messages": n, "blocked": blocked})
+	}
+	writeJSON(w, 200, out)
 }
 
 func (s *Server) clearChat(w http.ResponseWriter, r *http.Request) {
-	s.db.Exec(r.Context(), `delete from chats where user_id=$1`, uid(r))
+	if thread := r.URL.Query().Get("thread"); thread != "" {
+		if !uuidRe.MatchString(thread) {
+			fail(w, 400, "unknown conversation")
+			return
+		}
+		s.db.Exec(r.Context(), `delete from chats where user_id=$1 and thread_id::text=$2`, uid(r), thread)
+	} else {
+		s.db.Exec(r.Context(), `delete from chats where user_id=$1`, uid(r))
+	}
 	writeJSON(w, 200, map[string]bool{"ok": true})
 }
