@@ -25,6 +25,9 @@ const en = {
   login: 'Sign in', signup: 'Create account', email: 'Email', password: 'Password', fullName: 'Full name', phone: 'Phone',
   haveBiz: 'I also run a business', otpTitle: 'Enter the code', otpSent: 'We sent a 6 digit code to', verify: 'Verify',
   demo: 'Judges: use the demo account', noAccount: 'New to NURU?', haveAccount: 'Already have an account?',
+  languageVoice: 'Language and voice', privacy: 'Privacy and data', linkedAccounts: 'Linked accounts', devices: 'Trusted devices',
+  securityCentre: 'Security centre', learn: 'Learn', help: 'Help and support', supportChat: 'Customer service',
+  forgot: 'Forgot password?', logoutAsk: 'Log out of NURU?', verifyIdentity: 'Verify identity', linkAccount: 'Link an account',
 }
 export default en
 export type Dict = typeof en

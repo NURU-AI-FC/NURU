@@ -1,0 +1,40 @@
+/* Shared pieces for onboarding, identity, linking and settings screens. */
+.k-flow { width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.k-flow.wide { max-width: 760px; }
+.k-flow-top { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.k-flow-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.k-ic { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--surface); color: var(--text2); }
+.k-ic.lg { width: 56px; height: 56px; border-radius: 18px; }
+.k-ic.red { background: var(--red50); color: var(--red); }
+.k-ic.green { background: var(--green50); color: var(--green); }
+.k-ic.amber { background: var(--amber50); color: var(--amber); }
+.k-ic.blue { background: var(--blue50); color: var(--blue); }
+.k-tgl { position: relative; width: 44px; height: 26px; border-radius: 99px; border: 0; padding: 0; background: var(--surface2); flex: none; transition: background .2s; }
+.k-tgl i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.k-tgl.on { background: var(--red); }
+.k-tgl.on i { transform: translateX(18px); }
+.k-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex: none; }
+.k-radio.on { border: 7px solid var(--red); }
+.k-opt { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--border); background: var(--bg); text-align: left; width: 100%; }
+.k-opt:hover { border-color: var(--red100); }
+.k-opt.on { border-color: var(--red); background: var(--red50); }
+.k-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; width: 100%; border: 0; background: transparent; text-align: left; }
+.k-item + .k-item { border-top: 1px solid var(--border); }
+.k-label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin-top: 4px; }
+.k-done-ring { width: 120px; height: 120px; border-radius: 50%; background: var(--green50); display: flex; align-items: center; justify-content: center; }
+.k-done-ring > span { width: 80px; height: 80px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; }
+.k-hero { background: linear-gradient(150deg, var(--red) 0%, var(--red600) 100%); color: #fff; border-radius: 22px; padding: 22px; }
+.k-blogo { width: 52px; height: 52px; border-radius: 16px; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; flex: none; }
+.k-blogo.sm { width: 40px; height: 40px; border-radius: 12px; font-size: 17px; }
+.k-dots { display: flex; gap: 6px; }
+.k-dots i { display: block; height: 6px; width: 6px; border-radius: 3px; background: var(--border); transition: width .2s; }
+.k-dots i.on { width: 22px; background: var(--red); }
+.k-spin { animation: kspin 1.1s linear infinite; }
+@keyframes kspin { to { transform: rotate(360deg) } }
+.k-acc { border-bottom: 1px solid var(--border); }
+.k-acc > button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; border: 0; background: transparent; text-align: left; }
+.k-acc > div { padding: 0 0 14px; }
+.k-sheet-modal .modal { max-width: 440px; }
+@media (max-width: 640px) { .k-flow { gap: 16px; } }
+.k-composer { position: sticky; bottom: 16px; }
+@media (max-width: 900px) { .k-composer { bottom: 80px; } }
