@@ -7,6 +7,8 @@ Translations are reviewed by the language owners listed in docs/TEAM.md.
 
 import re
 
+from lang import LANGS
+
 INTENTS = [
     ("transfer", r"(?=.*(\b(send|transfer|pay|give|ziga|zipu|kwụọ|kwuo|aika|tura|biya)\b|ránṣẹ́|ranse|sanwó))(?=.*(₦|\d+\s?k\b|\d{3,}))"),
     ("injectionless_greeting", r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|bawo|ndewo|sannu|kedu)\b"),
@@ -106,110 +108,8 @@ def actions(name: str, ctx: dict, message: str = "") -> list[dict]:
     return out
 
 
-T = {
-    "off_topic": {
-        "en": "I can only help with your money: spending, savings, bills, loans, investments and your business. Try asking where your money went this month.",
-        "yo": "Ọ̀rọ̀ owó nìkan ni mo lè bá ọ sọ: ìnáwó, ìfowópamọ́, owó-iná, gbèsè, ìdókòwò àti iṣẹ́ rẹ. Bi mí pé ibo ni owó rẹ lọ lóṣù yìí.",
-        "ig": "Naanị ihe gbasara ego gị ka m nwere ike inyere gị aka: mmefu, nchekwa, ụgwọ, mbinye ego, itinye ego na azụmahịa gị. Jụọ m ebe ego gị gara n'ọnwa a.",
-        "ha": "Zan iya taimaka maka da kuɗinka kawai: kashe kuɗi, ajiya, kuɗin wuta, bashi, saka hannun jari da kasuwancinka. Tambaye ni ina kuɗinka ya tafi a wannan wata.",
-    },
-    "injection": {
-        "en": "I can't do that. I only answer questions about your own finances, and my instructions stay private. What would you like to know about your money?",
-        "yo": "Mi ò lè ṣe bẹ́ẹ̀. Ìbéèrè nípa owó tìrẹ nìkan ni mo ń dáhùn, àwọn ìlànà mi sì jẹ́ àṣírí. Kí lo fẹ́ mọ̀ nípa owó rẹ?",
-        "ig": "Enweghị m ike ime nke ahụ. Naanị ajụjụ gbasara ego gị ka m na-aza, ntuziaka m bụkwa nzuzo. Gịnị ka ị chọrọ ịma maka ego gị?",
-        "ha": "Ba zan iya yin hakan ba. Tambayoyi game da kuɗinka kawai nake amsawa, kuma umarnina sirri ne. Me kake so ka sani game da kuɗinka?",
-    },
-    "greeting": {
-        "en": "Hi {name}. Ask me where your money went, what is due soon, or how much you can save this month.",
-        "yo": "Ẹ n lẹ́ o {name}. Bi mí pé ibo ni owó rẹ lọ, kí ló kù sí dé, tàbí iye tí o lè fipamọ́ lóṣù yìí.",
-        "ig": "Ndewo {name}. Jụọ m ebe ego gị gara, ihe ga-eru n'oge na-adịghị anya, ma ọ bụ ego ole ị nwere ike ichekwa n'ọnwa a.",
-        "ha": "Sannu {name}. Tambaye ni ina kuɗinka ya tafi, me ke zuwa nan ba da daɗewa ba, ko nawa za ka iya ajiyewa a wannan wata.",
-    },
-    "spend": {
-        "en": "You have spent {out} so far this month. The biggest category is {top} at {top_amt}. By this point last month you had spent {prev}.",
-        "yo": "O ti ná {out} lóṣù yìí. {top} ló gbà jù, {top_amt}. Ní àkókò yìí lóṣù tó kọjá, o ti ná {prev}.",
-        "ig": "Ị mefuola {out} n'ọnwa a. {top} bụ nke kachasị, {top_amt}. N'oge a n'ọnwa gara aga, ị mefuru {prev}.",
-        "ha": "Ka kashe {out} a wannan wata. {top} ne mafi yawa, {top_amt}. A wannan lokaci a watan da ya wuce, ka kashe {prev}.",
-    },
-    "week": {
-        "en": "This week you have spent {wout} and received {win}. Most of it went on {wtop}.",
-        "yo": "Ọ̀sẹ̀ yìí o ti ná {wout}, o sì gba {win}. {wtop} ló gbà jù.",
-        "ig": "N'izu a ị mefuola {wout} ma nata {win}. Ọtụtụ ya gara na {wtop}.",
-        "ha": "A wannan mako ka kashe {wout}, ka karɓi {win}. Mafi yawa ya tafi kan {wtop}.",
-    },
-    "balance": {
-        "en": "You have {total} across {n} accounts. {accts}.",
-        "yo": "O ní {total} nínú àkáǹtì {n}. {accts}.",
-        "ig": "Ị nwere {total} n'akaụntụ {n}. {accts}.",
-        "ha": "Kana da {total} a asusu {n}. {accts}.",
-    },
-    "compare": {
-        "en": "{m1}: {t1}, {m2}: {t2}, and {m3} so far: {t3}. Your heaviest week in the last three months cost {peak}.",
-        "yo": "{m1}: {t1}, {m2}: {t2}, {m3} títí di báyìí: {t3}. Ọ̀sẹ̀ tí o ná jù ní oṣù mẹ́ta sẹ́yìn jẹ́ {peak}.",
-        "ig": "{m1}: {t1}, {m2}: {t2}, {m3} ruo ugbu a: {t3}. Izu i mefuru nke kachasị n'ọnwa atọ gara aga bụ {peak}.",
-        "ha": "{m1}: {t1}, {m2}: {t2}, {m3} zuwa yanzu: {t3}. Makon da ka fi kashewa a watanni uku da suka wuce shi ne {peak}.",
-    },
-    "forecast": {
-        "en": "At about {daily} a day, your balance should be near {end} in 30 days. The lowest point is about {low}, just before your next salary.",
-        "yo": "Bí o bá ń ná nǹkan bí {daily} lójoojúmọ́, owó rẹ yóò tó {end} ní ọgbọ̀n ọjọ́. Ibi tó kéré jù ni {low}, kí owó-oṣù tó dé.",
-        "ig": "Ọ bụrụ na ị na-emefu ihe dị ka {daily} kwa ụbọchị, ego gị ga-adị ihe dị ka {end} n'ụbọchị 30. Ebe kachasị ala bụ {low}, tupu ụgwọ ọnwa gị abịa.",
-        "ha": "Idan kana kashe kusan {daily} a rana, kuɗinka zai kai kusan {end} cikin kwanaki 30. Mafi ƙasƙanci shi ne {low}, kafin albashinka ya zo.",
-    },
-    "save": {
-        "en": "{tip} Moving ₦20,000 to savings each month keeps you on track without touching bills.",
-        "yo": "{tip} Fífi ₦20,000 pamọ́ lóṣooṣù yóò jẹ́ kí o wà lójú ọ̀nà láì fọwọ́ kan owó-iná.",
-        "ig": "{tip} Itinye ₦20,000 na nchekwa kwa ọnwa ga-eme ka ị nọrọ n'ụzọ n'emetụghị ụgwọ gị aka.",
-        "ha": "{tip} Ajiye ₦20,000 kowane wata zai sa ka ci gaba ba tare da taɓa kuɗin biyan bukatu ba.",
-    },
-    "subscriptions": {
-        "en": "{subs}",
-        "yo": "{subs}",
-        "ig": "{subs}",
-        "ha": "{subs}",
-    },
-    "loan": {
-        "en": "Your {lender} has {bal} left. You pay {monthly} a month at {rate}% and the next payment is due {due}.",
-        "yo": "Gbèsè {lender} rẹ ṣẹ́ kù {bal}. O ń san {monthly} lóṣooṣù ní {rate}%, ìsanwó tó kàn yóò jẹ́ {due}.",
-        "ig": "Mbinye ego {lender} gị fọdụrụ {bal}. Ị na-akwụ {monthly} kwa ọnwa na {rate}%, ịkwụ ụgwọ ọzọ bụ {due}.",
-        "ha": "Bashin {lender} naka ya rage {bal}. Kana biyan {monthly} kowane wata a {rate}%, biya na gaba a {due}.",
-    },
-    "no_loan": {
-        "en": "You have no active loans. Good place to be.",
-        "yo": "O ò ní gbèsè kankan lọ́wọ́. Ó dára bẹ́ẹ̀.",
-        "ig": "Ị nweghị mbinye ego ọ bụla ugbu a. Nke ahụ dị mma.",
-        "ha": "Ba ka da wani bashi a yanzu. Wannan yana da kyau.",
-    },
-    "upcoming": {
-        "en": "Coming up: {items}.",
-        "yo": "Ohun tó ń bọ̀: {items}.",
-        "ig": "Ihe na-abịa: {items}.",
-        "ha": "Abubuwan da ke zuwa: {items}.",
-    },
-    "business": {
-        "en": "{biz} took in {bin} and spent {bout} this month on the business account. Open Business for payroll, tax and runway.",
-        "yo": "{biz} gba {bin}, ó sì ná {bout} lóṣù yìí. Ṣí Business fún owó-oṣù òṣìṣẹ́, owó-orí àti ìgbà tí owó yóò fi tó.",
-        "ig": "{biz} nwetara {bin} ma mefuo {bout} n'ọnwa a. Mepee Business maka ụgwọ ndị ọrụ, ụtụ isi na oge ego ga-adị.",
-        "ha": "{biz} ta samu {bin} ta kashe {bout} a wannan wata. Buɗe Business don albashi, haraji da tsawon lokacin kuɗi.",
-    },
-    "transfer": {
-        "en": "Here is the transfer of {amt} to {payee}. After it you will still have {left} across your personal accounts. Check the details below; I will ask for your PIN and a face check before anything is sent.",
-        "yo": "Èyí ni owó {amt} tí o fẹ́ fi ránṣẹ́ sí {payee}. Lẹ́yìn rẹ̀, {left} yóò kù nínú àkáǹtì rẹ. Wo àlàyé ní ìsàlẹ̀; màá béèrè PIN rẹ àti ojú rẹ kí n tó fi ránṣẹ́.",
-        "ig": "Nke a bụ ego {amt} ị ga-eziga {payee}. Mgbe nke ahụ gasịrị, {left} ga-afọ n'akaụntụ gị. Lelee nkọwa n'okpuru; m ga-ajụ PIN gị na ihu gị tupu m ezipụ.",
-        "ha": "Ga kuɗin {amt} da za ka aika wa {payee}. Bayan haka, {left} zai rage a asusunka. Duba bayani a ƙasa; zan nemi PIN ɗinka da duba fuskarka kafin a aika.",
-    },
-    "no_payee": {
-        "en": "I can only send to people already saved in your payees: {list}. To pay someone new, add their account number on the Pay page first.",
-        "yo": "Mo lè fi ránṣẹ́ sí àwọn tí o ti fipamọ́ nìkan: {list}. Láti san fún ẹni tuntun, kọ́kọ́ fi nọ́mbà àkáǹtì wọn kún un ní ojú-ìwé Pay.",
-        "ig": "Enwere m ike iziga naanị ndị echekwara: {list}. Iji kwụọ onye ọhụrụ, buru ụzọ tinye nọmba akaụntụ ha na peeji Pay.",
-        "ha": "Zan iya aikawa ga waɗanda ka ajiye kawai: {list}. Don biyan sabon mutum, fara ƙara lambar asusunsa a shafin Pay.",
-    },
-    "invest": {
-        "en": "I can show how your investments are growing on the Loans and savings page. For a big investment decision, a Zenith relationship manager can advise you properly.",
-        "yo": "Mo lè fi bí ìdókòwò rẹ ṣe ń dàgbà hàn ọ́ ní ojú-ìwé Loans and savings. Fún ìpinnu ńlá, bá olùtọ́jú Zenith sọ̀rọ̀.",
-        "ig": "Enwere m ike igosi otu itinye ego gị si eto na peeji Loans and savings. Maka mkpebi buru ibu, kpọtụrụ onye njikwa Zenith.",
-        "ha": "Zan iya nuna yadda jarinka ke girma a shafin Loans and savings. Don babban yanke shawara, ka tuntuɓi manajan Zenith.",
-    },
-}
+# Templates live in lang/<code>.py, one file per language.
+T = {name: {code: d[name] for code, d in LANGS.items() if name in d} for name in LANGS["en"]}
 
 
 def refusal(kind: str, lang: str) -> str:
