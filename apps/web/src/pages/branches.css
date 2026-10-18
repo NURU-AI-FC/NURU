@@ -1,0 +1,52 @@
+/* Branch finder (design p17). Page-local styles. */
+.bwrap { display: grid; grid-template-columns: 400px 1fr; gap: 20px; height: calc(100dvh - 140px); min-height: 560px; }
+.bside { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.bside-head { display: flex; flex-direction: column; gap: 12px; }
+.blist { overflow-y: auto; min-height: 0; flex: 1; padding: 2px; }
+.bsearch { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 6px 0 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+.bsearch input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 14px; }
+.bsearch-go { width: 36px; height: 36px; border: 0; border-radius: 10px; background: transparent; display: inline-flex; align-items: center; justify-content: center; }
+.bchips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.bchips::-webkit-scrollbar { display: none; }
+.bchip { flex: none; height: 32px; padding: 0 13px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); font: inherit; font-size: 13px; font-weight: 500; }
+.bchip.on { background: var(--red); border-color: var(--red); color: #fff; }
+.brow { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 16px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; transition: border-color .15s, background .15s, transform .15s; }
+.brow:hover { border-color: var(--red); }
+.brow.on { background: var(--red50); border-color: color-mix(in srgb, var(--red) 25%, transparent); }
+.bic { width: 40px; height: 40px; border-radius: 12px; background: var(--red50); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.bic.big { width: 64px; height: 64px; border-radius: 20px; }
+.bopen { color: var(--green); }
+.ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bdetail { padding: 4px 2px; animation: bfade .2s ease; }
+.bmapbox { position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); min-height: 0; }
+.bmap { position: absolute; inset: 0; }
+.bmap .leaflet-container, .bmap.leaflet-container { background: var(--surface); font: inherit; }
+.blocate { position: absolute; right: 16px; top: 16px; z-index: 500; background: var(--bg); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+.bpop { position: absolute; left: 20px; bottom: 20px; width: min(320px, calc(100% - 40px)); z-index: 500; padding: 16px; animation: bfade .2s ease; }
+.bask { position: absolute; inset: 0; z-index: 600; display: flex; align-items: center; justify-content: center; padding: 20px; background: color-mix(in srgb, var(--bg) 35%, transparent); backdrop-filter: blur(2px); }
+.bpin-wrap { background: none; border: 0; }
+.bpin { width: 44px; height: 44px; border-radius: 16px 16px 16px 4px; background: var(--bg); border: 2px solid var(--red); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 14px color-mix(in srgb, var(--red) 25%, transparent); transform: rotate(-45deg); transition: transform .15s; }
+.bpin svg { transform: rotate(45deg); }
+.bpin.on { background: var(--red); transform: rotate(-45deg) scale(1.12); }
+.bpin.atm { border-style: dashed; }
+.bme { width: 56px; height: 56px; border-radius: 50%; background: rgba(37,99,235,.18); display: flex; align-items: center; justify-content: center; animation: bpulse 2s ease-in-out infinite; }
+.bme i { width: 18px; height: 18px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.leaflet-control-attribution { font-size: 10px; background: color-mix(in srgb, var(--bg) 80%, transparent) !important; color: var(--muted) !important; }
+.leaflet-control-attribution a { color: var(--text2) !important; }
+.leaflet-bar a { background: var(--bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+.bguest { min-height: 100dvh; display: flex; flex-direction: column; }
+.bguest header { padding: 14px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--border); }
+.bguest-body { padding: 20px clamp(16px, 4vw, 40px); flex: 1; }
+.bguest .bwrap { height: calc(100dvh - 120px); }
+@keyframes bfade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes bpulse { 0%, 100% { transform: scale(.85); } 50% { transform: scale(1.1); } }
+
+@media (max-width: 900px) {
+  .bwrap, .bguest .bwrap { grid-template-columns: 1fr; grid-template-rows: 46dvh auto; height: auto; min-height: 0; gap: 0; }
+  .bmapbox { grid-row: 1; border-radius: 20px; }
+  .bside { grid-row: 2; margin-top: -24px; position: relative; z-index: 700; background: var(--bg); border-radius: 24px 24px 0 0; padding: 22px 2px 8px; box-shadow: 0 -10px 30px rgba(0,0,0,.08); }
+  .bside::before { content: ''; position: absolute; top: 9px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--border); }
+  .blist { overflow: visible; }
+  .bpop { display: none; }
+  .bguest-body { padding: 12px; }
+}

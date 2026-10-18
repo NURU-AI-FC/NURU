@@ -1,7 +1,7 @@
 // English UI strings. Every other language falls back to these keys.
 const en = {
   home: 'Home', insights: 'Insights', ask: 'Ask NURU', pay: 'Pay and transfer', money: 'Loans and savings',
-  business: 'Business', planner: 'Planner', settings: 'Settings', console: 'Bank console', logout: 'Sign out',
+  business: 'Business', planner: 'Planner', branches: 'Branches', settings: 'Settings', console: 'Bank console', logout: 'Sign out',
   newChat: 'New chat with NURU', recent: 'Recent chats', search: 'Search or ask NURU',
   morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening',
   linked: 'linked accounts', totalBalance: 'Total balance', spentIn: 'Spent in', savedMonth: 'Saved this month', nextBill: 'Next bill',

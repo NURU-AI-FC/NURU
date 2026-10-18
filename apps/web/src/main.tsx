@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Ask from './pages/Ask'
 import Auth from './pages/Auth'
+import Branches from './pages/Branches'
 import Business from './pages/Business'
 import Console from './pages/Console'
 import Home from './pages/Home'
@@ -44,6 +45,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/money" element={<Private><Money /></Private>} />
           <Route path="/business" element={<Private><Business /></Private>} />
           <Route path="/planner" element={<Private><Planner /></Private>} />
+          <Route path="/branches" element={<Branches />} />
           <Route path="/settings" element={<Private any><Settings /></Private>} />
           <Route path="/console" element={<Private staff><Console /></Private>} />
           <Route path="*" element={<Navigate to="/" replace />} />
