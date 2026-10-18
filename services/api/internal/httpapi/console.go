@@ -25,15 +25,22 @@ import (
 func (s *Server) consoleRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(func(h http.Handler) http.Handler { return auth.RequireRole("staff", h) })
-		r.Get("/console/overview", s.consoleOverview)
-		r.Get("/console/segments", s.consoleSegments)
-		r.Get("/console/customers", s.consoleCustomers)
-		r.Get("/console/customers/{id}", s.consoleCustomer)
-		r.Get("/console/campaigns", s.consoleCampaigns)
-		r.Post("/console/campaigns", s.consoleCreateCampaign)
-		r.Patch("/console/campaigns/{id}", s.consoleCampaignStatus)
-		r.Get("/console/risk", s.consoleRisk)
-		r.Get("/console/consent", s.consoleConsent)
+		in := func(area string) func(http.Handler) http.Handler { return s.gate("staff", consoleAreas, area) }
+		r.With(in("overview")).Get("/console/overview", s.consoleOverview)
+		r.With(in("segments")).Get("/console/segments", s.consoleSegments)
+		r.With(in("customers")).Get("/console/customers", s.consoleCustomers)
+		r.With(in("customers")).Get("/console/customers/{id}", s.consoleCustomer)
+		r.With(in("campaigns")).Get("/console/campaigns", s.consoleCampaigns)
+		r.With(in("campaigns")).Post("/console/campaigns", s.consoleCreateCampaign)
+		r.With(in("campaigns")).Patch("/console/campaigns/{id}", s.consoleCampaignStatus)
+		r.With(in("risk")).Get("/console/risk", s.consoleRisk)
+		r.With(in("data")).Get("/console/consent", s.consoleConsent)
+		r.With(in("export")).Get("/console/exports", s.consoleExports)
+		r.With(in("export")).Post("/console/exports", s.consoleExport)
+		r.With(in("export")).Get("/console/exports/{id}", s.consoleExportFile)
+		r.With(in("team")).Get("/console/team", s.teamList(consoleTeam))
+		r.With(in("team")).Post("/console/team", s.teamInvite(consoleTeam))
+		r.With(in("team")).Patch("/console/team/{id}", s.teamUpdate(consoleTeam))
 	})
 }
 
@@ -410,10 +417,29 @@ func (s *Server) segmentRows(ctx context.Context, src []string) []map[string]any
 	return out
 }
 
+// minSegment is the smallest group the console shows, so no segment is small
+// enough to point at a few people.
+const minSegment = 50
+
+// visibleSegments drops segments under minSegment customers and counts them.
+func visibleSegments(rows []map[string]any) ([]map[string]any, int) {
+	out := []map[string]any{}
+	hidden := 0
+	for _, r := range rows {
+		if n, _ := r["customers"].(float64); n < minSegment {
+			hidden++
+			continue
+		}
+		out = append(out, r)
+	}
+	return out, hidden
+}
+
 func (s *Server) consoleSegments(w http.ResponseWriter, r *http.Request) {
 	s.syncLive(r.Context())
 	_, src := scope(r)
-	writeJSON(w, 200, map[string]any{"modelled": modelled(src), "segments": s.segmentRows(r.Context(), src)})
+	rows, hidden := visibleSegments(s.segmentRows(r.Context(), src))
+	writeJSON(w, 200, map[string]any{"modelled": modelled(src), "segments": rows, "hidden": hidden, "min_size": minSegment})
 }
 
 func riskLevel(c float64) string {
@@ -487,6 +513,7 @@ func (s *Server) consoleCustomer(w http.ResponseWriter, r *http.Request) {
 		fail(w, 404, "no opted in customer with that ID")
 		return
 	}
+	s.audit(c, "console", uid(r), "customer_viewed", "#"+maskedID(id))
 	var pctl float64
 	s.db.QueryRow(c, `select coalesce(avg(case when ltv<=$1 then 1.0 else 0 end),0)::float8 from console_customers where `+segExpr+`=$2 and consent_insights`, ltv, k).Scan(&pctl)
 
@@ -694,6 +721,11 @@ func (s *Server) consoleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, "could not save the campaign")
 		return
 	}
+	action := "campaign_drafted"
+	if in.Status == "pending" {
+		action = "campaign_for_approval"
+	}
+	s.audit(r.Context(), "console", uid(r), action, in.Name)
 	writeJSON(w, 201, map[string]any{"id": id, "reach": reach, "expected": exp, "status": in.Status})
 }
 
@@ -708,11 +740,17 @@ func (s *Server) consoleCampaignStatus(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, "unknown status")
 		return
 	}
-	tag, err := s.db.Exec(r.Context(), `update campaigns set status=$1 where id=$2 and status=any($3)`, in.Status, chi.URLParam(r, "id"), from)
-	if err != nil || tag.RowsAffected() == 0 {
+	if !campaignMoveAllowed(memberFrom(r.Context()).Sub, in.Status) {
+		fail(w, 403, "only a console admin can approve or send campaigns")
+		return
+	}
+	var name string
+	err := s.db.QueryRow(r.Context(), `update campaigns set status=$1 where id::text=$2 and status=any($3) returning name`, in.Status, chi.URLParam(r, "id"), from).Scan(&name)
+	if err != nil {
 		fail(w, 409, "this campaign cannot move to "+in.Status)
 		return
 	}
+	s.audit(r.Context(), "console", uid(r), "campaign_"+in.Status, name)
 	s.consoleCampaigns(w, r)
 }
 
