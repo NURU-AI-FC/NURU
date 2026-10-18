@@ -4,6 +4,7 @@ import { api } from '../api'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Icon, Skeleton, useLoad } from '../ui'
+import { SubNav } from './insights/parts'
 
 type Rem = { id: string; title: string; kind: string; amount: number; due_at: string; done: boolean }
 const kinds: [string, string][] = [['bill', 'Bill'], ['loan', 'Loan repayment'], ['salary', 'Salaries'], ['meeting', 'Meeting'], ['tax', 'Tax'], ['goal', 'Savings goal']]
@@ -35,6 +36,7 @@ export default function Planner() {
 
   return (
     <Shell title={t('planner')} sub="Bills, repayments, salaries and meetings">
+      <SubNav area="planner" />
       <div className="grid g-21">
         <div className="card col g12">
           <div className="row between"><span className="h3">{t('reminders')}</span><span className="chip red">{money(due30)} due in 30 days</span></div>
