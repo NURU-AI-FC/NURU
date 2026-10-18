@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,29 +14,61 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 )
 
-// transfer moves money between a user's account and a payee. It always needs
-// the transaction PIN; the web app adds a passkey or face check before calling.
+// transfer moves money between a user's account and a payee. It needs the
+// transaction PIN and a face match against the enrolled template. Three
+// failures pause transfers for 30 minutes.
 func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		From, ToName, ToBank, ToAccount, Note, PIN string
-		Amount                                     float64
+		From, PayeeID, ToName, ToBank, ToAccount, Note, PIN string
+		Amount                                              float64
+		Face                                                []float64
 	}
 	if !decode(w, r, &in) {
 		return
+	}
+	if in.PayeeID != "" {
+		if err := s.db.QueryRow(r.Context(), `select name,bank,account from payees where id=$1 and user_id=$2`, in.PayeeID, uid(r)).Scan(&in.ToName, &in.ToBank, &in.ToAccount); err != nil {
+			fail(w, 404, "payee not found")
+			return
+		}
 	}
 	if in.Amount <= 0 || in.Amount > 5_000_000 || in.ToName == "" || len(in.ToAccount) != 10 {
 		fail(w, 400, "check the amount and the 10 digit account number")
 		return
 	}
 	var pinHash string
-	s.db.QueryRow(r.Context(), `select pin_hash from users where id=$1`, uid(r)).Scan(&pinHash)
-	if pinHash == "" {
-		fail(w, 400, "set a transaction PIN first")
+	var hasFace bool
+	var locked *time.Time
+	var fails int
+	s.db.QueryRow(r.Context(), `select pin_hash, face_template is not null, transfer_locked_until, transfer_fails from users where id=$1`, uid(r)).Scan(&pinHash, &hasFace, &locked, &fails)
+	if locked != nil && locked.After(time.Now()) {
+		fail(w, 423, "transfers are paused until "+locked.Format("3:04 pm")+" after 3 failed checks")
 		return
 	}
+	if pinHash == "" || !hasFace {
+		fail(w, 428, "create a PIN and enrol your face first")
+		return
+	}
+	failed := func(kind, msg string) {
+		fails++
+		if fails >= 3 {
+			s.db.Exec(r.Context(), `update users set transfer_fails=0, transfer_locked_until=now()+interval '30 minutes' where id=$1`, uid(r))
+			s.event(r.Context(), uid(r), "transfers_locked", kind)
+			msg += ". Transfers are paused for 30 minutes"
+		} else {
+			s.db.Exec(r.Context(), `update users set transfer_fails=$1 where id=$2`, fails, uid(r))
+			left := 3 - fails
+			msg += ". " + strconv.Itoa(left) + map[bool]string{true: " try left", false: " tries left"}[left == 1]
+		}
+		s.event(r.Context(), uid(r), kind, naira(in.Amount)+" to "+in.ToName)
+		fail(w, 403, msg)
+	}
 	if ok, _ := auth.Verify(in.PIN, pinHash); !ok {
-		s.event(r.Context(), uid(r), "pin_failed", "transfer")
-		fail(w, 403, "wrong PIN")
+		failed("pin_failed", "wrong PIN")
+		return
+	}
+	if ok, _ := s.matchFace(r, in.Face); !ok {
+		failed("face_failed", "the face did not match")
 		return
 	}
 	tx, err := s.db.Begin(r.Context())
@@ -66,6 +99,8 @@ func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, "transfer failed")
 		return
 	}
+	s.db.Exec(r.Context(), `update users set transfer_fails=0 where id=$1`, uid(r))
+	s.db.Exec(r.Context(), `insert into payees(user_id,name,bank,account) values($1,$2,$3,$4) on conflict do nothing`, uid(r), in.ToName, in.ToBank, in.ToAccount)
 	writeJSON(w, 201, map[string]any{"id": id, "at": at, "amount": in.Amount, "to": in.ToName, "reference": "NURU-" + strings.ToUpper(id[:8]), "sandbox": true})
 }
 
