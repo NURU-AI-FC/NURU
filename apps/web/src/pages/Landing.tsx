@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Lang } from '../api'
 import { HEAD_OFFICE, directions, known, km } from '../branches'
@@ -49,6 +49,9 @@ const TOUR: [string, string, string][] = [
   ['briefcase', 'Run your business', 'Payroll with PAYE and pension, invoices, runway and a Decision Room for big choices.'],
   ['pin', 'Find a branch', 'When you need a person, NURU shows the closest Zenith branch with one-tap directions.'],
 ]
+
+const MAP_CENTER: [number, number] = [6.437, 3.435]
+const MAP_FIT = { tl: [40, 50] as [number, number], br: [40, 170] as [number, number] }
 
 const DEMO: [string, string][] = [['Email', 'judge@nuru.app'], ['Password', 'Zecathon-2026'], ['OTP code', '000000'], ['Transaction PIN', 'You create it on your first transfer']]
 
@@ -101,7 +104,7 @@ export default function Landing() {
   const [menu, setMenu] = useState(false)
   const [tour, setTour] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const near = known().map((b) => ({ ...b, km: km(HEAD_OFFICE, [b.lat, b.lon]) })).filter((b) => b.km < 8)
+  const near = useMemo(() => known().map((b) => ({ ...b, km: km(HEAD_OFFICE, [b.lat, b.lon]) })).filter((b) => b.km < 8), [])
   const ho = near.find((b) => b.id === 'ho')!
 
   useEffect(() => {
@@ -165,9 +168,12 @@ export default function Landing() {
           </div>
         </div>
         <div className="lp-hero-art">
-          <Phone />
+          <div className="lp-floats">
           <div className="card row g10 lp-float a"><Icon name="volume" color="var(--red)" /><div className="col g4"><span className="xs mu">Voice reply</span><span className="s w6">Ẹ kú àárọ̀, Adaeze</span></div></div>
           <div className="card row g10 lp-float b"><span className="lp-ic green sm"><Icon name="shieldcheck" size={16} /></span><div className="col g4"><span className="xs mu">Transfer protected</span><span className="s w6">Face check passed</span></div></div>
+          <div className="card row g10 lp-float c"><span className="lp-ic red sm"><Icon name="trendup" size={16} /></span><div className="col g4"><span className="xs mu">Saved this month</span><span className="s w6">₦62,400</span></div></div>
+          </div>
+          <Phone />
         </div>
       </section>
 
@@ -213,7 +219,7 @@ export default function Landing() {
             <polyline className="lp-draw" points="0,90 90,110 180,52 270,72 360,32 450,14 540,4" fill="none" stroke="var(--green)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
           </svg>
           <div className="row between xs mu">{['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'].map((m) => <span key={m}>{m}</span>)}</div>
-          <div className="lp-grid3 tight">{[['Payroll', '₦590,450', 'Due 28 Oct'], ['Unpaid invoices', '₦415,000', '3 overdue'], ['Runway', '41 days', 'Healthy']].map(([l, v, s]) => <div key={l} className="soft col g4"><span className="xs mu">{l}</span><span className="h3 num">{v}</span><span className="xs t2">{s}</span></div>)}</div>
+          <div className="lp-grid3 tight">{[['Payroll', '₦539,000', 'Due 28 Oct'], ['Unpaid invoices', '₦415,000', '3 overdue'], ['Runway', '41 days', 'Healthy']].map(([l, v, s]) => <div key={l} className="soft col g4"><span className="xs mu">{l}</span><span className="h3 num">{v}</span><span className="xs t2">{s}</span></div>)}</div>
         </div>
         <div className="col g20 grow">
           <Pill ic="briefcase">For business owners</Pill>
@@ -246,7 +252,7 @@ export default function Landing() {
           <Link to="/branches" className="btn pri" style={{ alignSelf: 'flex-start' }}><Icon name="pin" color="#fff" />Find my nearest branch</Link>
         </div>
         <div className="card lp-mapcard grow">
-          <MapView center={[6.437, 3.435]} branches={near} selected="ho" interactive={false} />
+          <MapView center={MAP_CENTER} branches={near} selected="ho" interactive={false} fit={MAP_FIT} />
           <div className="card col g8 lp-mappop">
             <div className="row between"><span className="s w6">{ho.name}</span><span className="chip green">Open</span></div>
             <span className="xs t2">Plot 84 Ajose Adeogun St · Victoria Island</span>
