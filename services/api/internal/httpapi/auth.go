@@ -32,13 +32,16 @@ type user struct {
 	BusinessType string `json:"business_type"`
 	HasPIN       bool   `json:"has_pin"`
 	KYCVerified  bool   `json:"kyc_verified"`
+	HQRole       string `json:"hq_role,omitempty"`
+	ConsoleRole  string `json:"console_role,omitempty"`
 }
 
-const userCols = `id,name,email,phone,role,language,theme,currency,business_name,business_type,pin_hash<>'',kyc_verified`
+const userCols = `id,name,email,phone,role,language,theme,currency,business_name,business_type,pin_hash<>'',kyc_verified,hq_role,console_role`
 
 func scanUser(row pgx.Row) (user, error) {
 	var u user
-	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.Language, &u.Theme, &u.Currency, &u.BusinessName, &u.BusinessType, &u.HasPIN, &u.KYCVerified)
+	err := row.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.Language, &u.Theme, &u.Currency, &u.BusinessName, &u.BusinessType, &u.HasPIN, &u.KYCVerified,
+		&u.HQRole, &u.ConsoleRole)
 	return u, err
 }
 
@@ -102,9 +105,10 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	var id, hash string
-	err := s.db.QueryRow(r.Context(), `select id,password_hash from users where email=$1`, in.Email).Scan(&id, &hash)
+	var off bool
+	err := s.db.QueryRow(r.Context(), `select id,password_hash,deactivated_at is not null from users where email=$1`, in.Email).Scan(&id, &hash, &off)
 	ok := false
-	if err == nil {
+	if err == nil && !off {
 		ok, _ = auth.Verify(in.Password, hash)
 	} else {
 		// spend the same time on unknown emails so they can't be discovered
@@ -125,11 +129,11 @@ func (s *Server) verifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
-	if msg := s.checkOTP(r.Context(), in.Email, in.Code, "signup", "login"); msg != "" {
+	if msg := s.checkOTP(r.Context(), in.Email, in.Code, "signup", "login", "staff"); msg != "" {
 		fail(w, 400, msg)
 		return
 	}
-	u, err := scanUser(s.db.QueryRow(r.Context(), `update users set email_verified=true where email=$1 returning `+userCols, in.Email))
+	u, err := scanUser(s.db.QueryRow(r.Context(), `update users set email_verified=true where email=$1 and deactivated_at is null returning `+userCols, in.Email))
 	if err != nil {
 		fail(w, 400, "account not found")
 		return
@@ -138,6 +142,12 @@ func (s *Server) verifyOTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, 500, "could not sign you in")
 		return
+	}
+	switch u.Role {
+	case "staff":
+		s.audit(r.Context(), "console", u.ID, "signed_in", "")
+	case "hq":
+		s.audit(r.Context(), "hq", u.ID, "signed_in", "")
 	}
 	writeJSON(w, 200, map[string]any{"token": tok, "user": u})
 }

@@ -54,15 +54,17 @@ func main() {
 	srv.Shutdown(shutdown)
 }
 
-// ensureDemoUsers creates the judge and bank staff accounts shown in the
-// designs, so judges can sign in without registering.
+// ensureDemoUsers creates the judge, bank staff and NURU team accounts shown
+// in the designs, so judges can sign in without registering.
 func ensureDemoUsers(ctx context.Context, pool *pgxpool.Pool) {
 	demo := []struct {
-		name, email, password, pin, role string
-		business                         bool
+		name, email, password, pin, role, sub string
+		business                              bool
 	}{
-		{"Adaeze Okafor", "judge@nuru.app", "Zecathon-2026", "", "customer", true},
-		{"Tunde Bakare", "staff@nuru.app", "Zecathon-2026", "1234", "staff", false},
+		{"Adaeze Okafor", "judge@nuru.app", "Zecathon-2026", "", "customer", "", true},
+		{"Tunde Bakare", "staff@nuru.app", "Zecathon-2026", "1234", "staff", "admin", false},
+		{"Bolaji Jimoh", "ceo@nuru.app", "Zecathon-2026", "", "hq", "owner", false},
+		{"Zainab Wahab", "ops@nuru.app", "Zecathon-2026", "", "hq", "ops", false},
 	}
 	for _, d := range demo {
 		pw, _ := auth.Hash(d.password)
@@ -75,9 +77,16 @@ func ensureDemoUsers(ctx context.Context, pool *pgxpool.Pool) {
 			biz, kind = "Kemi Foods Ltd", "Restaurant and catering"
 		}
 		var id string
-		err := pool.QueryRow(ctx, `insert into users(name,email,password_hash,pin_hash,role,business_name,business_type,kyc_verified,email_verified,bvn_last4)
-			values($1,$2,$3,$4,$5,$6,$7,true,true,'4417') on conflict (email) do nothing returning id`,
-			d.name, d.email, pw, pin, d.role, biz, kind).Scan(&id)
+		hqRole, consoleRole := "", ""
+		switch d.role {
+		case "hq":
+			hqRole = d.sub
+		case "staff":
+			consoleRole = d.sub
+		}
+		err := pool.QueryRow(ctx, `insert into users(name,email,password_hash,pin_hash,role,business_name,business_type,kyc_verified,email_verified,bvn_last4,hq_role,console_role)
+			values($1,$2,$3,$4,$5,$6,$7,true,true,'4417',$8,$9) on conflict (email) do nothing returning id`,
+			d.name, d.email, pw, pin, d.role, biz, kind, hqRole, consoleRole).Scan(&id)
 		if err != nil {
 			continue // already there
 		}
