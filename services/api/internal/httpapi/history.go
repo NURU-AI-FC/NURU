@@ -161,7 +161,8 @@ func (s *Server) getTx(w http.ResponseWriter, r *http.Request) {
 	var month int
 	s.db.QueryRow(r.Context(), `select count(*) from transactions where user_id=$1 and merchant=$2 and created_at>=date_trunc('month', $3::timestamptz) and created_at<=$3`,
 		uid(r), t.Merchant, t.At).Scan(&month)
-	writeJSON(w, 200, map[string]any{"tx": t, "category_avg": math.Round(avg), "category_count": n, "merchant_month": month})
+	label, purpose := s.txNote(r.Context(), uid(r), t.ID)
+	writeJSON(w, 200, map[string]any{"tx": t, "label": label, "purpose": purpose, "category_avg": math.Round(avg), "category_count": n, "merchant_month": month})
 }
 
 func (s *Server) reportTx(w http.ResponseWriter, r *http.Request) {
