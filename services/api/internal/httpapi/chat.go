@@ -134,7 +134,9 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		Actions []map[string]any `json:"actions"`
 		Sources json.RawMessage  `json:"sources"`
 		Thread  string           `json:"thread"`
+		Engine  string           `json:"engine"`
 	}
+	start := time.Now()
 	resp, err := s.http.Do(req)
 	if err != nil {
 		fail(w, 502, "NURU is busy, try again in a moment")
@@ -144,6 +146,10 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 	if resp.StatusCode != 200 || json.NewDecoder(resp.Body).Decode(&out) != nil {
 		fail(w, 502, "NURU could not answer, try again")
 		return
+	}
+	took := int(time.Since(start).Milliseconds())
+	if out.Engine == "" && out.Blocked != "" {
+		out.Engine = "guard"
 	}
 	if out.Blocked != "" {
 		snippet := mask(in.Message)
@@ -156,12 +162,14 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		out.Sources = json.RawMessage("[]")
 	}
 	out.Thread = in.Thread
-	s.saveChat(r.Context(), user, in.Thread, "user", in.Lang, in.Message, "", nil)
-	s.saveChat(r.Context(), user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources)
+	s.saveChat(r.Context(), user, in.Thread, "user", in.Lang, in.Message, "", nil, "", 0)
+	s.saveChat(r.Context(), user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources, out.Engine, took)
 	writeJSON(w, 200, out)
 }
 
-func (s *Server) saveChat(ctx context.Context, user, thread, role, lang, text, blocked string, sources json.RawMessage) {
+// saveChat stores one message. For answers, engine says how it was made
+// (claude, template or guard) and ms how long the AI service took.
+func (s *Server) saveChat(ctx context.Context, user, thread, role, lang, text, blocked string, sources json.RawMessage, engine string, ms int) {
 	nonce, ct, err := s.box.Seal(user, text)
 	if err != nil {
 		return
@@ -170,8 +178,12 @@ func (s *Server) saveChat(ctx context.Context, user, thread, role, lang, text, b
 	if len(sources) > 0 {
 		src = string(sources)
 	}
-	s.db.Exec(ctx, `insert into chats(user_id,thread_id,role,lang,nonce,ciphertext,blocked,sources) values($1,$2,$3,$4,$5,$6,$7,$8::jsonb)`,
-		user, thread, role, lang, nonce, ct, blocked, src)
+	var took any
+	if role == "assistant" && ms > 0 {
+		took = ms
+	}
+	s.db.Exec(ctx, `insert into chats(user_id,thread_id,role,lang,nonce,ciphertext,blocked,sources,engine,latency_ms) values($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10)`,
+		user, thread, role, lang, nonce, ct, blocked, src, engine, took)
 }
 
 // loadChat returns the latest messages of one conversation, or across all

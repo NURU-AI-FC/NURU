@@ -64,7 +64,10 @@ class Question(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": MODEL if client else "templates"}
+    # Railway sets these on deploy; NURU HQ shows them as the latest release.
+    sha = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")
+    return {"status": "ok", "model": MODEL if client else "templates",
+            "release": {"sha": sha[:7], "message": os.getenv("RAILWAY_GIT_COMMIT_MESSAGE", "").split("\n")[0][:120]}}
 
 
 @app.post("/answer")
@@ -72,7 +75,7 @@ def answer(q: Question):
     lang = q.lang if q.lang in LANGS else "en"
     blocked = guard.classify(q.message)
     if blocked:
-        return {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": [], "sources": []}
+        return {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": [], "sources": [], "engine": "guard"}
 
     intent = replies.intent(q.message)
     chart = replies.chart(intent, q.context)
@@ -86,9 +89,11 @@ def answer(q: Question):
         # answer, so fall back to the template that only quotes our numbers.
         log.warning("answer had untraceable amounts, using template")
         text = None
+    engine = "claude" if text else "action" if intent in ("transfer", "reminder") else "template"
     if not text:
         text = replies.template(intent, q.context, lang, q.message)
-    return {"answer": text, "blocked": "", "chart": chart, "actions": actions, "sources": replies.sources(intent, q.context)}
+    # engine tells the API, and NURU HQ, whether Claude or a template answered
+    return {"answer": text, "blocked": "", "chart": chart, "actions": actions, "sources": replies.sources(intent, q.context), "engine": engine}
 
 
 def ask_claude(q: Question, lang: str) -> str | None:
