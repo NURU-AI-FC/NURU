@@ -131,7 +131,7 @@ export default function Branches() {
   const detailView = cur && (
     <div className="bdetail col g16">
       <div className="row between">
-        <span className={'badge ' + (status(cur).open ? 'green' : 'amber')}>{status(cur).label}</span>
+        <span className={'chip ' + (status(cur).open ? 'green' : 'amber')}>{status(cur).label}</span>
         <button className="ib" style={{ width: 34, height: 34 }} onClick={() => setDetail(false)} aria-label="Back to list"><Icon name="x" size={18} /></button>
       </div>
       <div className="col g4"><h2 className="h2">{cur.name}</h2><span className="s t2">{cur.address}</span></div>
@@ -178,7 +178,7 @@ export default function Branches() {
           <button className="ib blocate" onClick={locate} aria-label="Use my location" title="Use my location"><Icon name={locating ? 'refresh' : 'target'} size={20} color="var(--blue)" /></button>
           {cur && !detail && (
             <div className="card bpop col g8">
-              <div className="row between g8"><span className="s w6 ell">{cur.name}</span><span className={'badge ' + (status(cur).open ? 'green' : 'amber')}>{status(cur).open ? 'Open' : 'Closed'}</span></div>
+              <div className="row between g8"><span className="s w6 ell">{cur.name}</span><span className={'chip ' + (status(cur).open ? 'green' : 'amber')}>{status(cur).open ? 'Open' : 'Closed'}</span></div>
               <span className="xs t2 ell">{cur.address} · {fmtKm(cur.km)}</span>
               <div className="row g8"><a className="btn pri sm grow" href={directions(cur)} target="_blank" rel="noreferrer"><Icon name="car" size={16} color="#fff" />Directions</a><button className="btn sm" onClick={() => setDetail(true)}>Details</button></div>
             </div>
