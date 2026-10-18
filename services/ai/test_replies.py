@@ -44,3 +44,13 @@ def test_sources():
     assert s[0]["type"] == "accounts" and "Zenith Savings •••• 4417" in s[0]["detail"]
     assert [x["type"] for x in replies.sources("spend", CTX)] == ["transactions", "accounts"]
     assert replies.sources("greeting", CTX) == []
+
+
+def test_advice_offers_to_send():
+    acts = replies.actions("save", {}, "how much should I save?")
+    assert acts[0]["kind"] == "offer" and acts[0]["amount"] == 20000
+
+
+def test_new_payee_is_collected_in_chat():
+    acts = replies.actions("transfer", {"payees": ["Tunde Bakare"]}, "send ₦75,000 to my landlord for rent")
+    assert acts[0]["kind"] == "transfer" and acts[0]["new"] and acts[0]["amount"] == 75000 and acts[0]["note"] == "rent"

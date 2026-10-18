@@ -16,6 +16,6 @@ T = {
     "upcoming": "Abubuwan da ke zuwa: {items}.",
     "business": "{biz} ta samu {bin} ta kashe {bout} a wannan wata. Buɗe Business don albashi, haraji da tsawon lokacin kuɗi.",
     "transfer": "Ga kuɗin {amt} da za ka aika wa {payee}. Bayan haka, {left} zai rage a asusunka. Duba bayani a ƙasa; zan nemi PIN ɗinka da duba fuskarka kafin a aika.",
-    "no_payee": "Zan iya aikawa ga waɗanda ka ajiye kawai: {list}. Don biyan sabon mutum, fara ƙara lambar asusunsa a shafin Pay.",
+    "no_payee": "Faɗa mini wanda zan biya. Rubuta bankinsa da lambar asusu mai lamba goma a ƙasa, ka faɗi abin da kuɗin yake domin sa. Waɗanda ka ajiye: {list}.",
     "invest": "Zan iya nuna yadda jarinka ke girma a shafin Loans and savings. Don babban yanke shawara, ka tuntuɓi manajan Zenith.",
 }

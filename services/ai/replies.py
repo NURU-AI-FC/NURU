@@ -211,7 +211,8 @@ def actions(name: str, ctx: dict, message: str = "") -> list[dict]:
         t = parse_transfer(message, ctx)
         if t["payee"] and t["amount"]:
             return [{"kind": "transfer", "label": "Confirm and send", **t}]
-        return [{"kind": "open", "label": "Add a new payee", "to": "/pay"}]
+        # Someone new: the app collects the bank and account number in the chat.
+        return [{"kind": "transfer", "label": "Send to someone new", **t, "new": True}]
     if name in ("save", "spend", "compare"):
         out.append({"kind": "save", "label": "Move ₦20,000 to savings", "amount": 20000})
     if name == "subscriptions":
@@ -220,7 +221,26 @@ def actions(name: str, ctx: dict, message: str = "") -> list[dict]:
         out.append({"kind": "open", "label": "See reminders", "to": "/planner"})
     if name == "business":
         out.append({"kind": "open", "label": "Open business tools", "to": "/business"})
+    if name in OFFER:
+        out.insert(0, {"kind": "offer", "label": "Yes, send it for me", "amount": offer_amount(name, ctx)})
     return out
+
+
+# After advice that ends in moving money, NURU offers to send it. Nothing moves
+# until the customer fills in the details and passes the PIN and face check.
+OFFER = ("save", "upcoming", "loan", "business", "forecast")
+
+
+def offer_amount(name: str, ctx: dict) -> float:
+    if name == "upcoming":
+        due = [u for u in ctx.get("upcoming") or [] if u.get("amount")]
+        return float(due[0]["amount"]) if due else 0
+    if name == "loan":
+        loans = ctx.get("loans") or []
+        return float(loans[0]["monthly"]) if loans else 0
+    if name == "save":
+        return 20000
+    return 0
 
 
 # Templates live in lang/<code>.py, one file per language.
