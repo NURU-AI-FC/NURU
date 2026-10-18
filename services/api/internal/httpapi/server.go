@@ -69,6 +69,9 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/insights", s.insights)
 
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/transfers", s.transfer)
+		r.Get("/me/security", s.security)
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/me/face", s.enrolFace)
+		r.Get("/payees", s.payees)
 		r.Get("/loans", s.loans)
 		r.Get("/investments", s.investments)
 		r.Get("/reminders", s.reminders)
