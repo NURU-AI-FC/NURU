@@ -8,7 +8,7 @@ async function icon(n){if(!comps[n])comps[n]=await figma.getNodeByIdAsync(IM[n])
 async function build(n,parent){
  if(n.k==='F'){const f=figma.createFrame();f.name=n.n;parent.appendChild(f);f.x=n.x;f.y=n.y;f.resize(Math.max(1,n.w),Math.max(1,n.h));f.fills=n.f?[PT(n.f)]:[];
   if(n.r!==undefined){if(Array.isArray(n.r)){[f.topLeftRadius,f.topRightRadius,f.bottomRightRadius,f.bottomLeftRadius]=n.r;}else f.cornerRadius=n.r;}
-  if(n.s){f.strokes=[SP(n.s[0])];f.strokeWeight=n.s[1];f.strokeAlign='INSIDE';}
+  if(n.s&&n.s[0]){f.strokes=[SP(n.s[0])];f.strokeWeight=n.s[1];f.strokeAlign='INSIDE';}
   if(n.e)f.effects=n.e.map(([h,x,y,b,sp])=>({type:'DROP_SHADOW',color:{...C(h),a:A(h)},offset:{x,y},radius:b,spread:sp,visible:true,blendMode:'NORMAL'}));
   f.clipsContent=!!n.c;if(n.o!==undefined)f.opacity=n.o;
   for(const c of n.ch||[])await build(c,f);return f;}
