@@ -4,6 +4,7 @@ import { api, type ChatMsg } from './api'
 import type { Key } from './i18n'
 import { useApp } from './store'
 import { ThemePicker } from './ThemePicker'
+import { useUnread } from './notify'
 import { Icon, Logo } from './ui'
 
 const NAV: [string, string, Key][] = [
@@ -19,6 +20,7 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const unread = useUnread()
 
   useEffect(() => { try { localStorage.setItem('nuru.side', mini ? 'mini' : 'full') } catch { /* ignore */ } }, [mini])
   useEffect(() => setOpen(false), [pathname])
@@ -92,18 +94,19 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
           </div>
           <div className="row g12">
             {user?.role !== 'staff' && (
-              <form className="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav('/ask?q=' + encodeURIComponent(q.trim())); setQ('') }}>
+              <form className="search" onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav('/search?q=' + encodeURIComponent(q.trim())); setQ('') }}>
                 <Icon name="search" size={16} color="var(--muted)" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('search')} aria-label={t('search')} />
               </form>
             )}
-            {right}
-            <Link className="ib" to="/planner" aria-label={t('reminders')}><Icon name="bell" /></Link>
+            {right && <div className="top-right">{right}</div>}
+            <Link className="ib bell" to="/notifications" aria-label={unread ? `${t('reminders')}, ${unread} unread` : t('reminders')}><Icon name="bell" />{unread > 0 && <span className="dot">{unread > 9 ? '9+' : unread}</span>}</Link>
             <ThemePicker />
             <button className="ib theme" onClick={() => update({ theme: dark ? 'light' : 'dark' })} aria-label="Toggle theme"><Icon name={dark ? 'moon' : 'sun'} /></button>
             <button className="ib" onClick={() => { signOut(); nav('/login') }} aria-label={t('logout')} title={t('logout')}><Icon name="logout" /></button>
           </div>
         </header>
+        {right && <div className="top-sub">{right}</div>}
         <main className="page">{children}</main>
       </div>
 
