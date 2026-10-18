@@ -35,7 +35,7 @@ func (s *Server) Routes() http.Handler {
 	r.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   s.cfg.WebOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: false,
 		MaxAge:           600,
@@ -62,6 +62,17 @@ func (s *Server) Routes() http.Handler {
 
 		r.Get("/accounts", s.accounts)
 		r.Get("/transactions", s.transactions)
+		r.Get("/transactions/{id}", s.getTx)
+		r.Post("/transactions/{id}/report", s.reportTx)
+		r.Get("/accounts/{id}", s.accountDetail)
+		r.Post("/accounts/demo", s.demoAccounts)
+		r.Post("/accounts/link", s.linkAccount)
+		r.Get("/me/profile", s.profile)
+		r.Get("/notifications", s.notifications)
+		r.Get("/notifications/{id}", s.notification)
+		r.Patch("/notifications/{id}", s.markNotification)
+		r.Get("/me/notification-settings", s.notifySettings)
+		r.Put("/me/notification-settings", s.saveNotifySettings)
 		r.Get("/analytics/summary", s.summary)
 		r.Get("/analytics/compare", s.compare)
 		r.Get("/analytics/forecast", s.forecast)

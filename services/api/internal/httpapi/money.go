@@ -83,17 +83,10 @@ func (s *Server) recent(ctx context.Context, user string, limit int, category st
 	return out, rows.Err()
 }
 
+// transactions supports account, category, direction, q, from, to,
+// limit and offset filters; see listTx.
 func (s *Server) transactions(w http.ResponseWriter, r *http.Request) {
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	if limit <= 0 || limit > 500 {
-		limit = 50
-	}
-	t, err := s.recent(r.Context(), uid(r), limit, r.URL.Query().Get("category"), r.URL.Query().Get("scope") == "business")
-	if err != nil {
-		fail(w, 500, "could not load transactions")
-		return
-	}
-	writeJSON(w, 200, t)
+	s.listTx(w, r)
 }
 
 // periodStart returns where a day, week, month or year view begins.
