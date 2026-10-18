@@ -31,6 +31,17 @@ import PlanCalendar from './pages/planner/Calendar'
 import PlanGoal from './pages/planner/Goal'
 import PlanMonth from './pages/planner/Plan'
 import PlanRecap from './pages/planner/Recap'
+import Welcome from './pages/Welcome'
+import Verify from './pages/Verify'
+import LinkAccount from './pages/Link'
+import Help from './pages/Help'
+import Learn from './pages/Learn'
+import Security from './pages/settings/Security'
+import Devices from './pages/settings/Devices'
+import Language from './pages/settings/Language'
+import Privacy from './pages/settings/Privacy'
+import LinkedAccounts from './pages/settings/Accounts'
+import Support from './pages/settings/Support'
 import { AppProvider, useApp } from './store'
 import './styles.css'
 
@@ -57,6 +68,18 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Root />} />
           <Route path="/login" element={<Auth mode="login" />} />
           <Route path="/signup" element={<Auth mode="signup" />} />
+          <Route path="/forgot" element={<Auth mode="forgot" />} />
+          <Route path="/welcome" element={<Private><Welcome /></Private>} />
+          <Route path="/verify" element={<Private><Verify /></Private>} />
+          <Route path="/link" element={<Private><LinkAccount /></Private>} />
+          <Route path="/help" element={<Private any><Help /></Private>} />
+          <Route path="/help/chat" element={<Private any><Support /></Private>} />
+          <Route path="/learn" element={<Private><Learn /></Private>} />
+          <Route path="/settings/security" element={<Private any><Security /></Private>} />
+          <Route path="/settings/devices" element={<Private any><Devices /></Private>} />
+          <Route path="/settings/language" element={<Private any><Language /></Private>} />
+          <Route path="/settings/privacy" element={<Private><Privacy /></Private>} />
+          <Route path="/settings/accounts" element={<Private><LinkedAccounts /></Private>} />
           <Route path="/insights" element={<Private><Insights /></Private>} />
           <Route path="/insights/category/:name" element={<Private><InsightCategory /></Private>} />
           <Route path="/insights/bills" element={<Private><InsightBills /></Private>} />

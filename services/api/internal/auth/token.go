@@ -21,7 +21,13 @@ type Signer struct{ secret []byte }
 func NewSigner(secret string) *Signer { return &Signer{secret: []byte(secret)} }
 
 func (s *Signer) Issue(userID, role string, ttl time.Duration) (string, error) {
+	return s.IssueSession(userID, role, "", ttl)
+}
+
+// IssueSession ties the token to a sessions row (the jti), so it can be revoked.
+func (s *Signer) IssueSession(userID, role, sessionID string, ttl time.Duration) (string, error) {
 	c := Claims{UserID: userID, Role: role, RegisteredClaims: jwt.RegisteredClaims{
+		ID:        sessionID,
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 		Issuer:    "nuru",

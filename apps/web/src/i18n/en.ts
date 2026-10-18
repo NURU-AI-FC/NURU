@@ -33,6 +33,9 @@ const en = {
   linkBank: 'Link a bank account', tryDemoBank: 'Try the demo bank instead', connectFirst: 'Connect your first account',
   searchTx: 'Search transactions', askAboutThis: 'Ask NURU about this', reportProblem: 'Report a problem', markAllRead: 'Mark all read',
   loadMore: 'Load more', noMatches: 'Nothing matches yet', memberSince: 'Member since', editProfile: 'Edit profile',
+  languageVoice: 'Language and voice', privacy: 'Privacy and data', linkedAccounts: 'Linked accounts', devices: 'Trusted devices',
+  securityCentre: 'Security centre', learn: 'Learn', help: 'Help and support', supportChat: 'Customer service',
+  forgot: 'Forgot password?', logoutAsk: 'Log out of NURU?', verifyIdentity: 'Verify identity', linkAccount: 'Link an account',
 }
 export default en
 export type Dict = typeof en

@@ -247,46 +247,6 @@ func (s *Server) demoAccounts(w http.ResponseWriter, r *http.Request) {
 	s.accounts(w, r)
 }
 
-var linkBanks = map[string]string{"GTBank": "•••• 3381", "Access Bank": "•••• 5520", "First Bank": "•••• 9014", "UBA": "•••• 7742", "Moniepoint": "•••• 6630", "Kuda": "•••• 1187", "OPay": "•••• 3302"}
-
-// linkAccount adds a sandbox account at another bank with an opening balance.
-func (s *Server) linkAccount(w http.ResponseWriter, r *http.Request) {
-	var in struct{ Bank string }
-	if !decode(w, r, &in) {
-		return
-	}
-	num, ok := linkBanks[in.Bank]
-	if !ok {
-		fail(w, 400, "choose a supported bank")
-		return
-	}
-	var dup bool
-	s.db.QueryRow(r.Context(), `select exists(select 1 from accounts where user_id=$1 and bank=$2)`, uid(r), in.Bank).Scan(&dup)
-	if dup {
-		fail(w, 409, in.Bank+" is already linked")
-		return
-	}
-	opening := float64(25000 + time.Now().UnixNano()%60*1000)
-	tx, err := s.db.Begin(r.Context())
-	if err != nil {
-		fail(w, 500, "could not link the account")
-		return
-	}
-	defer tx.Rollback(r.Context())
-	var id string
-	if err := tx.QueryRow(r.Context(), `insert into accounts(user_id,bank,name,number_masked,kind,linked_via,balance) values($1,$2,$3,$4,'current','mono-sandbox',$5) returning id`,
-		uid(r), in.Bank, in.Bank+" Current", num, opening).Scan(&id); err != nil {
-		fail(w, 500, "could not link the account")
-		return
-	}
-	tx.Exec(r.Context(), `insert into transactions(user_id,account_id,direction,amount,category,merchant,narration,created_at) values($1,$2,'credit',$3,'Transfer','Opening balance','Linked with Mono sandbox',now())`, uid(r), id, opening)
-	if err := tx.Commit(r.Context()); err != nil {
-		fail(w, 500, "could not link the account")
-		return
-	}
-	s.accounts(w, r)
-}
-
 // profile adds what the profile page shows on top of /me.
 func (s *Server) profile(w http.ResponseWriter, r *http.Request) {
 	var since time.Time

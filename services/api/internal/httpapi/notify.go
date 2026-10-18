@@ -61,7 +61,7 @@ func defaultPrefs() notifyPrefs {
 		Quiet: true, QuietFrom: "22:00", QuietTo: "07:00", LargeOver: 50000, LowBalanceAt: 20000}
 }
 
-func (s *Server) prefs(ctx context.Context, user string) notifyPrefs {
+func (s *Server) notifyPrefs(ctx context.Context, user string) notifyPrefs {
 	p := defaultPrefs()
 	var raw []byte
 	if s.db.QueryRow(ctx, `select prefs from notification_settings where user_id=$1`, user).Scan(&raw) == nil {
@@ -86,7 +86,7 @@ func (s *Server) syncNotes(ctx context.Context, user string) {
 	lastSync[user] = time.Now()
 	syncMu.Unlock()
 
-	p := s.prefs(ctx, user)
+	p := s.notifyPrefs(ctx, user)
 	rows, err := s.db.Query(ctx, `select t.id,t.direction,t.amount::float8,t.category,t.merchant,t.created_at,a.name from transactions t join accounts a on a.id=t.account_id
 		where t.user_id=$1 and a.kind<>'business' and t.created_at>now()-interval '30 days' and t.category<>'Savings'
 		and (t.category='Transfer' or t.category='Salary' or t.amount>=$2) order by t.created_at`, user, p.LargeOver)
@@ -266,11 +266,11 @@ func (s *Server) markNotification(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) notifySettings(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, s.prefs(r.Context(), uid(r)))
+	writeJSON(w, 200, s.notifyPrefs(r.Context(), uid(r)))
 }
 
 func (s *Server) saveNotifySettings(w http.ResponseWriter, r *http.Request) {
-	p := s.prefs(r.Context(), uid(r))
+	p := s.notifyPrefs(r.Context(), uid(r))
 	if !decode(w, r, &p) {
 		return
 	}
