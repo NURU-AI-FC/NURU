@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../../api'
-import { useMoney } from '../../store'
+import { canConsole } from '../../access'
+import { useApp, useMoney } from '../../store'
 import { Icon, Seg, Skeleton, useLoad, when } from '../../ui'
 import { BasisTag, ConsoleShell, fmt, useScope } from './Layout'
 import type { Segment } from './Segments'
@@ -33,6 +34,7 @@ function nextPayday() {
 
 export default function Campaigns() {
   const scope = useScope()
+  const { user } = useApp()
   const money = useMoney()
   const [params] = useSearchParams()
   const { data: segs } = useLoad<{ segments: Segment[] }>('/console/segments?src=all')
@@ -157,7 +159,7 @@ export default function Campaigns() {
             <tbody>
               {list?.map((c) => {
                 const [label, tone] = STATUS[c.status] || [c.status, '']
-                const next = NEXT[c.status]
+                const next = NEXT[c.status] && (c.status === 'draft' || canConsole(user, 'approve')) ? NEXT[c.status] : undefined
                 return (
                   <tr key={c.id}>
                     <td><div className="col g4"><span className="s w6">{c.name}</span><span className="xs mu">{c.offer} · {c.language.toUpperCase()}</span></div></td>

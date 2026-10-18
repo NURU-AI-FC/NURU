@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useMoney } from '../../store'
+import { canConsole } from '../../access'
+import { api } from '../../api'
+import { useApp, useMoney } from '../../store'
 import { Icon, Skeleton, useLoad } from '../../ui'
 import { BasisTag, ConsoleShell, CountBars, Err, Meter, fmt, useScope } from './Layout'
 
@@ -14,13 +16,13 @@ const GROUPS: [string, string, string[]][] = [
   ['all', 'All segments', []], ['personal', 'Personal', ['salary', 'student', 'high']], ['business', 'Business', ['business', 'trader']], ['value', 'High value', ['high', 'business']],
 ]
 
-function csv(rows: Segment[]) {
-  const head = ['Segment', 'Customers', 'Reachable for offers', 'Average income', 'Spend ratio %', 'Saving rate %', 'Suggested product', 'Likely uptake %']
-  const body = rows.map((s) => [s.name, s.customers, s.reachable, s.avg_income, s.spend_ratio, s.saving_rate, s.product, s.uptake].join(','))
-  const url = URL.createObjectURL(new Blob([[head.join(','), ...body].join('\n')], { type: 'text/csv' }))
+// download saves a CSV the API made. Exports are built and logged on the
+// server and stop downloading after 7 days.
+export function download(csv: string, filename: string) {
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
   const a = document.createElement('a')
   a.href = url
-  a.download = 'nuru-segments.csv'
+  a.download = filename
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -28,9 +30,19 @@ function csv(rows: Segment[]) {
 export default function Segments() {
   const scope = useScope()
   const money = useMoney()
+  const { user, toast } = useApp()
+  const [exporting, setExporting] = useState(false)
   const [group, setGroup] = useState('all')
   const [pick, setPick] = useState('salary')
-  const { data, error } = useLoad<{ modelled: boolean; segments: Segment[] }>('/console/segments?src=' + scope.src)
+  const { data, error } = useLoad<{ modelled: boolean; segments: Segment[]; hidden: number; min_size: number }>('/console/segments?src=' + scope.src)
+  const exportCSV = async () => {
+    setExporting(true)
+    try {
+      const r = await api<{ csv: string; filename: string; expires_at: string }>('/console/exports', { body: { kind: 'segments', src: scope.src } })
+      download(r.csv, r.filename)
+      toast('Export logged. The copy on the server expires ' + new Date(r.expires_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }))
+    } catch (e) { toast((e as Error).message) } finally { setExporting(false) }
+  }
   const all = data?.segments || []
   const keys = GROUPS.find((g) => g[0] === group)![2]
   const rows = keys.length ? all.filter((s) => keys.includes(s.key)) : all
@@ -43,13 +55,16 @@ export default function Segments() {
       <Err msg={error} />
       <div className="row between wrap g8">
         <div className="row g8 wrap">{GROUPS.map(([k, l]) => <button key={k} className={'chip' + (group === k ? ' red' : '')} onClick={() => setGroup(k)}>{l}</button>)}</div>
-        <button className="chip" onClick={() => csv(rows)} disabled={!rows.length}><Icon name="download" size={14} />Export CSV</button>
+        {canConsole(user, 'export') && <button className="chip" onClick={exportCSV} disabled={!rows.length || exporting}><Icon name="download" size={14} />{exporting ? 'Exporting…' : 'Export CSV'}</button>}
       </div>
+      {!!data?.hidden && (
+        <div className="soft row g10"><Icon name="eyeoff" size={16} color="var(--muted)" /><span className="xs t2 grow">{data.hidden} segment{data.hidden === 1 ? ' is' : 's are'} hidden because {data.hidden === 1 ? 'it has' : 'they have'} fewer than {data.min_size} customers, so no small group can be singled out.</span></div>
+      )}
 
       <div className="card col" style={{ padding: 0 }}>
         <div className="row between wrap g8" style={{ padding: '16px 18px 6px' }}>
           <div className="col g4"><span className="h3">Customer segments and next best offer</span><span className="xs mu">Grouped by NURU from spending patterns. No single customer can be identified.</span></div>
-          <div className="row g8"><BasisTag b={basis} /><Link to={'/console/campaigns?segment=' + (sel?.key || 'salary')} className="btn pri sm"><Icon name="megaphone" size={16} color="#fff" />Create campaign</Link></div>
+          <div className="row g8"><BasisTag b={basis} />{canConsole(user, 'campaigns') && <Link to={'/console/campaigns?segment=' + (sel?.key || 'salary')} className="btn pri sm"><Icon name="megaphone" size={16} color="#fff" />Create campaign</Link>}</div>
         </div>
         <div className="cscroll">
           <table className="tx">
@@ -88,8 +103,8 @@ export default function Segments() {
             </div>
             <div className="row g8 wrap">{sel.bullets.map((b) => <span key={b} className="chip">{b}</span>)}</div>
             <div className="row g8 wrap">
-              <Link to={'/console/campaigns?segment=' + sel.key} className="btn pri sm"><Icon name="megaphone" size={16} color="#fff" />Offer to {fmt(sel.reachable)} customers</Link>
-              <Link to={'/console/customers?segment=' + sel.key} className="btn sm"><Icon name="user" size={16} />See masked profiles</Link>
+              {canConsole(user, 'campaigns') && <Link to={'/console/campaigns?segment=' + sel.key} className="btn pri sm"><Icon name="megaphone" size={16} color="#fff" />Offer to {fmt(sel.reachable)} customers</Link>}
+              {canConsole(user, 'customers') && <Link to={'/console/customers?segment=' + sel.key} className="btn sm"><Icon name="user" size={16} />See masked profiles</Link>}
             </div>
           </div>
         </div>

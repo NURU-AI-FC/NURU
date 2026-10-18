@@ -1,16 +1,20 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Bar, BarChart, CartesianGrid, Legend as RLegend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { canConsole } from '../../access'
 import { Shell } from '../../Shell'
+import { useApp } from '../../store'
 import { Icon, Seg } from '../../ui'
 import './console.css'
 
 export type Basis = 'live' | 'mixed' | 'estimated'
 export type Src = 'all' | 'live'
 
-const TABS: [string, string, string][] = [
-  ['/console', 'grid', 'Overview'], ['/console/segments', 'users', 'Segments'], ['/console/customers', 'user', 'Customer view'],
-  ['/console/campaigns', 'megaphone', 'Campaigns'], ['/console/risk', 'shield', 'Risk and AI safety'], ['/console/data', 'database', 'Data and consent'],
+// Each tab is shown only to console roles that can open its area.
+const TABS: [string, string, string, string][] = [
+  ['/console', 'grid', 'Overview', 'overview'], ['/console/segments', 'users', 'Segments', 'segments'], ['/console/customers', 'user', 'Customer view', 'customers'],
+  ['/console/campaigns', 'megaphone', 'Campaigns', 'campaigns'], ['/console/risk', 'shield', 'Risk and AI safety', 'risk'], ['/console/data', 'database', 'Data and consent', 'data'],
+  ['/console/team', 'key', 'Team and access', 'team'],
 ]
 
 function stored<T extends string>(key: string, def: T, ok: T[]): [T, (v: T) => void] {
@@ -29,12 +33,16 @@ export function useScope() {
 export function ConsoleShell({ title, sub, children, scope, range = true }: {
   title: string; sub: string; children: ReactNode; scope?: ReturnType<typeof useScope>; range?: boolean
 }) {
+  const { user } = useApp()
+  const { pathname } = useLocation()
+  const here = [...TABS].reverse().find(([to]) => pathname === to || pathname.startsWith(to + '/'))
+  const allowed = !here || canConsole(user, here[3])
   return (
-    <Shell title={title} sub={sub}>
+    <Shell title={allowed ? title : 'Not in your role'} sub={allowed ? sub : 'Ask your console admin for access'}>
       <nav className="ctabs" aria-label="Console">
-        {TABS.map(([to, ic, l]) => <NavLink key={to} to={to} end={to === '/console'} className={({ isActive }) => (isActive ? 'on' : '')}><Icon name={ic} size={16} />{l}</NavLink>)}
+        {TABS.filter((t) => canConsole(user, t[3])).map(([to, ic, l]) => <NavLink key={to} to={to} end={to === '/console'} className={({ isActive }) => (isActive ? 'on' : '')}><Icon name={ic} size={16} />{l}</NavLink>)}
       </nav>
-      {scope && (
+      {!allowed ? <NoAccess /> : <>{scope && (
         <div className="cbar">
           <div className="row g8 wrap">
             <Seg value={scope.src} onChange={scope.setSrc} options={[['all', 'Live and modelled'], ['live', 'Live only']]} />
@@ -43,8 +51,20 @@ export function ConsoleShell({ title, sub, children, scope, range = true }: {
           {range && <Seg value={scope.days} onChange={scope.setDays} options={[['7', '7 days'], ['30', '30 days'], ['90', '3 months']]} />}
         </div>
       )}
-      {children}
+      {children}</>}
     </Shell>
+  )
+}
+
+// NoAccess is shown instead of a page the person's role does not include.
+export function NoAccess({ home = '/console' }: { home?: string }) {
+  return (
+    <div className="card col center g12" style={{ padding: 40, textAlign: 'center' }}>
+      <span className="tile" style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="lock" size={24} /></span>
+      <span className="h3">Your role does not include this page</span>
+      <span className="s t2" style={{ maxWidth: 420 }}>Access is role based and every view is logged. Ask an admin to change your role if you need it.</span>
+      <Link to={home} className="btn sm">Go to overview</Link>
+    </div>
   )
 }
 
@@ -88,13 +108,13 @@ function CountTip({ active, payload, label, unit = '' }: { active?: boolean; pay
 type Series = { name: string; values: number[] }
 const rowsOf = (labels: string[], series: Series[]) => labels.map((l, i) => Object.fromEntries([['label', l], ...series.map((s) => [s.name, s.values[i] ?? 0])]))
 
-export function CountBars({ labels, series, height = 220, stacked, colors = CC, unit }: { labels: string[]; series: Series[]; height?: number; stacked?: boolean; colors?: string[]; unit?: string }) {
+export function CountBars({ labels, series, height = 220, stacked, colors = CC, unit, whole }: { labels: string[]; series: Series[]; height?: number; stacked?: boolean; colors?: string[]; unit?: string; whole?: boolean }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={rowsOf(labels, series)} barGap={3} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="label" tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />
-        <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={compact} />
+        <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={compact} allowDecimals={!whole} />
         <Tooltip content={<CountTip unit={unit} />} cursor={{ fill: 'var(--surface)' }} />
         {series.length > 1 && <RLegend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />}
         {series.map((s, i) => <Bar key={s.name} dataKey={s.name} stackId={stacked ? 'a' : undefined} fill={colors[i % colors.length]} radius={stacked ? 0 : [5, 5, 0, 0]} maxBarSize={28} isAnimationActive={false} />)}
@@ -103,13 +123,13 @@ export function CountBars({ labels, series, height = 220, stacked, colors = CC, 
   )
 }
 
-export function CountLines({ labels, series, height = 220, colors = CC, dashed, domain, unit }: { labels: string[]; series: Series[]; height?: number; colors?: string[]; dashed?: string; domain?: [number | string, number | string]; unit?: string }) {
+export function CountLines({ labels, series, height = 220, colors = CC, dashed, domain, unit, whole }: { labels: string[]; series: Series[]; height?: number; colors?: string[]; dashed?: string; domain?: [number | string, number | string]; unit?: string; whole?: boolean }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={rowsOf(labels, series)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="label" tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={20} />
-        <YAxis tickLine={false} axisLine={false} width={48} tickFormatter={compact} domain={domain || ['auto', 'auto']} />
+        <YAxis tickLine={false} axisLine={false} width={48} tickFormatter={compact} domain={domain || ['auto', 'auto']} allowDecimals={!whole} />
         <Tooltip content={<CountTip unit={unit} />} />
         {series.length > 1 && <RLegend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />}
         {series.map((s, i) => <Line key={s.name} dataKey={s.name} stroke={s.name === dashed ? 'var(--muted)' : colors[i % colors.length]} strokeDasharray={s.name === dashed ? '5 5' : undefined} strokeWidth={2.5} dot={false} isAnimationActive={false} />)}

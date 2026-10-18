@@ -27,3 +27,20 @@
 .ctoggle.on i { left: 19px; }
 textarea.input { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; font: inherit; }
 button.chip { border: 0; }
+
+/* Staff sign in */
+.slogin { display: flex; min-height: 100vh; align-items: stretch; background: var(--bg); }
+.slogin-side { width: 620px; flex: none; padding: 56px 72px; background: #141416; color: #fff; display: flex; flex-direction: column; gap: 24px; }
+.slogin-title { margin: 0; font-size: 40px; line-height: 46px; font-weight: 800; letter-spacing: -1.4px; }
+.slogin-main { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+.slogin .slogin-brand { display: none; }
+@media (max-width: 1100px) { .slogin-side { width: 440px; padding: 48px; } .slogin-title { font-size: 32px; line-height: 38px; } }
+@media (max-width: 860px) { .slogin-side { display: none; } .slogin .slogin-brand { display: flex; } }
+
+/* Team and access */
+.rolecard { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--surface); }
+.audit { display: flex; gap: 12px; align-items: baseline; }
+.audit .t { width: 72px; flex: none; }
+select.input.tsel { height: 32px; width: auto; padding: 0 30px 0 10px; font-size: 13px; border-radius: 9px; background-position: calc(100% - 15px) 14px, calc(100% - 10px) 14px; }
+.show-sm { display: none; }
+@media (max-width: 640px) { .show-sm { display: inline; } }
