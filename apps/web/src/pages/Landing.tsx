@@ -135,7 +135,6 @@ export default function Landing() {
         <nav className="lp-links">{SECTIONS.map(([id, l]) => <button key={id} onClick={() => go(id)}>{l}</button>)}</nav>
         <div className="row g12 lp-actions">
           <ThemePicker />
-          {langPick('lp-hide-sm')}
           <Link to="/login" className="btn ghost sm lp-hide-sm">Sign in</Link>
           <Link to="/signup" className="btn pri sm lp-hide-sm" style={{ height: 42, fontSize: 15 }}>Get started</Link>
           <button className="ib lp-burger" onClick={() => setMenu(true)} aria-label="Open menu"><Icon name="menu" /></button>
@@ -171,7 +170,6 @@ export default function Landing() {
           <div className="lp-floats">
           <div className="card row g10 lp-float a"><Icon name="volume" color="var(--red)" /><div className="col g4"><span className="xs mu">Voice reply</span><span className="s w6">Ẹ kú àárọ̀, Adaeze</span></div></div>
           <div className="card row g10 lp-float b"><span className="lp-ic green sm"><Icon name="shieldcheck" size={16} /></span><div className="col g4"><span className="xs mu">Transfer protected</span><span className="s w6">Face check passed</span></div></div>
-          <div className="card row g10 lp-float c"><span className="lp-ic red sm"><Icon name="trendup" size={16} /></span><div className="col g4"><span className="xs mu">Saved this month</span><span className="s w6">₦62,400</span></div></div>
           </div>
           <Phone />
         </div>
