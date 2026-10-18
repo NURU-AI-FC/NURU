@@ -1,0 +1,29 @@
+.ctabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); margin: -8px 0 0; }
+.ctabs::-webkit-scrollbar { display: none; }
+.ctabs a { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px; font-size: 14px; font-weight: 500; color: var(--text2); border-bottom: 2px solid transparent; white-space: nowrap; }
+.ctabs a.on { color: var(--red); border-bottom-color: var(--red); font-weight: 600; }
+.cbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.basis { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 99px; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.basis.live { background: var(--green50); color: var(--green); }
+.basis.mixed { background: var(--blue50); color: var(--blue); }
+.basis.estimated { background: var(--amber50); color: var(--amber); }
+.kpi { display: flex; flex-direction: column; gap: 8px; padding: 18px; }
+.kpi .v { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+.cscroll { overflow-x: auto; }
+.cscroll table { min-width: 640px; }
+.crow { cursor: pointer; }
+.crow:hover td { background: var(--surface); }
+.cgrid-5 { display: grid; gap: 16px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .cgrid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .cgrid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi .v { font-size: 22px; } .kpi { padding: 14px; } }
+.cside { width: 340px; flex: none; }
+.cpair { display: flex; gap: 16px; align-items: stretch; }
+@media (max-width: 1000px) { .cpair { flex-direction: column; } .cside { width: auto; } }
+.cbars { display: flex; flex-direction: column; gap: 6px; }
+.cmsg { padding: 18px; border-radius: 18px; background: var(--surface); display: flex; flex-direction: column; gap: 10px; }
+.ctoggle { width: 40px; height: 24px; border-radius: 99px; background: var(--surface2); position: relative; border: 0; flex: none; }
+.ctoggle.on { background: var(--red); }
+.ctoggle i { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
+.ctoggle.on i { left: 19px; }
+textarea.input { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; font: inherit; }
+button.chip { border: 0; }
