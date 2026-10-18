@@ -120,6 +120,12 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 		}
 	}
 
+	// a few recent moves with no narration, so NURU has something to ask about
+	ago := func(d, h int) time.Time { return now.Add(-time.Duration(d)*24*time.Hour - time.Duration(h)*time.Hour) }
+	add(txn{1, "credit", 150000, "Other", "OPay wallet transfer", "", ago(0, 2)})
+	add(txn{0, "debit", 18500, "Other", "POS purchase", "", ago(4, 5)})
+	add(txn{2, "credit", 35000, "Other", "Inward transfer", "", ago(9, 3)})
+
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
