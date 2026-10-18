@@ -311,22 +311,29 @@ export function line(values, { w = 320, h = 120, color = 'var(--red)', fill = tr
   return s + '</svg>';
 }
 
+// Arcs are drawn as paths: Figma's SVG import drops stroke-dashoffset, so dashed circles break.
+const arc = (cx, r, a0, a1) => {
+  const pt = (a) => [(cx + r * Math.sin(a)).toFixed(2), (cx - r * Math.cos(a)).toFixed(2)];
+  const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+  return `M${x0} ${y0} A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1} ${y1}`;
+};
+
 export function donut(values, { size = 150, sw = 20, colors = cat, center = '', sub = '' } = {}) {
-  const tot = values.reduce((a, b) => a + b, 0), r = (size - sw) / 2, c = 2 * Math.PI * r;
-  let off = 0, s = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/>`;
+  const tot = values.reduce((a, b) => a + b, 0), r = (size - sw) / 2, cx = size / 2, gap = 3 / r;
+  let a = 0, s = `<svg class="arc" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/>`;
   values.forEach((v, i) => {
-    const len = (v / tot) * c;
-    s += `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="${sw}" stroke-dasharray="${Math.max(0, len - 3).toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
-    off += len;
+    const sweep = (v / tot) * 2 * Math.PI;
+    s += `<path d="${arc(cx, r, a, a + Math.max(0.01, sweep - gap))}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="${sw}"/>`;
+    a += sweep;
   });
-  if (center) s += `<text x="${size / 2}" y="${size / 2 + (sub ? 0 : 6)}" text-anchor="middle" font-size="${size > 130 ? 20 : 15}" font-weight="700" fill="var(--text)" font-family="Inter">${center}</text>`;
-  if (sub) s += `<text x="${size / 2}" y="${size / 2 + 18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">${sub}</text>`;
+  if (center) s += `<text x="${cx}" y="${cx + (sub ? 0 : 6)}" text-anchor="middle" font-size="${size > 130 ? 20 : 15}" font-weight="700" fill="var(--text)" font-family="Inter">${center}</text>`;
+  if (sub) s += `<text x="${cx}" y="${cx + 18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">${sub}</text>`;
   return s + '</svg>';
 }
 
 export function ring(pct, { size = 64, sw = 7, color = 'var(--red)', label = '' } = {}) {
-  const r = (size - sw) / 2, c = 2 * Math.PI * r;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${((pct / 100) * c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/><text x="${size / 2}" y="${size / 2 + 5}" text-anchor="middle" font-size="${size / 4.4}" font-weight="700" fill="var(--text)" font-family="Inter">${label || pct + '%'}</text></svg>`;
+  const r = (size - sw) / 2, cx = size / 2, end = Math.min(0.9999, pct / 100) * 2 * Math.PI;
+  return `<svg class="arc" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/><path d="${arc(cx, r, 0, end)}" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round"/><text x="${cx}" y="${cx + 5}" text-anchor="middle" font-size="${size / 4.4}" font-weight="700" fill="var(--text)" font-family="Inter">${label || pct + '%'}</text></svg>`;
 }
 
 export function heat(rows, cols, { cell = 18, gap = 4 } = {}) {
