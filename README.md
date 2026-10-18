@@ -11,7 +11,7 @@ explains where the money goes, what is coming up and how to save more, in Englis
 | Customer | `judge@nuru.app` / `Zecathon-2026` |
 | Bank staff | `staff@nuru.app` / `Zecathon-2026` |
 | One time code | `000000` (demo mode) |
-| Transaction PIN | `1234` |
+| Transaction PIN | the customer creates one on their first transfer |
 
 All data is sandbox data: twelve months of seeded transactions across Zenith, OPay (Mono sandbox) and Kuda,
 plus a business account for Kemi Foods Ltd. No real money moves.
@@ -27,11 +27,11 @@ design          Generator for the Figma file (every screen in light and dark)
 
 **Features:** daily, weekly, monthly and yearly analytics; a three month comparison; a 30 day balance forecast;
 spending heat map; insights on overspending and subscriptions; Ask NURU chat with voice input and read aloud;
-transfers with PIN and face check; live currency conversion; loans with interest and repayment dates;
+transfers from inside the chat ("send ₦25,000 to Tunde") with a PIN created on the first transfer and a face check enrolled once and matched on every transfer, pausing after 3 failed checks; live currency conversion; loans with interest and repayment dates;
 investments and pension; business payroll with PAYE and pension, cash runway, advertising spend, funding and
 investor meetings; reminders; a bank staff console with anonymised insights and an AI safety log.
 
-**Security:** Argon2id passwords and PINs, OTP on every sign in, rate limits, passkeys, face check from ₦50,000,
+**Security:** Argon2id passwords and PINs, OTP on every sign in, rate limits, passkeys, face recognition on every transfer (a 128 number template computed in the browser, encrypted per user, never a photo),
 BVN or NIN check that keeps only the last 4 digits, AES-256-GCM chat encryption with a key per user, account
 numbers masked before anything reaches the model.
 
