@@ -3,11 +3,12 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { api, type ChatMsg } from './api'
 import type { Key } from './i18n'
 import { useApp } from './store'
+import { ThemePicker } from './ThemePicker'
 import { Icon, Logo } from './ui'
 
 const NAV: [string, string, Key][] = [
   ['/', 'home', 'home'], ['/insights', 'chart', 'insights'], ['/ask', 'sparkles', 'ask'], ['/pay', 'send', 'pay'],
-  ['/money', 'landmark', 'money'], ['/business', 'briefcase', 'business'], ['/planner', 'calendar', 'planner'],
+  ['/money', 'landmark', 'money'], ['/business', 'briefcase', 'business'], ['/planner', 'calendar', 'planner'], ['/branches', 'pin', 'branches'],
 ]
 
 export function Shell({ title, sub, children, right }: { title: string; sub?: string; children: ReactNode; right?: ReactNode }) {
@@ -98,7 +99,8 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
             )}
             {right}
             <Link className="ib" to="/planner" aria-label={t('reminders')}><Icon name="bell" /></Link>
-            <button className="ib" onClick={() => update({ theme: dark ? 'light' : 'dark' })} aria-label="Toggle theme"><Icon name={dark ? 'moon' : 'sun'} /></button>
+            <ThemePicker />
+            <button className="ib theme" onClick={() => update({ theme: dark ? 'light' : 'dark' })} aria-label="Toggle theme"><Icon name={dark ? 'moon' : 'sun'} /></button>
             <button className="ib" onClick={() => { signOut(); nav('/login') }} aria-label={t('logout')} title={t('logout')}><Icon name="logout" /></button>
           </div>
         </header>

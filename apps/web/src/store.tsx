@@ -6,6 +6,7 @@ type Ctx = {
   user: User | null
   ready: boolean
   lang: Lang
+  theme: string
   t: (k: Key) => string
   rates: Record<string, number>
   signIn: (tok: string, u: User) => void
@@ -33,6 +34,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try { return (localStorage.getItem('nuru.lang') as Lang) || 'en' } catch { return 'en' }
   })
 
+  const [guestTheme, setGuestTheme] = useState(() => {
+    try { return localStorage.getItem('nuru.theme') || 'system' } catch { return 'system' }
+  })
+  useEffect(() => { if (!user) applyTheme(guestTheme) }, [user, guestTheme])
+
   const refresh = useCallback(async () => {
     if (!token()) { setReady(true); return }
     try { setUser(await api<User>('/me')) } catch { setToken('') } finally { setReady(true) }
@@ -55,18 +61,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => ({
     user, ready, lang, rates, toast, refresh,
+    theme: user?.theme || guestTheme,
     t: translate(lang),
     signIn: (tok, u) => { setToken(tok); setUser(u) },
     signOut: () => { setToken(''); setUser(null) },
     update: async (patch) => {
-      if (patch.theme) applyTheme(patch.theme)
+      if (patch.theme) { applyTheme(patch.theme); setGuestTheme(patch.theme) }
       if (!user) {
         if (patch.language) { setGuestLang(patch.language); try { localStorage.setItem('nuru.lang', patch.language) } catch { /* ignore */ } }
         return
       }
       setUser(await api<User>('/me', { method: 'PATCH', body: patch }))
     },
-  }), [user, ready, lang, rates, toast, refresh])
+  }), [user, ready, lang, rates, toast, refresh, guestTheme])
 
   return <AppCtx.Provider value={value}>{children}{msg && <div className="toast" role="status">{msg}</div>}</AppCtx.Provider>
 }
