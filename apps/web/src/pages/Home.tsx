@@ -1,18 +1,22 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import type { Account, Compare, Insight, Summary, Tx } from '../api'
+import { Link, useNavigate } from 'react-router-dom'
+import { api, type Account, type Compare, type Insight, type Summary, type Tx } from '../api'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Bars, catIcon, Donut, Icon, Legend, Seg, Skeleton, Stat, useGreeting, useLoad, when } from '../ui'
+import { LinkModal } from './Accounts'
+import './Home.css'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 
 export default function Home() {
   const { t, user } = useApp()
+  const [hidden, setHidden] = useHidden()
   const money = useMoney()
   const greet = useGreeting()
   const [period, setPeriod] = useState<Period>('month')
-  const accts = useLoad<{ accounts: Account[] }>('/accounts').data?.accounts
+  const acctLoad = useLoad<{ accounts: Account[] }>('/accounts')
+  const accts = acctLoad.data?.accounts
   const month = useLoad<Summary>('/analytics/summary?period=month').data
   const week = useLoad<Summary>('/analytics/summary?period=week').data
   const cmp = useLoad<Compare>('/analytics/compare').data
@@ -34,13 +38,22 @@ export default function Home() {
 
   const sub = new Date().toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ` · ${personal.length} ${t('linked')}`
 
+  const title = `${greet}, ${user?.name.split(' ')[0] || ''}`
+  if (accts && personal.length === 0) return <Shell title={title}><EmptyHome onLinked={acctLoad.reload} /></Shell>
+
   return (
-    <Shell title={`${greet}, ${user?.name.split(' ')[0] || ''}`} sub={sub}>
+    <Shell title={title} sub={sub}>
       <div className="grid g-4">
         {accts && month && week ? <>
-          <Stat icon="wallet" label={t('totalBalance')} value={money(total)} note={`${money(week.in - week.out, { sign: true })} ${t('thisWeek')}`} tone={week.in - week.out >= 0 ? 'pos' : 'amber'} />
+          <div className="card col g12">
+            <div className="row between"><span className="t2">{t('totalBalance')}</span>
+              <button className="tile" style={{ width: 32, height: 32, border: 0 }} onClick={() => setHidden(!hidden)} aria-label={hidden ? t('showBalance') : t('hideBalance')} aria-pressed={hidden} title={hidden ? t('showBalance') : t('hideBalance')}><Icon name={hidden ? 'eyeoff' : 'eye'} size={16} /></button>
+            </div>
+            <Link to="/accounts" className="big num" aria-label={hidden ? 'Balance hidden' : undefined}>{hidden ? '••••••' : money(total)}</Link>
+            <span className={'xs w6 ' + (week.in - week.out >= 0 ? 'pos' : 'amber')}>{hidden ? `${personal.length} ${t('linked')}` : `${money(week.in - week.out, { sign: true })} ${t('thisWeek')}`}</span>
+          </div>
           <Stat icon="down" label={`${t('spentIn')} ${monthName}`} value={money(month.out)} note={diff ? `${Math.abs(diff)}% ${diff < 0 ? t('lessThan') : t('moreThan')} last month by this date` : undefined} tone={diff <= 0 ? 'pos' : 'amber'} />
-          <Stat icon="target" label={t('investments')} value={money(inv?.reduce((s, i) => s + i.value, 0) || 0)} note={`${money(inv?.reduce((s, i) => s + i.monthly, 0) || 0, { sign: true })} a month`} tone="pos" />
+          <Stat icon="target" label={t('investments')} value={hidden ? '••••••' : money(inv?.reduce((s, i) => s + i.value, 0) || 0)} note={`${money(inv?.reduce((s, i) => s + i.monthly, 0) || 0, { sign: true })} a month`} tone="pos" />
           <Stat icon="calendar" label={t('nextBill')} value={bill ? money(bill.amount) : '-'} note={bill ? `${bill.title} · ${new Date(bill.due_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}` : undefined} tone="red" />
         </> : [0, 1, 2, 3].map((i) => <Skeleton key={i} h={134} />)}
       </div>
@@ -84,7 +97,7 @@ export default function Home() {
       </div>
 
       <div className="card" style={{ padding: 0 }}>
-        <div className="row between" style={{ padding: '18px 20px 8px' }}><span className="h3">{t('recentTx')}</span><Link to="/insights#transactions" className="s w6 red">{t('seeAll')}</Link></div>
+        <div className="row between" style={{ padding: '18px 20px 8px' }}><span className="h3">{t('recentTx')}</span><Link to="/history" className="s w6 red">{t('seeAll')}</Link></div>
         <TxTable rows={tx} />
       </div>
     </Shell>
@@ -102,7 +115,7 @@ export function TxTable({ rows }: { rows: Tx[] | null }) {
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
-              <td><span className="row g10"><span className="tile"><Icon name={catIcon(r.category)} size={16} /></span><span className="w6">{r.merchant}</span></span></td>
+              <td><Link to={'/history/' + r.id} className="row g10"><span className="tile"><Icon name={catIcon(r.category)} size={16} /></span><span className="w6">{r.merchant}</span></Link></td>
               <td className="hide-sm t2">{r.category}</td>
               <td className="hide-sm t2">{r.account}</td>
               <td className="t2">{when(r.at)}</td>
@@ -111,6 +124,45 @@ export function TxTable({ rows }: { rows: Tx[] | null }) {
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// useHidden remembers whether the balance is hidden on this device.
+function useHidden(): [boolean, (v: boolean) => void] {
+  const [h, setH] = useState(() => { try { return localStorage.getItem('nuru.hideBalance') === '1' } catch { return false } })
+  return [h, (v) => { setH(v); try { localStorage.setItem('nuru.hideBalance', v ? '1' : '0') } catch { /* ignore */ } }]
+}
+
+function EmptyHome({ onLinked }: { onLinked: () => void }) {
+  const { t, toast } = useApp()
+  const nav = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  async function demo() {
+    setBusy(true)
+    try { await api('/accounts/demo', { body: {} }); toast('Demo bank linked'); onLinked(); nav('/', { replace: true }) } catch (e) { toast((e as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <div className="narrow" style={{ maxWidth: 560 }}>
+      <div className="hero col g12">
+        <span className="s" style={{ opacity: .85 }}>{t('totalBalance')}</span>
+        <span className="amt num">₦0.00</span>
+        <span className="xs" style={{ opacity: .8 }}>Link an account to see your real numbers</span>
+      </div>
+      <div className="card col center g12" style={{ padding: '28px 20px', textAlign: 'center' }}>
+        <span className="ic red" style={{ width: 64, height: 64, borderRadius: 20 }}><Icon name="link" size={30} /></span>
+        <span className="h3">{t('connectFirst')}</span>
+        <span className="s t2">NURU needs your transaction history to find insights. Read only and secured by Mono.</span>
+        <button className="btn pri block" onClick={() => setOpen(true)}>{t('linkBank')}</button>
+        <button className="btn ghost sm red" disabled={busy} onClick={demo}>{busy ? 'Linking…' : t('tryDemoBank')}</button>
+      </div>
+      <div className="col g10">
+        {([['chart', 'See spending by category'], ['bell', 'Get bill and unusual spend alerts'], ['message', 'Ask questions in your language']] as [string, string][]).map(([i, l]) => (
+          <div key={l} className="row g10"><Icon name={i} color="var(--red)" /><span className="s t2">{l}</span></div>
+        ))}
+      </div>
+      {open && <LinkModal have={[]} onClose={() => setOpen(false)} onDone={onLinked} />}
     </div>
   )
 }
