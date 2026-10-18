@@ -377,10 +377,11 @@ func (s *Server) payInvoice(w http.ResponseWriter, r *http.Request) {
 
 // ---- Plan ----
 
-// bizMonths returns sales and costs for the last n full months, oldest first.
+// bizMonths returns sales, costs and direct costs (ingredients and kitchen
+// payroll) for the last n full months, oldest first.
 func (s *Server) bizMonths(ctx context.Context, user string, n int) (sales, costs, supplies []float64) {
 	rows, err := s.db.Query(ctx, `select coalesce(sum(t.amount) filter (where direction='credit'),0)::float8, coalesce(sum(t.amount) filter (where direction='debit'),0)::float8,
-		coalesce(sum(t.amount) filter (where direction='debit' and category='Supplies'),0)::float8
+		coalesce(sum(t.amount) filter (where direction='debit' and category in ('Supplies','Payroll')),0)::float8
 		from transactions t join accounts a on a.id=t.account_id where t.user_id=$1 and a.kind='business'
 		and t.created_at>=date_trunc('month',now())-make_interval(months => $2) and t.created_at<date_trunc('month',now())
 		group by date_trunc('month',t.created_at) order by date_trunc('month',t.created_at)`, user, n)
@@ -500,8 +501,8 @@ func (s *Server) investor(w http.ResponseWriter, r *http.Request) {
 	s.db.QueryRow(ctx, `select coalesce(sum(gross),0)::float8 from staff where user_id=$1`, uid(r)).Scan(&payroll)
 	qs := []string{}
 	if rev > 0 {
-		qs = append(qs, fmt.Sprintf("Ingredients take %d%% of sales. What happens if food prices rise again?", int(math.Round(sup/rev*100))))
-		qs = append(qs, fmt.Sprintf("Payroll is %d%% of sales. How will you hire without hurting margin?", int(math.Round(payroll*12/rev*100))))
+		qs = append(qs, fmt.Sprintf("Ingredients and staff take %d%% of sales. What happens if food prices rise again?", int(math.Round(sup/rev*100))))
+		qs = append(qs, fmt.Sprintf("Staff cost %s a month. How will you hire without hurting margin?", naira(payroll)))
 	}
 	if ask > 0 {
 		qs = append(qs, "How will the "+naira(ask)+" be spent, and when does it pay back?")
