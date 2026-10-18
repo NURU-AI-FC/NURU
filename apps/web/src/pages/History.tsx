@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, type Tx } from '../api'
+import { DescribeCard } from '../Describe'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { catIcon, Icon, Modal, Skeleton, useLoad } from '../ui'
@@ -167,7 +168,7 @@ export default function History() {
   )
 }
 
-type Detail = { tx: TxFull; category_avg: number; category_count: number; merchant_month: number }
+type Detail = { tx: TxFull; label: string; purpose: string; category_avg: number; category_count: number; merchant_month: number }
 
 const REASONS = ['I did not make this payment', 'Wrong amount', 'Charged twice', 'Goods or service not received', 'Something else']
 
@@ -177,7 +178,10 @@ export function TxDetail() {
   const money = useMoney()
   const nav = useNavigate()
   const { data, error } = useLoad<Detail>('/transactions/' + id)
-  const [report, setReport] = useState(false)
+  const [params] = useSearchParams()
+  const [report, setReport] = useState(() => params.get('report') === '1')
+  const [editing, setEditing] = useState(false)
+  const [mine, setMine] = useState<{ label: string; purpose: string; category: string } | null>(null)
   const [reason, setReason] = useState(REASONS[0])
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
@@ -212,10 +216,29 @@ export function TxDetail() {
           <div className="card" style={{ padding: '4px 18px' }}>
             <div className="kv"><span className="t2">Date</span><span>{date}</span></div>
             <div className="kv"><span className="t2">{t('account')}</span><Link to={'/accounts/' + tx.account_id}>{tx.account} {tx.number}</Link></div>
-            <div className="kv"><span className="t2">{t('category')}</span><span>{tx.category}</span></div>
+            <div className="kv"><span className="t2">{t('category')}</span><span>{mine?.category || tx.category}</span></div>
             <div className="kv"><span className="t2">Narration</span><span>{tx.narration || (credit ? 'Credit from ' : 'Payment to ') + tx.merchant}</span></div>
             <div className="kv"><span className="t2">Reference</span><span className="row g6">{tx.reference}<button className="ib" style={{ width: 26, height: 26 }} aria-label="Copy reference" onClick={() => { navigator.clipboard?.writeText(tx.reference); toast('Reference copied') }}><Icon name="copy" size={14} /></button></span></div>
           </div>
+          {(() => {
+            const purpose = mine?.purpose ?? data.purpose
+            const label = mine?.label ?? data.label
+            const item = { id: tx.id, direction: tx.direction, amount: tx.amount, merchant: tx.merchant, account: tx.account, at: tx.at }
+            if (editing || !purpose) return (
+              <div className="col g8">
+                {!purpose && <span className="s t2">This payment came with no description. Tell NURU what it was for so your advice stays accurate.</span>}
+                <DescribeCard item={item} initial={{ label, purpose }} onSaved={(r) => { setMine(r); setEditing(false); toast('Description saved') }} />
+              </div>
+            )
+            return (
+              <div className="card col g8" style={{ padding: 16 }}>
+                <div className="row between"><span className="s w6">Your description</span>
+                  <button className="row g4 xs w6 red askbtn" onClick={() => setEditing(true)}><Icon name="edit" size={14} color="var(--red)" />Edit</button></div>
+                <span className="s">{label && label !== 'Other' && label !== purpose ? `${label}: ` : ''}{purpose}</span>
+                <span className="row g6 xs mu"><Icon name="lock" size={12} />Encrypted · NURU uses it for advice</span>
+              </div>
+            )
+          })()}
           {!credit && data.category_count > 2 && (
             <div className="soft row g10 start" style={{ background: 'var(--red50)' }}>
               <Icon name="sparkles" size={18} color="var(--red)" />
