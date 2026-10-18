@@ -1,0 +1,118 @@
+package httpapi
+
+import (
+	"encoding/json"
+	"net/http"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/httprate"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
+)
+
+type Server struct {
+	cfg    config.Config
+	db     *pgxpool.Pool
+	tokens *auth.Signer
+	box    *secure.Box
+	http   *http.Client
+	fx     *fxCache
+}
+
+func New(cfg config.Config, db *pgxpool.Pool, box *secure.Box) *Server {
+	return &Server{cfg: cfg, db: db, tokens: auth.NewSigner(cfg.JWTSecret), box: box,
+		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}}
+}
+
+func (s *Server) Routes() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   s.cfg.WebOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: false,
+		MaxAge:           600,
+	}))
+	r.Use(securityHeaders)
+
+	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
+	r.Get("/fx", s.fxRates)
+
+	r.Group(func(r chi.Router) {
+		// slow down guessing of passwords and codes
+		r.Use(httprate.LimitByIP(20, time.Minute))
+		r.Post("/auth/signup", s.signup)
+		r.Post("/auth/login", s.login)
+		r.Post("/auth/verify", s.verifyOTP)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(s.tokens.Middleware)
+		r.Get("/me", s.me)
+		r.Patch("/me", s.updateMe)
+		r.Post("/me/pin", s.setPIN)
+		r.Post("/me/kyc", s.kyc)
+
+		r.Get("/accounts", s.accounts)
+		r.Get("/transactions", s.transactions)
+		r.Get("/analytics/summary", s.summary)
+		r.Get("/analytics/compare", s.compare)
+		r.Get("/analytics/forecast", s.forecast)
+		r.Get("/analytics/heat", s.heat)
+		r.Get("/insights", s.insights)
+
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/transfers", s.transfer)
+		r.Get("/loans", s.loans)
+		r.Get("/investments", s.investments)
+		r.Get("/reminders", s.reminders)
+		r.Post("/reminders", s.addReminder)
+		r.Patch("/reminders/{id}", s.toggleReminder)
+		r.Get("/business", s.business)
+
+		r.With(httprate.LimitByIP(30, time.Minute)).Post("/chat", s.chat)
+		r.Get("/chat", s.chatHistory)
+		r.Delete("/chat", s.clearChat)
+
+		r.Method("GET", "/console/overview", auth.RequireRole("staff", http.HandlerFunc(s.consoleOverview)))
+	})
+	return r
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "no-referrer")
+		h.Set("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func writeJSON(w http.ResponseWriter, code int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
+func fail(w http.ResponseWriter, code int, msg string) {
+	writeJSON(w, code, map[string]string{"error": msg})
+}
+
+func decode(w http.ResponseWriter, r *http.Request, v any) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		fail(w, 400, "could not read the request")
+		return false
+	}
+	return true
+}
+
+func uid(r *http.Request) string { return auth.From(r.Context()).UserID }
