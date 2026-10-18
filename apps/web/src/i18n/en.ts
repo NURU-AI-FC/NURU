@@ -25,6 +25,8 @@ const en = {
   login: 'Sign in', signup: 'Create account', email: 'Email', password: 'Password', fullName: 'Full name', phone: 'Phone',
   haveBiz: 'I also run a business', otpTitle: 'Enter the code', otpSent: 'We sent a 6 digit code to', verify: 'Verify',
   demo: 'Judges: use the demo account', noAccount: 'New to NURU?', haveAccount: 'Already have an account?',
+  overview: 'Overview', bills: 'Bills', whereSpend: 'Where you spend', healthScore: 'Health score', budgets: 'Budgets', goals: 'Goals', report: 'Monthly report',
+  calendar: 'Calendar', budget: 'Budget', savingsGoal: 'Savings goal', monthlyPlan: 'Monthly plan', weeklyRecap: 'Weekly recap', newGoal: 'New goal', newBudget: 'New budget',
 }
 export default en
 export type Dict = typeof en
