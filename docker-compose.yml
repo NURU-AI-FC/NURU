@@ -1,0 +1,40 @@
+# Runs the whole of NURU locally: docker compose up --build
+# then open http://localhost:3000 and sign in with judge@nuru.app / Zecathon-2026 (code 000000, PIN 1234).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nuru
+      POSTGRES_PASSWORD: nuru
+      POSTGRES_DB: nuru
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nuru"]
+      interval: 3s
+      retries: 20
+
+  ai:
+    build: ./services/ai
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+  api:
+    build: ./services/api
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://nuru:nuru@db:5432/nuru?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-change-me-local-only-secret-value}
+      DATA_KEY: ${DATA_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      AI_URL: http://ai:8000
+      WEB_ORIGINS: http://localhost:3000
+      DEMO_MODE: "true"
+    ports: ["8080:8080"]
+
+  web:
+    build: ./apps/web
+    depends_on: [api]
+    ports: ["3000:80"]
+
+volumes:
+  pgdata:
