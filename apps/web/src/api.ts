@@ -35,9 +35,10 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
 }
 
 export type User = {
-  id: string; name: string; email: string; phone: string; role: 'customer' | 'staff'
+  id: string; name: string; email: string; phone: string; role: 'customer' | 'staff' | 'hq'
   language: Lang; theme: 'light' | 'dark' | 'system'; currency: string
   business_name: string; business_type: string; has_pin: boolean; kyc_verified: boolean
+  hq_role?: string; console_role?: string
 }
 export type Lang = 'en' | 'yo' | 'ig' | 'ha'
 export type Account = { id: string; bank: string; name: string; number: string; kind: string; balance: number; linked_via: string }

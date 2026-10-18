@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, type User } from '../api'
+import { homeFor } from '../access'
 import { useApp } from '../store'
 import { Icon, Logo } from '../ui'
 
@@ -41,7 +42,7 @@ function SignIn({ mode }: { mode: 'login' | 'signup' }) {
     try {
       const r = await api<{ token: string; user: User }>('/auth/verify', { body: { email: form.email, code } })
       signIn(r.token, r.user)
-      nav(r.user.role === 'staff' ? '/console' : mode === 'signup' ? '/welcome' : '/')
+      nav(r.user.role !== 'customer' ? homeFor(r.user) : mode === 'signup' ? '/welcome' : '/')
     } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
 

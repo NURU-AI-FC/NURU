@@ -66,13 +66,25 @@ import Privacy from './pages/settings/Privacy'
 import LinkedAccounts from './pages/settings/Accounts'
 import Support from './pages/settings/Support'
 import { AppProvider, useApp } from './store'
+import { homeFor } from './access'
+import ConsoleLogin from './pages/console/Login'
+import ConsoleTeam from './pages/console/Team'
+import HQOverview from './pages/hq/Overview'
+import HQHealth from './pages/hq/Health'
+import HQSupport from './pages/hq/Support'
+import HQEmails from './pages/hq/Emails'
+import HQTeam from './pages/hq/Team'
 import './styles.css'
 
-function Private({ children, staff = false, any = false }: { children: ReactNode; staff?: boolean; any?: boolean }) {
+// Private keeps each kind of account in its own app: customers, Zenith staff
+// in the console and the NURU team in HQ.
+function Private({ children, staff = false, hq = false, any = false }: { children: ReactNode; staff?: boolean; hq?: boolean; any?: boolean }) {
   const { user, ready } = useApp()
   if (!ready) return null
-  if (!user) return <Navigate to="/login" replace />
-  if (!any && staff !== (user.role === 'staff')) return <Navigate to={user.role === 'staff' ? '/console' : '/'} replace />
+  if (!user) return <Navigate to={staff ? '/console/login' : '/login'} replace />
+  const want = staff ? 'staff' : hq ? 'hq' : 'customer'
+  if (!any && user.role !== want) return <Navigate to={homeFor(user)} replace />
+  if (any && user.role === 'hq') return <Navigate to={homeFor(user)} replace />
   return children
 }
 
@@ -80,7 +92,7 @@ function Root() {
   const { user, ready } = useApp()
   if (!ready) return null
   if (!user) return <Landing />
-  return user.role === 'staff' ? <Navigate to="/console" replace /> : <Home />
+  return user.role === 'customer' ? <Home /> : <Navigate to={homeFor(user)} replace />
 }
 
 createRoot(document.getElementById('root')!).render(
@@ -159,6 +171,14 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/console/campaigns" element={<Private staff><Campaigns /></Private>} />
           <Route path="/console/risk" element={<Private staff><Risk /></Private>} />
           <Route path="/console/data" element={<Private staff><ConsoleData /></Private>} />
+          <Route path="/console/team" element={<Private staff><ConsoleTeam /></Private>} />
+          <Route path="/console/login" element={<ConsoleLogin area="console" />} />
+          <Route path="/hq/login" element={<ConsoleLogin area="hq" />} />
+          <Route path="/hq" element={<Private hq><HQOverview /></Private>} />
+          <Route path="/hq/health" element={<Private hq><HQHealth /></Private>} />
+          <Route path="/hq/support" element={<Private hq><HQSupport /></Private>} />
+          <Route path="/hq/emails" element={<Private hq><HQEmails /></Private>} />
+          <Route path="/hq/team" element={<Private hq><HQTeam /></Private>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
