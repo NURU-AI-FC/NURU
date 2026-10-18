@@ -14,14 +14,130 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 )
 
+// stepUp guards every payment: no lockout, a PIN and an enrolled face, the
+// right PIN, then a face match against the encrypted template. Three
+// failures pause payments for 30 minutes. It writes the error response
+// itself and reports whether the payment may go ahead.
+func (s *Server) stepUp(w http.ResponseWriter, r *http.Request, pin string, face []float64, what string) bool {
+	var pinHash string
+	var hasFace bool
+	var locked *time.Time
+	var fails int
+	s.db.QueryRow(r.Context(), `select pin_hash, face_template is not null, transfer_locked_until, transfer_fails from users where id=$1`, uid(r)).Scan(&pinHash, &hasFace, &locked, &fails)
+	if locked != nil && locked.After(time.Now()) {
+		fail(w, 423, "transfers are paused until "+locked.Format("3:04 pm")+" after 3 failed checks")
+		return false
+	}
+	if pinHash == "" || !hasFace {
+		fail(w, 428, "create a PIN and enrol your face first")
+		return false
+	}
+	failed := func(kind, msg string) bool {
+		fails++
+		if fails >= 3 {
+			s.db.Exec(r.Context(), `update users set transfer_fails=0, transfer_locked_until=now()+interval '30 minutes' where id=$1`, uid(r))
+			s.event(r.Context(), uid(r), "transfers_locked", kind)
+			msg += ". Transfers are paused for 30 minutes"
+		} else {
+			s.db.Exec(r.Context(), `update users set transfer_fails=$1 where id=$2`, fails, uid(r))
+			left := 3 - fails
+			msg += ". " + strconv.Itoa(left) + map[bool]string{true: " try left", false: " tries left"}[left == 1]
+		}
+		s.event(r.Context(), uid(r), kind, what)
+		fail(w, 403, msg)
+		return false
+	}
+	if ok, _ := auth.Verify(pin, pinHash); !ok {
+		return failed("pin_failed", "wrong PIN")
+	}
+	if ok, _ := s.matchFace(r, face); !ok {
+		return failed("face_failed", "the face did not match")
+	}
+	s.db.Exec(r.Context(), `update users set transfer_fails=0 where id=$1`, uid(r))
+	return true
+}
+
+// debit takes money from one of the user's accounts and records it in one
+// database transaction. On failure it has already written the response.
+func (s *Server) debit(w http.ResponseWriter, r *http.Request, from string, amount float64, category, merchant, narration string) (string, time.Time, bool) {
+	var id string
+	var at time.Time
+	tx, err := s.db.Begin(r.Context())
+	if err != nil {
+		fail(w, 500, "try again")
+		return id, at, false
+	}
+	defer tx.Rollback(r.Context())
+	var bal float64
+	if err := tx.QueryRow(r.Context(), `select balance::float8 from accounts where id=$1 and user_id=$2 for update`, from, uid(r)).Scan(&bal); err != nil {
+		fail(w, 404, "account not found")
+		return id, at, false
+	}
+	if bal < amount {
+		fail(w, 400, "not enough money in this account")
+		return id, at, false
+	}
+	tx.Exec(r.Context(), `update accounts set balance=balance-$1 where id=$2`, amount, from)
+	if err := tx.QueryRow(r.Context(), `insert into transactions(user_id,account_id,direction,amount,category,merchant,narration,created_at)
+		values($1,$2,'debit',$3,$4,$5,$6,now()) returning id, created_at`, uid(r), from, amount, category, merchant, narration).Scan(&id, &at); err != nil {
+		fail(w, 500, "payment failed")
+		return id, at, false
+	}
+	if err := tx.Commit(r.Context()); err != nil {
+		fail(w, 500, "payment failed")
+		return id, at, false
+	}
+	return id, at, true
+}
+
+func receipt(id string, at time.Time, amount float64, to string) map[string]any {
+	digits := []byte{}
+	for _, c := range id {
+		if c != '-' {
+			digits = append(digits, byte('0'+int(c)%10))
+		}
+	}
+	return map[string]any{"id": id, "at": at, "amount": amount, "to": to, "fee": 0, "sandbox": true,
+		"reference": "NURU-" + strings.ToUpper(id[:8]), "session_id": "000015" + at.Format("060102150405") + string(digits[:12])}
+}
+
+// transferRisk flags a payment to an account the customer has never paid
+// that is large, or far above what they usually send.
+func (s *Server) transferRisk(r *http.Request, account string, amount float64) []string {
+	var saved bool
+	s.db.QueryRow(r.Context(), `select exists(select 1 from payees where user_id=$1 and account=$2)`, uid(r), account).Scan(&saved)
+	if saved {
+		return nil
+	}
+	var usual float64
+	s.db.QueryRow(r.Context(), `select coalesce(avg(amount),0)::float8 from transactions where user_id=$1 and direction='debit'
+		and category in ('Transfer','Family') and created_at>now()-interval '90 days'`, uid(r)).Scan(&usual)
+	times := 0.0
+	if usual > 0 {
+		times = math.Floor(amount / usual)
+	}
+	if amount < 200_000 && times < 5 {
+		return nil
+	}
+	out := []string{"New account, never paid before"}
+	if times >= 3 {
+		out = append(out, strconv.Itoa(int(times))+"× bigger than your usual transfer")
+	}
+	if amount >= 200_000 {
+		out = append(out, "Over "+naira(200_000)+" in one go to someone new")
+	}
+	return out
+}
+
 // transfer moves money between a user's account and a payee. It needs the
-// transaction PIN and a face match against the enrolled template. Three
-// failures pause transfers for 30 minutes.
+// transaction PIN and a face match against the enrolled template. A risky
+// payment to someone new is paused until the customer confirms it.
 func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		From, PayeeID, ToName, ToBank, ToAccount, Note, PIN string
 		Amount                                              float64
 		Face                                                []float64
+		ConfirmRisk                                         bool
 	}
 	if !decode(w, r, &in) {
 		return
@@ -36,72 +152,20 @@ func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, "check the amount and the 10 digit account number")
 		return
 	}
-	var pinHash string
-	var hasFace bool
-	var locked *time.Time
-	var fails int
-	s.db.QueryRow(r.Context(), `select pin_hash, face_template is not null, transfer_locked_until, transfer_fails from users where id=$1`, uid(r)).Scan(&pinHash, &hasFace, &locked, &fails)
-	if locked != nil && locked.After(time.Now()) {
-		fail(w, 423, "transfers are paused until "+locked.Format("3:04 pm")+" after 3 failed checks")
+	if risk := s.transferRisk(r, in.ToAccount, in.Amount); len(risk) > 0 && !in.ConfirmRisk {
+		s.event(r.Context(), uid(r), "transfer_paused", naira(in.Amount)+" to "+in.ToName)
+		writeJSON(w, 409, map[string]any{"error": "we paused this transfer", "risk": risk, "to": in.ToName, "bank": in.ToBank, "amount": in.Amount})
 		return
 	}
-	if pinHash == "" || !hasFace {
-		fail(w, 428, "create a PIN and enrol your face first")
+	if !s.stepUp(w, r, in.PIN, in.Face, naira(in.Amount)+" to "+in.ToName) {
 		return
 	}
-	failed := func(kind, msg string) {
-		fails++
-		if fails >= 3 {
-			s.db.Exec(r.Context(), `update users set transfer_fails=0, transfer_locked_until=now()+interval '30 minutes' where id=$1`, uid(r))
-			s.event(r.Context(), uid(r), "transfers_locked", kind)
-			msg += ". Transfers are paused for 30 minutes"
-		} else {
-			s.db.Exec(r.Context(), `update users set transfer_fails=$1 where id=$2`, fails, uid(r))
-			left := 3 - fails
-			msg += ". " + strconv.Itoa(left) + map[bool]string{true: " try left", false: " tries left"}[left == 1]
-		}
-		s.event(r.Context(), uid(r), kind, naira(in.Amount)+" to "+in.ToName)
-		fail(w, 403, msg)
-	}
-	if ok, _ := auth.Verify(in.PIN, pinHash); !ok {
-		failed("pin_failed", "wrong PIN")
+	id, at, ok := s.debit(w, r, in.From, in.Amount, "Transfer", in.ToName+", "+in.ToBank, strings.TrimSpace(in.Note)+" ••••"+in.ToAccount[6:])
+	if !ok {
 		return
 	}
-	if ok, _ := s.matchFace(r, in.Face); !ok {
-		failed("face_failed", "the face did not match")
-		return
-	}
-	tx, err := s.db.Begin(r.Context())
-	if err != nil {
-		fail(w, 500, "try again")
-		return
-	}
-	defer tx.Rollback(r.Context())
-	var bal float64
-	if err := tx.QueryRow(r.Context(), `select balance::float8 from accounts where id=$1 and user_id=$2 for update`, in.From, uid(r)).Scan(&bal); err != nil {
-		fail(w, 404, "account not found")
-		return
-	}
-	if bal < in.Amount {
-		fail(w, 400, "not enough money in this account")
-		return
-	}
-	var id string
-	var at time.Time
-	tx.Exec(r.Context(), `update accounts set balance=balance-$1 where id=$2`, in.Amount, in.From)
-	if err := tx.QueryRow(r.Context(), `insert into transactions(user_id,account_id,direction,amount,category,merchant,narration,created_at)
-		values($1,$2,'debit',$3,'Transfer',$4,$5,now()) returning id, created_at`, uid(r), in.From, in.Amount,
-		in.ToName+", "+in.ToBank, strings.TrimSpace(in.Note)+" ••••"+in.ToAccount[6:]).Scan(&id, &at); err != nil {
-		fail(w, 500, "transfer failed")
-		return
-	}
-	if err := tx.Commit(r.Context()); err != nil {
-		fail(w, 500, "transfer failed")
-		return
-	}
-	s.db.Exec(r.Context(), `update users set transfer_fails=0 where id=$1`, uid(r))
 	s.db.Exec(r.Context(), `insert into payees(user_id,name,bank,account) values($1,$2,$3,$4) on conflict do nothing`, uid(r), in.ToName, in.ToBank, in.ToAccount)
-	writeJSON(w, 201, map[string]any{"id": id, "at": at, "amount": in.Amount, "to": in.ToName, "reference": "NURU-" + strings.ToUpper(id[:8]), "sandbox": true})
+	writeJSON(w, 201, receipt(id, at, in.Amount, in.ToName))
 }
 
 func (s *Server) loans(w http.ResponseWriter, r *http.Request) {

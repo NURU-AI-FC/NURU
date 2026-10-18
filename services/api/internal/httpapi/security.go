@@ -81,17 +81,21 @@ func (s *Server) security(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) payees(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.db.Query(r.Context(), `select id,name,bank,account from payees where user_id=$1 order by name`, uid(r))
+	rows, err := s.db.Query(r.Context(), `select p.id,p.name,p.bank,p.account,p.tag,p.starred,
+		(select count(*) from transactions t where t.user_id=p.user_id and t.direction='debit' and t.merchant=p.name||', '||p.bank)
+		from payees p where p.user_id=$1 order by p.starred desc, p.name`, uid(r))
 	if err != nil {
 		fail(w, 500, "could not load payees")
 		return
 	}
 	defer rows.Close()
-	out := []map[string]string{}
+	out := []map[string]any{}
 	for rows.Next() {
-		var id, n, b, a string
-		rows.Scan(&id, &n, &b, &a)
-		out = append(out, map[string]string{"id": id, "name": n, "bank": b, "account": "•••• " + a[len(a)-4:]})
+		var id, n, b, a, tag string
+		var star bool
+		var times int
+		rows.Scan(&id, &n, &b, &a, &tag, &star, &times)
+		out = append(out, map[string]any{"id": id, "name": n, "bank": b, "account": "•••• " + a[len(a)-4:], "tag": tag, "starred": star, "times": times})
 	}
 	writeJSON(w, 200, out)
 }
