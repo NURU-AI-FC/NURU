@@ -4,6 +4,16 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Ask from './pages/Ask'
 import Auth from './pages/Auth'
 import Business from './pages/Business'
+import Decide from './pages/business/Decide'
+import Expenses from './pages/business/Expenses'
+import Investor from './pages/business/Investor'
+import Invoices from './pages/business/Invoices'
+import Payroll from './pages/business/Payroll'
+import Payslip from './pages/business/Payslip'
+import Plan from './pages/business/Plan'
+import Setup from './pages/business/Setup'
+import Vendors from './pages/business/Vendors'
+import Verdict from './pages/business/Verdict'
 import Console from './pages/Console'
 import Home from './pages/Home'
 import Insights from './pages/Insights'
@@ -59,6 +69,16 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/money/insurance/claim/:id" element={<Private><Claim /></Private>} />
           <Route path="/money/vaults" element={<Private><Vaults /></Private>} />
           <Route path="/business" element={<Private><Business /></Private>} />
+          <Route path="/business/setup" element={<Private><Setup /></Private>} />
+          <Route path="/business/payroll" element={<Private><Payroll /></Private>} />
+          <Route path="/business/payslip/:id" element={<Private><Payslip /></Private>} />
+          <Route path="/business/vendors" element={<Private><Vendors /></Private>} />
+          <Route path="/business/invoices" element={<Private><Invoices /></Private>} />
+          <Route path="/business/expenses" element={<Private><Expenses /></Private>} />
+          <Route path="/business/plan" element={<Private><Plan /></Private>} />
+          <Route path="/business/decide" element={<Private><Decide /></Private>} />
+          <Route path="/business/decide/result" element={<Private><Verdict /></Private>} />
+          <Route path="/business/investor" element={<Private><Investor /></Private>} />
           <Route path="/planner" element={<Private><Planner /></Private>} />
           <Route path="/settings" element={<Private any><Settings /></Private>} />
           <Route path="/console" element={<Private staff><Console /></Private>} />

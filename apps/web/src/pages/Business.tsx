@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom'
+import './Business.css'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Bars, Icon, Skeleton, Stat, useLoad } from '../ui'
+import { lastFull, type Biz } from './business/data'
 
-type Biz = {
-  enabled: boolean; name: string; type: string; cash: number; runway_days: number; payroll: number
-  staff: { name: string; role: string; gross: number; paye: number; pension: number; net: number }[]
-  monthly: { month: string; sales: number; costs: number; profit: number }[]
-  advertising: { channel: string; spend: number }[]
-}
+const tools: [string, string, string][] = [
+  ['/business/payroll', 'users', 'Payroll'], ['/business/vendors', 'package', 'Vendors'], ['/business/invoices', 'file', 'Invoices'], ['/business/expenses', 'receipt', 'Expenses'],
+  ['/business/plan', 'flag', '12-month plan'], ['/business/decide', 'scale', 'Decision Room'], ['/business/investor', 'briefcase', 'Investor prep'], ['/business/setup', 'edit', 'Business details'],
+]
 
 const funding = [
   ['Zenith SME loan', 'Working capital up to ₦50m for registered businesses with 6 months of statements.'],
@@ -29,23 +29,32 @@ export default function Business() {
           <Icon name="briefcase" size={40} color="var(--red)" />
           <span className="h2">Run a business?</span>
           <span className="t2" style={{ maxWidth: 420 }}>Link your business account to see payroll, tax, cash runway and advertising spend next to your personal money.</span>
+          <Link to="/business/setup" className="btn pri">Set up your business</Link>
         </div>
       </Shell>
     )
   }
-  const full = b?.monthly.slice(0, -1) || []
-  const last = full[full.length - 1]
+  const last = b ? lastFull(b) : undefined
+  const prev = b?.monthly[b.monthly.length - 3]
+  const growth = last && prev?.profit ? Math.round(((last.profit - prev.profit) / Math.abs(prev.profit)) * 100) : null
+  const due = b?.payroll_due
   const ads = b?.advertising.reduce((s, a) => s + a.spend, 0) || 0
 
   return (
     <Shell title={b?.name || t('business')} sub={b?.type}>
       <div className="grid g-4">
         {b ? <>
-          <Stat icon="wallet" label={t('cash')} value={money(b.cash)} note="Kemi Foods Ltd •••• 0094" />
-          <Stat icon="calendar" label={t('runway')} value={`${b.runway_days} ${t('days')}`} note="At last month's spending" tone={b.runway_days < 60 ? 'red' : 'pos'} />
-          <Stat icon="users" label={t('payroll')} value={money(b.payroll)} note={`${b.staff.length} staff, gross`} />
-          <Stat icon="trendup" label={`${t('profit')} · ${last?.month || ''}`} value={money(last?.profit || 0, { sign: true })} note={last ? `${Math.round((last.profit / last.sales) * 100)}% margin` : undefined} tone="pos" />
+          <Stat icon="trendup" label={`${t('profit')} · ${last?.month || ''}`} value={money(last?.profit || 0, { sign: true })} note={growth === null ? undefined : `${Math.abs(growth)}% ${growth >= 0 ? 'more' : 'less'} than ${prev?.month}`} tone={growth !== null && growth < 0 ? 'amber' : 'pos'} />
+          <Stat icon="wallet" label={t('cash')} value={money(b.cash)} note={`${b.runway_days} ${t('days')} of runway`} tone={b.runway_days < 60 ? 'red' : 'pos'} />
+          <Stat icon="file" label="Unpaid invoices" value={money(b.unpaid)} note={b.overdue_count ? `${b.overdue_count} overdue` : `${b.unpaid_count} open`} tone={b.overdue_count ? 'red' : undefined} />
+          <Stat icon="users" label="Payroll due" value={money(due?.amount || 0)} note={due?.paid_at ? `Paid · next ${new Date(due.due_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}` : `${due ? new Date(due.due_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }) : ''} · ${b.staff.length} staff`} tone={due?.paid_at ? 'pos' : 'amber'} />
         </> : [0, 1, 2, 3].map((i) => <Skeleton key={i} h={134} />)}
+      </div>
+
+      <div className="biz-tools">
+        {tools.map(([to, ic, l]) => (
+          <Link key={to} to={to} className="col center g8"><span className="tile" style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--blue50)', color: 'var(--blue)' }}><Icon name={ic} size={22} /></span><span className="xs w6" style={{ textAlign: 'center' }}>{l}</span></Link>
+        ))}
       </div>
 
       <div className="grid g-21">
@@ -67,13 +76,13 @@ export default function Business() {
       </div>
 
       <div className="card" style={{ padding: 0 }}>
-        <div className="row between" style={{ padding: '18px 20px 8px' }}><span className="h3">{t('staff')}</span><span className="xs mu">PAYE estimated at 6.33%, pension 8% employee share</span></div>
+        <div className="row between wrap g8" style={{ padding: '18px 20px 8px' }}><span className="col g4"><span className="h3">{t('staff')}</span><span className="xs mu">PAYE estimated at 6.33%, pension 8% and NHF 2.5% employee share</span></span><Link to="/business/payroll" className="btn pri sm">Run payroll</Link></div>
         <div style={{ overflowX: 'auto' }}>
           <table className="tx">
             <thead><tr><th>{t('name')}</th><th className="hide-sm">Role</th><th className="right">Gross</th><th className="right hide-sm">PAYE</th><th className="right hide-sm">Pension</th><th className="right">Net pay</th></tr></thead>
             <tbody>
               {b?.staff.map((s) => (
-                <tr key={s.name}><td className="w6">{s.name}</td><td className="hide-sm t2">{s.role}</td><td className="right num">{money(s.gross)}</td><td className="right num t2 hide-sm">{money(s.paye)}</td><td className="right num t2 hide-sm">{money(s.pension)}</td><td className="right num w6">{money(s.net)}</td></tr>
+                <tr key={s.id}><td className="w6"><Link to={`/business/payslip/${s.id}`}>{s.name}</Link></td><td className="hide-sm t2">{s.role}</td><td className="right num">{money(s.gross)}</td><td className="right num t2 hide-sm">{money(s.paye)}</td><td className="right num t2 hide-sm">{money(s.pension)}</td><td className="right num w6">{money(s.net)}</td></tr>
               ))}
             </tbody>
           </table>
@@ -90,7 +99,7 @@ export default function Business() {
           {meetings?.length ? meetings.map((m) => (
             <div key={m.title} className="row g10"><span className="tile"><Icon name="calendar" size={16} /></span><span className="col grow"><span className="s w6">{m.title}</span><span className="xs mu">{new Date(m.due_at).toLocaleDateString('en-NG', { weekday: 'long', day: 'numeric', month: 'short' })}</span></span></div>
           )) : <span className="t2 s">No meetings booked. Add one in the planner.</span>}
-          <Link to={'/ask?q=' + encodeURIComponent('Prepare numbers for my investor meeting')} className="btn sm" style={{ alignSelf: 'flex-start' }}><Icon name="sparkles" size={16} />Prepare my numbers</Link>
+          <Link to="/business/investor" className="btn sm" style={{ alignSelf: 'flex-start' }}><Icon name="sparkles" size={16} />Prepare my numbers</Link>
         </div>
       </div>
     </Shell>
