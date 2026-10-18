@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api, type ChatMsg, type ChatReply } from '../api'
+import { api, type Account, type ChatAction, type ChatMsg, type ChatReply, type Payee } from '../api'
+import { TransferGuard, type Draft } from '../Guard'
 import { langNames, suggestions } from '../i18n'
 import { Shell } from '../Shell'
-import { useApp } from '../store'
-import { ChartView, Icon } from '../ui'
+import { useApp, useMoney } from '../store'
+import { ChartView, Icon, useLoad } from '../ui'
 
 const speechLang = { en: 'en-NG', yo: 'yo-NG', ig: 'ig-NG', ha: 'ha-NG' }
 
@@ -104,9 +105,10 @@ export default function Ask() {
                 <span className="mark" style={{ width: 28, height: 28, fontSize: 15, borderRadius: 8 }}>N</span>
                 <div className="bubble ai">{m.content}</div>
               </div>
+              {m.actions?.filter((a) => a.kind === 'transfer').map((a, j) => <TransferCard key={j} action={a} onSent={(text) => setMsgs((x) => [...x, { role: 'assistant', content: text, lang, at: new Date().toISOString() }])} />)}
               {m.chart && <div className="card flat col g8" style={{ marginLeft: 36 }}><span className="s w6">{m.chart.title}</span><ChartView chart={m.chart} /></div>}
               <div className="row g6 wrap" style={{ marginLeft: 36 }}>
-                {m.actions?.map((a) => (
+                {m.actions?.filter((a) => a.kind !== 'transfer').map((a) => (
                   <button key={a.label} className="btn sm" onClick={() => nav(a.kind === 'save' ? `/pay?save=${a.amount}` : a.to || '/')}>{a.label}</button>
                 ))}
                 <button className="btn sm ghost" onClick={() => speak(m.content)} aria-label="Read aloud"><Icon name="headphones" size={16} /></button>
@@ -128,5 +130,42 @@ export default function Ask() {
         </div>
       </div>
     </Shell>
+  )
+}
+
+// TransferCard is the draft NURU proposes in chat. Nothing moves until the
+// customer confirms and passes the PIN and face check.
+function TransferCard({ action, onSent }: { action: ChatAction; onSent: (text: string) => void }) {
+  const money = useMoney()
+  const payees = useLoad<Payee[]>('/payees').data
+  const accts = useLoad<{ accounts: Account[] }>('/accounts').data?.accounts
+  const [from, setFrom] = useState('')
+  const [guard, setGuard] = useState(false)
+  const [ref, setRef] = useState('')
+  const payee = payees?.find((p) => p.name === action.payee)
+  const acct = accts?.find((a) => a.id === from) || accts?.[0]
+  if (!payee || !acct) return null
+  const amount = action.amount || 0
+  const draft: Draft = { from: acct.id, payeeId: payee.id, toName: payee.name, toBank: payee.bank, amount, note: action.note }
+  const initials = payee.name.split(/[\s,]+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+  return (
+    <div className="card col g12" style={{ marginLeft: 36, maxWidth: 380, padding: 16 }}>
+      <div className="row between"><span className="xs mu w6 upper">Transfer draft</span><span className="chip amber">Sandbox</span></div>
+      <div className="row g12"><span className="av" style={{ width: 40, height: 40, background: 'var(--blue)' }}>{initials}</span><span className="col"><span className="w6 s">{payee.name}</span><span className="xs mu">{payee.bank} {payee.account} · saved payee</span></span></div>
+      <div className="row between"><span className="s t2">Amount</span><span className="h3 num">{money(amount)}</span></div>
+      {action.note && <div className="row between"><span className="s t2">For</span><span className="s w6">{action.note}</span></div>}
+      <div className="row between g8"><span className="s t2">From</span>
+        <select className="input" style={{ height: 36, width: 'auto', fontSize: 13 }} value={acct.id} onChange={(e) => setFrom(e.target.value)} disabled={!!ref}>
+          {accts!.map((a) => <option key={a.id} value={a.id}>{a.name} {a.number}</option>)}
+        </select>
+      </div>
+      <div className="row between"><span className="s t2">Balance after</span><span className={'s w6 num' + (acct.balance < amount ? ' red' : '')}>{money(acct.balance - amount)}</span></div>
+      {ref ? (
+        <div className="row g8" style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--green50)', color: 'var(--green)' }}><Icon name="check" size={18} /><span className="s w6">Sent · Ref {ref}</span></div>
+      ) : (
+        <button className="btn pri sm" disabled={acct.balance < amount} onClick={() => setGuard(true)}><Icon name="shieldcheck" size={16} color="#fff" />Confirm and send</button>
+      )}
+      {guard && <TransferGuard draft={draft} onClose={() => setGuard(false)} onDone={(r) => { setGuard(false); setRef(r.reference); onSent(`Done. ${money(r.amount)} is on its way to ${r.to}. Reference ${r.reference}.`) }} />}
+    </div>
   )
 }
