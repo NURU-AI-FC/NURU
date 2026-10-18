@@ -299,7 +299,8 @@ export function line(values, { w = 320, h = 120, color = 'var(--red)', fill = tr
   const pt = (v, i, arr) => [(i / (arr.length - 1)) * w, h - ((v - min) / (max - min)) * h];
   const path = (arr) => arr.map((v, i) => { const [x, y] = pt(v, i, arr); return `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`; }).join(' ');
   const id = 'g' + Math.random().toString(36).slice(2, 8);
-  let s = `<svg width="${w}" height="${h + (labels.length ? 20 : 4)}" viewBox="0 0 ${w} ${h + (labels.length ? 20 : 4)}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E30613" stop-opacity=".22"/><stop offset="1" stop-color="#E30613" stop-opacity="0"/></linearGradient></defs>`;
+  const gc = color.startsWith('#') ? color : { 'var(--green)': '#15803D', 'var(--blue)': '#1D4ED8', 'var(--amber)': '#B45309' }[color] || '#E30613';
+  let s = `<svg width="${w}" height="${h + (labels.length ? 20 : 4)}" viewBox="0 0 ${w} ${h + (labels.length ? 20 : 4)}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${gc}" stop-opacity=".22"/><stop offset="1" stop-color="${gc}" stop-opacity="0"/></linearGradient></defs>`;
   for (let k = 1; k < 4; k++) s += `<line x1="0" x2="${w}" y1="${(h / 4) * k}" y2="${(h / 4) * k}" stroke="var(--border)" stroke-dasharray="3 4"/>`;
   if (compare) s += `<path d="${path(compare)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 5"/>`;
   if (fill) s += `<path d="${path(values)} L${w} ${h} L0 ${h} Z" fill="url(#${id})"/>`;
