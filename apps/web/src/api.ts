@@ -4,9 +4,11 @@ const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/
 
 export class ApiError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  data: Record<string, unknown>
+  constructor(status: number, message: string, data: Record<string, unknown> = {}) {
     super(message)
     this.status = status
+    this.data = data
   }
 }
 
@@ -28,7 +30,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
     setToken('')
     location.assign('/login')
   }
-  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error || 'Something went wrong')
+  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error || 'Something went wrong', data as Record<string, unknown>)
   return data as T
 }
 
@@ -46,7 +48,9 @@ export type Compare = { month: string; weeks: number[]; total: number; in: numbe
 export type Forecast = { daily_spend: number; end: number; lowest: number; points: { label: string; balance: number }[] }
 export type Insight = { kind: string; tone: string; title: string; body: string; amount: number }
 export type Chart = { type: 'bar' | 'line' | 'donut'; title: string; labels: string[]; series: { name: string; values: number[] }[] }
-export type ChatAction = { kind: string; label: string; amount?: number; to?: string; payee?: string; note?: string }
-export type Payee = { id: string; name: string; bank: string; account: string }
-export type ChatReply = { answer: string; blocked: string; chart: Chart | null; actions: ChatAction[] }
-export type ChatMsg = { role: 'user' | 'assistant'; content: string; lang: Lang; at: string; chart?: Chart | null; actions?: ChatAction[] }
+export type ChatAction = { kind: string; label: string; amount?: number; to?: string; payee?: string; note?: string; title?: string; due?: string }
+export type Payee = { id: string; name: string; bank: string; account: string; tag?: string; starred?: boolean; times?: number }
+export type Source = { type: string; label: string; detail: string }
+export type ChatReply = { answer: string; blocked: string; chart: Chart | null; actions: ChatAction[]; sources?: Source[]; thread?: string }
+export type ChatMsg = { role: 'user' | 'assistant'; content: string; lang: Lang; at: string; chart?: Chart | null; actions?: ChatAction[]; blocked?: string; sources?: Source[]; thread?: string }
+export type Thread = { id: string; title: string; lang: Lang; started_at: string; at: string; messages: number; blocked: number }

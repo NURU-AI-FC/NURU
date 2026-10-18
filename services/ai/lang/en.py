@@ -16,6 +16,7 @@ T = {
     "upcoming": "Coming up: {items}.",
     "business": "{biz} took in {bin} and spent {bout} this month on the business account. Open Business for payroll, tax and runway.",
     "transfer": "Here is the transfer of {amt} to {payee}. After it you will still have {left} across your personal accounts. Check the details below; I will ask for your PIN and a face check before anything is sent.",
+    "reminder": "I can remind you about {title}{amt} on {date}. Check the details below and confirm, and it goes into your planner.",
     "no_payee": "I can only send to people already saved in your payees: {list}. To pay someone new, add their account number on the Pay page first.",
     "invest": "I can show how your investments are growing on the Loans and savings page. For a big investment decision, a Zenith relationship manager can advise you properly.",
 }

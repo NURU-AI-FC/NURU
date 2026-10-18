@@ -159,7 +159,7 @@ func (s *Server) export(w http.ResponseWriter, r *http.Request) {
 		"reminders":    rows(`select title, kind, amount::float8 as amount, due_at, done from reminders where user_id=$1`),
 		"loans":        rows(`select lender, principal::float8 as principal, rate_pct::float8 as rate_pct, months, balance::float8 as balance from loans where user_id=$1`),
 		"investments":  rows(`select kind, name, value::float8 as value, contributed::float8 as contributed from investments where user_id=$1`),
-		"chats":        s.loadChat(ctx, id, 5000),
+		"chats":        s.loadChat(ctx, id, "", 5000),
 		"sessions":     rows(`select device, ip, created_at, last_seen_at, revoked_at from sessions where user_id=$1 order by created_at desc`),
 		"security_log": rows(`select kind, created_at from security_events where user_id=$1 order by created_at desc limit 500`),
 	}

@@ -183,6 +183,9 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 	if err := planning(ctx, tx, userID, ids[2]); err != nil {
 		return err
 	}
+	if err := payments(ctx, tx, userID, now); err != nil {
+		return err
+	}
 	if business {
 		if _, err := tx.Exec(ctx, `insert into staff(user_id,name,role,gross) values
 			($1,'Aisha Okoro','Head chef',180000),($1,'Bayo Eze','Kitchen staff',95000),

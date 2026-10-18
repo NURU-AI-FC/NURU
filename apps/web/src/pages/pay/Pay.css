@@ -1,0 +1,31 @@
+.paysub { max-width: 720px; width: 100%; margin: 0 auto; min-width: 0; }
+.payhub > * { min-width: 0; }
+.payback { align-self: flex-start; font-weight: 600; }
+.payamt { font-size: 40px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+.paylink { border: 0; background: transparent; color: var(--text); padding: 0; cursor: pointer; }
+.paytiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.paytile { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: var(--text); font-size: 12px; font-weight: 500; border: 0; background: transparent; padding: 0; cursor: pointer; }
+.paytile .ic { width: 56px; height: 56px; border-radius: 18px; background: var(--red50); color: var(--red); display: flex; align-items: center; justify-content: center; }
+.paypeople { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+.payperson { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 72px; flex: none; font-size: 12px; text-align: center; color: var(--text); }
+.payrow { display: flex; align-items: center; gap: 12px; padding: 8px 0; width: 100%; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.paypick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.paypick button { height: 56px; border-radius: 14px; border: 1.5px solid var(--border); background: transparent; color: var(--text); font-weight: 600; cursor: pointer; }
+.paypick button.on { border-color: var(--red); background: var(--red50); color: var(--red); }
+.paycats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.paycats button { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1.5px solid transparent; background: transparent; color: var(--text); font-size: 12px; font-weight: 500; padding: 6px 0; border-radius: 14px; cursor: pointer; }
+.paycats button .tile { width: 52px; height: 52px; border-radius: 16px; }
+.paycats button.on .tile { background: var(--red50); color: var(--red); }
+.paytgl { width: 44px; height: 26px; border-radius: 13px; border: 0; background: var(--surface2); position: relative; flex: none; cursor: pointer; }
+.paytgl i { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 10px; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.paytgl.on { background: var(--red); }
+.paytgl.on i { left: 21px; }
+.payscan { position: relative; background: #141416; border-radius: 20px; overflow: hidden; aspect-ratio: 1; max-height: 420px; display: flex; align-items: center; justify-content: center; }
+.payscan video { width: 100%; height: 100%; object-fit: cover; }
+.payscan .frame { position: absolute; width: 62%; aspect-ratio: 1; border: 3px solid #fff; border-radius: 24px; }
+.payscan .beam { position: absolute; left: 22%; right: 22%; top: 50%; height: 3px; background: var(--red); box-shadow: 0 0 14px var(--red); }
+.input.paybig { font-size: 32px; font-weight: 700; text-align: center; height: 64px; }
+@media (max-width: 640px) {
+  .paytiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .payamt { font-size: 34px; }
+}

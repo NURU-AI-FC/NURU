@@ -11,7 +11,10 @@ import unicodedata
 # Phrases people use to hijack an assistant. Matched on a normalised copy of
 # the message so tricks like full-width letters or zero-width spaces fail.
 INJECTION = [
-    r"ignore (all |any |the )?(previous|prior|above|earlier) (instructions|rules|prompts?)",
+    r"ignore (all |any |the |your |my )?(of )?(your |the )?(previous|prior|above|earlier) (instructions|rules|prompts?)",
+    r"(admin|god|debug) mode",
+    r"(do not|don'?t|never) ask (me )?for (my |a |the )?(pin|otp|password|face)",
+    r"(without|skip|bypass|disable|turn off) (asking for )?(my |a |the )?(pin|otp|face check|face)",
     r"disregard (your|the|all) (instructions|rules|system)",
     r"forget (everything|your (rules|instructions))",
     r"(reveal|show|print|repeat|leak) (me )?(your|the) (system )?(prompt|instructions|rules)",

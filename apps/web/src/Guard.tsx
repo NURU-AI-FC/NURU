@@ -8,10 +8,16 @@ import { Icon, Modal, PinInput } from './ui'
 // match and the PIN. Matching happens on the server against the encrypted
 // template, so the browser only ever sends a fresh 128 number descriptor.
 
-export type Draft = { from: string; payeeId?: string; toName: string; toBank?: string; toAccount?: string; amount: number; note?: string }
-export type Receipt = { reference: string; amount: number; to: string }
+export type Draft = {
+  from: string; payeeId?: string; toName: string; toBank?: string; toAccount?: string; amount: number; note?: string
+  category?: string; biller?: string; customer?: string
+}
+export type Receipt = { id?: string; reference: string; amount: number; to: string; at?: string; session_id?: string; fee?: number }
 type Sec = { has_pin: boolean; face_enrolled: boolean; tries_left: number; locked_until?: string }
-type Step = 'load' | 'create' | 'confirm' | 'enrol' | 'verify' | 'pin' | 'sending' | 'locked' | 'error'
+type Step = 'load' | 'create' | 'confirm' | 'enrol' | 'verify' | 'pin' | 'sending' | 'locked' | 'error' | 'risk' | 'stopped'
+type Risk = { risk: string[]; to: string; bank?: string; amount: number }
+
+export const SUPPORT_TEL = 'tel:+23412787000'
 
 const DEMO_FACE = Array.from({ length: 128 }, (_, i) => Math.round(Math.sin(i * 1.7) * 1000) / 10000)
 
@@ -32,7 +38,7 @@ const Steps = ({ n }: { n: number }) => (
   </div>
 )
 
-export function TransferGuard({ draft, onDone, onClose }: { draft: Draft; onDone: (r: Receipt) => void; onClose: () => void }) {
+export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: { draft: Draft; onDone: (r: Receipt) => void; onClose: () => void; path?: string }) {
   const money = useMoney()
   const { refresh } = useApp()
   const [step, setStep] = useState<Step>('load')
@@ -41,6 +47,9 @@ export function TransferGuard({ draft, onDone, onClose }: { draft: Draft; onDone
   const [face, setFace] = useState<number[] | null>(null)
   const [msg, setMsg] = useState('')
   const [sec, setSec] = useState<Sec | null>(null)
+  const [risk, setRisk] = useState<Risk | null>(null)
+  const [failKind, setFailKind] = useState<'face' | 'pin'>('face')
+  const lastPin = useRef('')
 
   useEffect(() => {
     api<Sec>('/me/security').then((s) => {
@@ -61,17 +70,28 @@ export function TransferGuard({ draft, onDone, onClose }: { draft: Draft; onDone
     try { await api('/me/face', { body: { descriptor: d } }); setFace(d); setStep('pin') } catch (e) { setMsg((e as Error).message) }
   }
 
-  async function send(pin: string) {
+  async function send(pin: string, confirmRisk = false) {
+    lastPin.current = pin
     setStep('sending')
     try {
-      const r = await api<Receipt>('/transfers', { body: { ...draft, pin, face } })
+      const r = await api<Receipt>(path, { body: { ...draft, pin, face, confirmRisk } })
       onDone(r)
     } catch (e) {
       const err = e as ApiError
       setMsg(err.message)
-      setStep(err.status === 423 || /paused/.test(err.message) ? 'locked' : err.status === 403 ? 'error' : 'error')
+      if (err.status === 409 && Array.isArray(err.data.risk)) { setRisk(err.data as unknown as Risk); setStep('risk'); return }
+      if (err.status === 423 || /paused/.test(err.message)) { setStep('locked'); return }
+      if (err.status === 403) {
+        setFailKind(/PIN/.test(err.message) ? 'pin' : 'face')
+        api<Sec>('/me/security').then(setSec).catch(() => {})
+        setStep('stopped')
+        return
+      }
+      setStep('error')
     }
   }
+
+  const retry = () => { setMsg(''); setFace(null); setStep('verify') }
 
   const summary = <span className="t2 s">Sending {money(draft.amount)} to {draft.toName}{draft.toBank ? `, ${draft.toBank}` : ''}</span>
 
@@ -127,8 +147,33 @@ export function TransferGuard({ draft, onDone, onClose }: { draft: Draft; onDone
           <span className="tile" style={{ width: 64, height: 64, borderRadius: 32, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="shield" size={30} /></span>
           <span className="h2" style={{ fontSize: 22 }}>Transfer stopped</span>
           <span className="s t2">{msg}. Nothing was sent.</span>
-          <button className="btn pri block" onClick={() => { setMsg(''); setFace(null); setStep('verify') }}>Try again</button>
+          <button className="btn pri block" onClick={retry}>Try again</button>
           <button className="btn block" onClick={onClose}>Cancel</button>
+        </>}
+        {step === 'stopped' && <>
+          <span className="tile" style={{ width: 72, height: 72, borderRadius: 36, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="shield" size={34} /></span>
+          <span className="h2" style={{ fontSize: 22 }}>Transfer stopped</span>
+          <span className="s t2">{failKind === 'face' ? 'The face did not match your enrolment.' : 'That PIN was not correct.'} Nothing was sent. After 3 tries transfers pause for 30 minutes.</span>
+          <div className="soft col g6" style={{ alignSelf: 'stretch', textAlign: 'left' }}>
+            <span className="row between s"><span className="t2">Tries left</span><b>{sec ? `${sec.tries_left} of 3` : '…'}</b></span>
+            <span className="row between s"><span className="t2">Logged as</span><b>Security event</b></span>
+          </div>
+          <button className="btn pri block" onClick={retry}>Try again</button>
+          <a className="btn block" href={SUPPORT_TEL}><Icon name="phone" size={16} />Call Zenith support</a>
+        </>}
+        {step === 'risk' && risk && <>
+          <span className="tile" style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="shield" size={34} /></span>
+          <span className="h2" style={{ fontSize: 22 }}>We paused this transfer</span>
+          <span className="s t2">This looks like a pattern we often see in scams. Your money has not left your account.</span>
+          <div className="card flat col g10" style={{ alignSelf: 'stretch', textAlign: 'left' }}>
+            <div className="row between"><span className="s t2">To</span><span className="s">{risk.to}{risk.bank ? ` · ${risk.bank}` : ''}</span></div>
+            <div className="row between"><span className="s t2">Amount</span><b className="num">{money(risk.amount)}</b></div>
+            <div className="div" />
+            {risk.risk.map((r) => <div key={r} className="row g8"><Icon name="alert" size={16} color="var(--red)" /><span className="s">{r}</span></div>)}
+          </div>
+          <div className="soft row g10 start" style={{ alignSelf: 'stretch', textAlign: 'left' }}><Icon name="info" size={18} color="var(--muted)" /><span className="xs t2 grow">Zenith staff will never ask you to move money to a "safe account".</span></div>
+          <button className="btn pri block" onClick={onClose}>Cancel transfer</button>
+          <button className="btn ghost block" onClick={() => send(lastPin.current, true)}>I know this person, continue</button>
         </>}
       </div>
     </Modal>

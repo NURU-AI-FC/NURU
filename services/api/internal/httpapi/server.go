@@ -113,7 +113,11 @@ func (s *Server) Routes() http.Handler {
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/transfers", s.transfer)
 		r.Get("/me/security", s.security)
 		r.With(httprate.LimitByIP(10, time.Minute)).Post("/me/face", s.enrolFace)
+		r.With(httprate.LimitByIP(10, time.Minute)).Post("/payments/bill", s.payBill)
 		r.Get("/payees", s.payees)
+		r.Post("/payees", s.addPayee)
+		r.Patch("/payees/{id}", s.updatePayee)
+		r.Delete("/payees/{id}", s.deletePayee)
 		r.Get("/loans", s.loans)
 		r.Get("/investments", s.investments)
 		r.Get("/reminders", s.reminders)
@@ -123,6 +127,7 @@ func (s *Server) Routes() http.Handler {
 
 		r.With(httprate.LimitByIP(30, time.Minute)).Post("/chat", s.chat)
 		r.Get("/chat", s.chatHistory)
+		r.Get("/chat/threads", s.chatThreads)
 		r.Delete("/chat", s.clearChat)
 
 		r.Method("GET", "/console/overview", auth.RequireRole("staff", http.HandlerFunc(s.consoleOverview)))
