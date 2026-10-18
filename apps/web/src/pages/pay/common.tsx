@@ -10,7 +10,7 @@ import './Pay.css'
 export const BANKS = ['Zenith Bank', 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'OPay', 'Kuda', 'Moniepoint', 'PalmPay', 'Wema Bank']
 const TONES = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--amber)', 'var(--c7)', 'var(--c2)']
 
-export const initials = (n: string) => n.split(/[\s,()]+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
+export const initials = (n: string) => n.split(/[\s,()]+/).filter((w) => /^\p{L}/u.test(w)).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 const tone = (n: string) => TONES[[...n].reduce((s, c) => s + c.charCodeAt(0), 0) % TONES.length]
 
 export const Avatar = ({ name, size = 40 }: { name: string; size?: number }) => (

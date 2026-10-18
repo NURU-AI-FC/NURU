@@ -33,8 +33,8 @@ export default function Hub() {
   const converted = Number(fx.amount || 0) * (rates[fx.to] || 0)
 
   return (
-    <Shell title={t('pay')} sub="Sandbox payments. No real money moves." right={<Link className="ib" to="/pay/scan" aria-label="Scan to pay"><Icon name="qr" /></Link>}>
-      <div className="grid g-21">
+    <Shell title={t('pay')} sub="Sandbox. No real money moves.">
+      <div className="grid g-21 payhub">
         <div className="col g20">
           <div className="soft row between" style={{ padding: '14px 16px' }}>
             {acct ? <div className="col g4"><span className="xs mu">{acct.name} {acct.number}</span><span className="h3 num">{money(acct.balance)}</span></div> : <Skeleton h={44} />}

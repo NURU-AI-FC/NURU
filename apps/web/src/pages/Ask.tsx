@@ -54,6 +54,7 @@ export default function Ask() {
   const [voice, setVoice] = useState(() => store.get('nuru.voice'))
   const [auto, setAuto] = useState(() => store.get('nuru.voice.auto') === '1')
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [wide] = useState(() => matchMedia('(min-width: 641px)').matches)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
@@ -160,11 +161,11 @@ export default function Ask() {
   const langVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(lang)).concat(lang === 'en' ? [] : voices.filter((v) => v.lang.toLowerCase().startsWith('en')))
 
   return (
-    <Shell title={view === 'history' ? 'Chats' : t('ask')} sub={view === 'history' ? 'Encrypted. Only you can read these.' : 'Only answers about your money'} right={
+    <Shell title={view === 'history' ? 'Chats' : t('ask')} sub={wide ? 'Only answers about your money' : undefined} right={
       <div className="row g8">
         <button className="ib" onClick={() => (view === 'history' ? setView('chat') : showHistory())} aria-label="Chat history" title="Chat history" style={view === 'history' ? { background: 'var(--red50)', color: 'var(--red)' } : undefined}><Icon name="history" /></button>
         <button className="ib asklang" onClick={() => setSheet(true)} aria-label="Language and voice" title="Language and voice">{lang.toUpperCase()}</button>
-        <button className="ib" onClick={newChat} aria-label={t('newChat')} title={t('newChat')}><Icon name="edit" /></button>
+        <button className="ib askwide" onClick={newChat} aria-label={t('newChat')} title={t('newChat')}><Icon name="edit" /></button>
       </div>
     }>
       {view === 'history' ? (
