@@ -94,11 +94,15 @@ function kitchen(b: Biz, v: Record<string, number>, money: Fmt): Verdict {
 function lease(b: Biz, v: Record<string, number>, money: Fmt): Verdict {
   const n = Math.min(LOAN_MONTHS, v.months)
   const payment = pay(v.price, v.rate, n)
-  const resale = (m: number) => v.price * Math.max(0.2, 1 - (0.18 * m) / 12)
+  // a van loses about 15% when bought, then 15% a year
+  const resale = (m: number) => v.price * Math.max(0.2, 0.85 - (0.15 * m) / 12)
+  const r = v.rate / 1200
+  const owed = (m: number) => m >= n ? 0 : r ? v.price * Math.pow(1 + r, m) - (payment * (Math.pow(1 + r, m) - 1)) / r : v.price - payment * m
   const buyCost = payment * n - resale(v.months)
   const leaseCost = v.lease * v.months
   let be = 0
-  for (let m = 1; m <= 120 && !be; m++) if (v.lease * m >= payment * Math.min(m, n) - resale(m)) be = m
+  // the first month where selling up would have cost less than leasing so far
+  for (let m = 1; m <= 120 && !be; m++) if (v.lease * m >= payment * Math.min(m, n) + owed(m) - resale(m)) be = m
   const profit = lastFull(b).profit
   const floor = (b.payroll || 400_000) * 2
   const lowBuy = Math.min(b.cash, b.cash + n * (profit - payment))
