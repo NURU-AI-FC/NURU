@@ -20,13 +20,14 @@ const tiles = (dark: boolean) => dark
   : L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap, © CARTO', subdomains: 'abcd', maxZoom: 19 })
 
 // MapView draws branches on a live OpenStreetMap map and follows the app theme.
-export function MapView({ center, user, branches, selected, onSelect, interactive = true }: {
+export function MapView({ center, user, branches, selected, onSelect, interactive = true, fit }: {
   center: [number, number]
   user?: [number, number] | null
   branches: Branch[]
   selected?: string | null
   onSelect?: (id: string) => void
   interactive?: boolean
+  fit?: { tl: [number, number]; br: [number, number] }
 }) {
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
@@ -64,11 +65,13 @@ export function MapView({ center, user, branches, selected, onSelect, interactiv
       L.marker([b.lat, b.lon], { icon: pin(b, on), title: b.name, zIndexOffset: on ? 1000 : 0, keyboard: true })
         .on('click', () => pick.current?.(b.id)).addTo(g)
     }
+    if (fit && branches.length) map.current?.fitBounds(L.latLngBounds(branches.map((b) => [b.lat, b.lon])), { paddingTopLeft: fit.tl, paddingBottomRight: fit.br, maxZoom: 15 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branches, selected, user])
 
   useEffect(() => {
     const b = branches.find((x) => x.id === selected)
-    if (b && map.current) map.current.panTo([b.lat, b.lon], { animate: true })
+    if (b && map.current && !fit) map.current.panTo([b.lat, b.lon], { animate: true })
   }, [selected, branches])
 
   return <div ref={box} className="bmap" />
