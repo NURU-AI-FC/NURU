@@ -1,0 +1,19 @@
+/* NURU HQ: the sidebar is dark in both themes, as in design/src/p20-hq.mjs. */
+.side.hqside { width: 256px; background: #141416; color: #fff; border-right-color: #2b2b31; }
+.hqside .nav { color: #b3b3bd; }
+.hqside .nav:hover { background: #1d1d21; }
+.hqside .nav.on { background: #2b2b31; color: #fff; }
+.hqside .hqnote, .hqside .hqme { margin-top: 22px; padding: 12px; border-radius: 12px; background: #1d1d21; border: 1px solid #2b2b31; }
+.hqside .hqme { padding: 10px; }
+.hqside .ib:hover { background: #2b2b31 !important; }
+@media (max-width: 900px) { .side.hqside { width: 300px; } }
+
+.cgrid-4 { display: grid; gap: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .cgrid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hqattn { display: flex; align-items: center; gap: 12px; }
+.hqattn .tile { width: 36px; height: 36px; }
+.tile.red { background: var(--red50); color: var(--red); }
+.tile.amber { background: var(--amber50); color: var(--amber); }
+.tile.blue { background: var(--blue50); color: var(--blue); }
+.tile.green { background: var(--green50); color: var(--green); }
+.notconn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
