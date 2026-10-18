@@ -870,16 +870,20 @@ func (s *Server) consoleConsent(w http.ResponseWriter, r *http.Request) {
 	if days == 90 {
 		step = 7
 	}
+	mod := modelled(src)
 	for i := 0; i < len(dl); i += step {
 		d := dl[i]
 		g, wd := 0.0, 0.0
-		for j := i; j < i+step && j < len(dl); j++ {
+		for j := i; j < i+step && j < len(dl) && mod; j++ {
 			g += math.Round(model("consent_given", dl[j], 140, 0.3, 0.3))
 			wd += math.Round(model("consent_withdrawn", dl[j], 9, 0, 0.6))
 		}
 		trend = append(trend, map[string]any{"label": d.Format("2 Jan"), "given": g, "withdrawn": wd})
 	}
-	requests := map[string]float64{"exports": sumModel("dsr_export", dl, 6, 0, 0.7), "deletions": sumModel("dsr_delete", dl, 2, 0, 0.9), "median_hours": 26}
-	writeJSON(w, 200, map[string]any{"days": days, "modelled": modelled(src), "total": total, "rates": rates, "segments": bySeg,
+	requests := map[string]float64{"exports": 0, "deletions": 0, "median_hours": 0}
+	if mod {
+		requests = map[string]float64{"exports": sumModel("dsr_export", dl, 6, 0, 0.7), "deletions": sumModel("dsr_delete", dl, 2, 0, 0.9), "median_hours": 26}
+	}
+	writeJSON(w, 200, map[string]any{"days": days, "modelled": mod, "total": total, "rates": rates, "segments": bySeg,
 		"retention": retention, "trend": trend, "requests": requests})
 }
