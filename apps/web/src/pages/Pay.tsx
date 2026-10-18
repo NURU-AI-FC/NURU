@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { api, type Account } from '../api'
+import type { Account } from '../api'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
-import { Icon, Modal, PinInput, Skeleton, useLoad } from '../ui'
+import { TransferGuard } from '../Guard'
+import { Icon, Modal, Skeleton, useLoad } from '../ui'
 
 const BANKS = ['Zenith Bank', 'OPay', 'Kuda', 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'Moniepoint', 'PalmPay', 'Wema Bank']
 
@@ -15,7 +16,7 @@ export default function Pay() {
   const { data: accData, reload } = useLoad<{ accounts: Account[] }>('/accounts')
   const accts = accData?.accounts
   const [f, setF] = useState({ from: '', toName: save ? 'NURU Japa fund' : '', toBank: 'Zenith Bank', toAccount: save ? '1012345678' : '', amount: save || '', note: save ? 'Savings' : '' })
-  const [step, setStep] = useState<'' | 'face' | 'pin' | 'done'>('')
+  const [step, setStep] = useState<'' | 'guard' | 'done'>('')
   const [err, setErr] = useState('')
   const [receipt, setReceipt] = useState<{ reference: string; amount: number; to: string } | null>(null)
   const [fx, setFx] = useState({ amount: '100000', to: 'USD' })
@@ -27,15 +28,10 @@ export default function Pay() {
     e.preventDefault()
     setErr('')
     if (!/^\d{10}$/.test(f.toAccount)) { setErr('Account numbers are 10 digits'); return }
-    setStep(Number(f.amount) >= 50000 ? 'face' : 'pin')
+    setStep('guard')
   }
 
-  async function confirm(pin: string) {
-    try {
-      const r = await api<{ reference: string; amount: number; to: string }>('/transfers', { body: { from: f.from, toName: f.toName, toBank: f.toBank, toAccount: f.toAccount, note: f.note, amount: Number(f.amount), pin } })
-      setReceipt(r); setStep('done'); reload()
-    } catch (e) { setErr((e as Error).message); setStep('') }
-  }
+
 
   const from = accts?.find((a) => a.id === f.from)
   const converted = Number(fx.amount || 0) * (rates[fx.to] || 0)
@@ -61,7 +57,7 @@ export default function Pay() {
           {from && Number(f.amount) > from.balance && <span className="err">That is more than the {money(from.balance)} in this account.</span>}
           {err && <span className="err" role="alert">{err}</span>}
           <button className="btn pri" disabled={!f.amount || !f.toName}>{t('continue')}</button>
-          <span className="xs mu row g6"><Icon name="shieldcheck" size={14} />PIN on every transfer. Face check from ₦50,000.</span>
+          <span className="xs mu row g6"><Icon name="shieldcheck" size={14} />PIN and face check on every transfer.</span>
         </form>
 
         <div className="col g20">
@@ -92,17 +88,9 @@ export default function Pay() {
         </div>
       </div>
 
-      {step === 'face' && <FaceCheck onDone={() => setStep('pin')} onClose={() => setStep('')} />}
-      {step === 'pin' && (
-        <Modal onClose={() => setStep('')}>
-          <div className="col g16 center" style={{ textAlign: 'center' }}>
-            <span className="tile" style={{ width: 48, height: 48, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="lock" size={22} /></span>
-            <span className="h3">{t('enterPin')}</span>
-            <span className="t2 s">Sending {money(Number(f.amount))} to {f.toName}, {f.toBank}</span>
-            <PinInput onDone={confirm} />
-            <span className="xs mu">Demo PIN is 1234</span>
-          </div>
-        </Modal>
+      {step === 'guard' && (
+        <TransferGuard draft={{ from: f.from, toName: f.toName, toBank: f.toBank, toAccount: f.toAccount, note: f.note, amount: Number(f.amount) }}
+          onClose={() => setStep('')} onDone={(r) => { setReceipt(r); setStep('done'); reload() }} />
       )}
       {step === 'done' && receipt && (
         <Modal onClose={() => setStep('')}>
@@ -117,35 +105,5 @@ export default function Pay() {
         </Modal>
       )}
     </Shell>
-  )
-}
-
-// FaceCheck shows the camera for a moment as the second factor. In the
-// sandbox any face passes; production would call a liveness provider.
-function FaceCheck({ onDone, onClose }: { onDone: () => void; onClose: () => void }) {
-  const video = useRef<HTMLVideoElement>(null)
-  const [state, setState] = useState<'ask' | 'scan' | 'ok' | 'none'>('ask')
-  useEffect(() => {
-    let stream: MediaStream | null = null
-    navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' } }).then((s) => {
-      stream = s
-      if (video.current) video.current.srcObject = s
-      setState('scan')
-      setTimeout(() => setState('ok'), 1800)
-      setTimeout(onDone, 2600)
-    }).catch(() => setState('none'))
-    return () => stream?.getTracks().forEach((tr) => tr.stop())
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  return (
-    <Modal onClose={onClose}>
-      <div className="col g16 center" style={{ textAlign: 'center' }}>
-        <span className="h3">Face check</span>
-        <div style={{ width: 200, height: 200, borderRadius: 100, overflow: 'hidden', background: 'var(--surface)', border: `4px solid ${state === 'ok' ? 'var(--green)' : 'var(--red)'}` }} className="col center">
-          {state === 'none' ? <Icon name="scanface" size={64} color="var(--muted)" /> : <video ref={video} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />}
-        </div>
-        <span className="t2 s">{state === 'ask' ? 'Allow the camera to continue' : state === 'scan' ? 'Hold still…' : state === 'ok' ? 'Verified' : 'No camera found. In the sandbox you can continue with your PIN.'}</span>
-        {state === 'none' && <button className="btn pri block" onClick={onDone}>Continue with PIN</button>}
-      </div>
-    </Modal>
   )
 }

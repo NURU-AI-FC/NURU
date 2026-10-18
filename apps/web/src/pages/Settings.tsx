@@ -4,7 +4,8 @@ import { api, type Lang } from '../api'
 import { langNames } from '../i18n'
 import { Shell } from '../Shell'
 import { useApp } from '../store'
-import { Icon, Modal, PinInput, Seg } from '../ui'
+import { FaceCam } from '../Guard'
+import { Icon, Modal, PinInput, Seg, useLoad } from '../ui'
 
 export default function Settings() {
   const { t, user, update, refresh, toast } = useApp()
@@ -14,6 +15,8 @@ export default function Settings() {
   const [bvn, setBvn] = useState('')
   const [err, setErr] = useState('')
   const [passkey, setPasskey] = useState(() => { try { return !!localStorage.getItem('nuru.passkey') } catch { return false } })
+  const { data: sec, reload: reSec } = useLoad<{ face_enrolled: boolean }>('/me/security')
+  const [faceOpen, setFaceOpen] = useState(false)
   if (!user) return null
 
   async function savePin(pin: string) {
@@ -69,7 +72,7 @@ export default function Settings() {
           <Row icon="fingerprint" title={t('passkey')} sub="Sign in with your fingerprint or face on this device">
             {passkey ? <span className="chip green">On</span> : <button className="btn sm" onClick={addPasskey}>Add</button>}
           </Row>
-          <Row icon="scanface" title={t('face')} sub="Asked for transfers from ₦50,000"><span className="chip green">On</span></Row>
+          <Row icon="scanface" title={t('face')} sub={sec?.face_enrolled ? 'Checked on every transfer' : 'Set up on your first transfer'}>{sec?.face_enrolled ? <button className="btn sm" onClick={() => setFaceOpen(true)}>Redo</button> : <button className="btn sm" onClick={() => setFaceOpen(true)}>Set up</button>}</Row>
           <Row icon="mail" title="One time code" sub="Sent each time you sign in"><span className="chip green">On</span></Row>
           <Row icon="shieldcheck" title={t('verifyId')} sub={user.kyc_verified ? 'Tier 2, only the last 4 digits are stored' : 'Raises your limits to Tier 2'}>
             {user.kyc_verified && <span className="chip green">{t('verified')}</span>}
@@ -90,6 +93,14 @@ export default function Settings() {
         </div>
       </div>
 
+      {faceOpen && (
+        <Modal onClose={() => setFaceOpen(false)}>
+          <div className="col g12 center" style={{ textAlign: 'center' }}>
+            <span className="h3">Face check</span>
+            <FaceCam mode="enrol" onFace={async (d) => { try { await api('/me/face', { body: { descriptor: d } }); toast('Face check saved'); reSec() } catch (e) { toast((e as Error).message) } setFaceOpen(false) }} />
+          </div>
+        </Modal>
+      )}
       {pinStep && (
         <Modal onClose={() => setPinStep('')}>
           <div className="col g16 center" style={{ textAlign: 'center' }}>
