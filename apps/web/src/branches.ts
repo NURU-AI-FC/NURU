@@ -126,3 +126,6 @@ export async function areaName(at: [number, number]): Promise<string> {
     return a.suburb || a.neighbourhood || a.city_district || a.town || a.city || a.state || ''
   } catch { return '' }
 }
+
+// known returns the backup list, for previews that should not wait on the network.
+export const known = (): Branch[] => LIST.map((b) => ({ ...b, source: 'list' }))
