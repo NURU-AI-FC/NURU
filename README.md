@@ -9,7 +9,9 @@ explains where the money goes, what is coming up and how to save more, in Englis
 | | |
 |---|---|
 | Customer | `judge@nuru.app` / `Zecathon-2026` |
-| Bank staff | `staff@nuru.app` / `Zecathon-2026` |
+| Bank staff (console admin) | `staff@nuru.app` / `Zecathon-2026`, or code only at `/console/login` |
+| NURU HQ owner | `ceo@nuru.app` / `Zecathon-2026` (Bolaji Jimoh), or code only at `/hq/login` |
+| NURU HQ operations | `ops@nuru.app` / `Zecathon-2026` |
 | One time code | `000000` (demo mode) |
 | Transaction PIN | the customer creates one on their first transfer |
 
@@ -76,6 +78,10 @@ cd apps/web && npm install && npm run dev
 | api | `AI_URL` | where `services/ai` runs |
 | api | `WEB_ORIGINS` | comma separated allowed origins |
 | api | `DEMO_MODE` | `true` creates the demo accounts and uses code 000000 |
+| api | `UPTIMEROBOT_API_KEY` | optional, 30 day uptime on NURU HQ's platform health |
+| api | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional, unresolved errors on NURU HQ |
+| api | `RESEND_API_KEY` | optional, marks email sending as connected on NURU HQ (sending itself is not wired yet) |
+| api, ai | `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_GIT_COMMIT_MESSAGE` | set by Railway, shown as the latest release on NURU HQ |
 | ai | `ANTHROPIC_API_KEY` | optional, enables Claude answers |
 | web | `VITE_API_URL` | API address at build time, empty to use the `/api` proxy |
 
