@@ -168,27 +168,6 @@ func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 201, receipt(id, at, in.Amount, in.ToName))
 }
 
-func (s *Server) loans(w http.ResponseWriter, r *http.Request) {
-	rows, err := s.db.Query(r.Context(), `select lender,principal::float8,rate_pct::float8,months,disbursed_at,next_due_at,monthly::float8,balance::float8 from loans where user_id=$1`, uid(r))
-	if err != nil {
-		fail(w, 500, "could not load loans")
-		return
-	}
-	defer rows.Close()
-	out := []map[string]any{}
-	for rows.Next() {
-		var lender string
-		var p, rate, monthly, bal float64
-		var months int
-		var disb, next time.Time
-		rows.Scan(&lender, &p, &rate, &months, &disb, &next, &monthly, &bal)
-		paid := math.Round((p*(1+rate/100) - bal) / monthly)
-		out = append(out, map[string]any{"lender": lender, "principal": p, "rate_pct": rate, "months": months, "disbursed_at": disb,
-			"next_due_at": next, "monthly": monthly, "balance": bal, "paid_instalments": paid, "total_interest": math.Round(p * rate / 100)})
-	}
-	writeJSON(w, 200, out)
-}
-
 func (s *Server) investments(w http.ResponseWriter, r *http.Request) {
 	rows, err := s.db.Query(r.Context(), `select kind,name,value::float8,contributed::float8,monthly::float8 from investments where user_id=$1 order by value desc`, uid(r))
 	if err != nil {
@@ -251,28 +230,29 @@ func (s *Server) toggleReminder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) business(w http.ResponseWriter, r *http.Request) {
-	var name, kind string
-	s.db.QueryRow(r.Context(), `select business_name,business_type from users where id=$1`, uid(r)).Scan(&name, &kind)
+	ctx := r.Context()
+	var name, kind, rc, customers string
+	var staffN int
+	var sales float64
+	s.db.QueryRow(ctx, `select business_name,business_type,business_rc,business_customers,business_staff,business_sales::float8 from users where id=$1`, uid(r)).Scan(&name, &kind, &rc, &customers, &staffN, &sales)
 	if name == "" {
 		writeJSON(w, 200, map[string]any{"enabled": false})
 		return
 	}
-	rows, _ := s.db.Query(r.Context(), `select name,role,gross::float8 from staff where user_id=$1 order by gross desc`, uid(r))
-	staff := []map[string]any{}
-	payroll := 0.0
-	for rows.Next() {
-		var n, role string
-		var g float64
-		rows.Scan(&n, &role, &g)
-		paye := math.Round(g * 0.0633)
-		pension := math.Round(g * 0.08)
-		net := g - paye - pension
-		payroll += g
-		staff = append(staff, map[string]any{"name": n, "role": role, "gross": g, "paye": paye, "pension": pension, "net": net})
+	staff, err := s.staffSlips(ctx, uid(r))
+	if err != nil {
+		fail(w, 500, "could not load staff")
+		return
 	}
-	rows.Close()
+	payroll, cost := 0.0, 0.0
+	list := []map[string]any{}
+	for _, st := range staff {
+		payroll += st.Gross
+		cost += st.Gross + st.Employer
+		list = append(list, map[string]any{"id": st.ID, "name": st.Name, "role": st.Role, "gross": st.Gross, "paye": st.PAYE, "pension": st.Pension, "nhf": st.NHF, "net": st.Net})
+	}
 	monthly := []map[string]any{}
-	rows, _ = s.db.Query(r.Context(), `select to_char(date_trunc('month',t.created_at),'Mon'),
+	rows, _ := s.db.Query(ctx, `select to_char(date_trunc('month',t.created_at),'Mon'),
 		coalesce(sum(amount) filter (where direction='credit'),0)::float8, coalesce(sum(amount) filter (where direction='debit'),0)::float8
 		from transactions t join accounts a on a.id=t.account_id where t.user_id=$1 and a.kind='business' and t.created_at>=date_trunc('month',now())-interval '5 months'
 		group by date_trunc('month',t.created_at) order by date_trunc('month',t.created_at)`, uid(r))
@@ -284,9 +264,10 @@ func (s *Server) business(w http.ResponseWriter, r *http.Request) {
 	}
 	rows.Close()
 	var cash float64
-	s.db.QueryRow(r.Context(), `select coalesce(sum(balance),0)::float8 from accounts where user_id=$1 and kind='business'`, uid(r)).Scan(&cash)
-	var ads []map[string]any
-	rows, _ = s.db.Query(r.Context(), `select merchant, sum(amount)::float8 from transactions where user_id=$1 and category='Advertising' and created_at>now()-interval '90 days' group by merchant`, uid(r))
+	s.db.QueryRow(ctx, `select coalesce(sum(balance),0)::float8 from accounts where user_id=$1 and kind='business'`, uid(r)).Scan(&cash)
+	_, number, _ := s.bizAccount(ctx, uid(r))
+	ads := []map[string]any{}
+	rows, _ = s.db.Query(ctx, `select merchant, sum(amount)::float8 from transactions where user_id=$1 and category='Advertising' and created_at>now()-interval '90 days' group by merchant order by 2 desc`, uid(r))
 	for rows.Next() {
 		var m string
 		var v float64
@@ -301,8 +282,21 @@ func (s *Server) business(w http.ResponseWriter, r *http.Request) {
 			runway = math.Round(cash / (c / 30))
 		}
 	}
-	writeJSON(w, 200, map[string]any{"enabled": true, "name": name, "type": kind, "staff": staff, "payroll": payroll,
-		"monthly": monthly, "cash": cash, "runway_days": runway, "advertising": ads})
+	var unpaid, overdue float64
+	var nUnpaid, nOverdue int
+	s.db.QueryRow(ctx, `select coalesce(sum(amount),0)::float8, count(*)::int, coalesce(sum(amount) filter (where due_at<now()),0)::float8, (count(*) filter (where due_at<now()))::int
+		from invoices where user_id=$1 and paid_at is null`, uid(r)).Scan(&unpaid, &nUnpaid, &overdue, &nOverdue)
+	paidAt := s.payrollPaid(ctx, uid(r))
+	now := time.Now()
+	due := time.Date(now.Year(), now.Month(), 28, 9, 0, 0, 0, now.Location())
+	if paidAt != nil {
+		due = due.AddDate(0, 1, 0)
+	}
+	writeJSON(w, 200, map[string]any{"enabled": true, "name": name, "type": kind, "rc": rc, "customers": customers, "staff_count": max(staffN, len(staff)),
+		"monthly_sales": sales, "account": number, "staff": list, "payroll": payroll,
+		"monthly": monthly, "cash": cash, "runway_days": runway, "advertising": ads,
+		"unpaid": unpaid, "unpaid_count": nUnpaid, "overdue": overdue, "overdue_count": nOverdue,
+		"payroll_due": map[string]any{"amount": cost, "due_at": due, "paid_at": paidAt}})
 }
 
 // fxCache keeps live NGN rates for ten minutes so the app shows the time of
