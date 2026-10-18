@@ -117,6 +117,20 @@ func (s *Server) syncNotes(ctx context.Context, user string) {
 		}
 	}
 
+	// money that moved with no description: ask the customer what it was for
+	items, _ := s.pendingDescriptions(ctx, user, 3)
+	for _, t := range items {
+		if time.Since(t.At) > 7*24*time.Hour {
+			continue
+		}
+		way := "came in from " + t.Merchant
+		if t.Direction == "debit" {
+			way = "left " + t.Account + " at " + t.Merchant
+		}
+		s.notify(ctx, user, note{Key: "describe:" + t.ID, Kind: "reminder", Tone: "amber", Icon: "edit", Title: "What was this " + naira(t.Amount) + " for?",
+			Body: naira(t.Amount) + " " + way + " with no description. Tell NURU so your advice stays accurate.", Amount: t.Amount, TxID: t.ID, Link: "/ask?describe=" + t.ID, At: t.At})
+	}
+
 	if p.Reminders {
 		rows, err = s.db.Query(ctx, `select id,title,amount::float8,due_at from reminders where user_id=$1 and not done and due_at between now() and now()+interval '7 days'`, user)
 		if err == nil {

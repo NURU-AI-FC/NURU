@@ -88,6 +88,8 @@ func (s *Server) snapshot(ctx context.Context, user string) map[string]any {
 		prow.Close()
 	}
 	snap["payees"] = payees
+	snap["customer_descriptions"] = s.describedForAI(ctx, user)
+	_, snap["transactions_without_description"] = s.pendingDescriptions(ctx, user, 0)
 	if bizName != "" {
 		if b, err := s.computeSummary(ctx, user, "month", true); err == nil {
 			snap["business_month"] = map[string]any{"in": b.In, "out": b.Out, "by_category": b.Categories}
