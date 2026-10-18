@@ -75,16 +75,18 @@ def answer(q: Question):
 
     intent = replies.intent(q.message)
     chart = replies.chart(intent, q.context)
-    actions = replies.actions(intent, q.context)
+    actions = replies.actions(intent, q.context, q.message)
 
-    text = ask_claude(q, lang) if client else None
+    # Transfers always use the template so the confirmation quotes exactly
+    # the payee and amount the app will send.
+    text = ask_claude(q, lang) if client and intent != "transfer" else None
     if text and guard.unsupported_amounts(text, q.context):
         # A figure we cannot trace back to the data is worse than a plainer
         # answer, so fall back to the template that only quotes our numbers.
         log.warning("answer had untraceable amounts, using template")
         text = None
     if not text:
-        text = replies.template(intent, q.context, lang)
+        text = replies.template(intent, q.context, lang, q.message)
     return {"answer": text, "blocked": "", "chart": chart, "actions": actions}
 
 

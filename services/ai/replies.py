@@ -8,6 +8,7 @@ Translations are reviewed by the language owners listed in docs/TEAM.md.
 import re
 
 INTENTS = [
+    ("transfer", r"(?=.*(\b(send|transfer|pay|give|ziga|zipu|kwụọ|kwuo|aika|tura|biya)\b|ránṣẹ́|ranse|sanwó))(?=.*(₦|\d+\s?k\b|\d{3,}))"),
     ("injectionless_greeting", r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|bawo|ndewo|sannu|kedu)\b"),
     ("business", r"business|sales|profit|payroll|staff|salar(y|ies) for|runway|kemi|vendor|advert|investor"),
     ("loan", r"loan|debt|repay|interest|gbèsè|gbese|ụgwọ|ugwo|bashi"),
@@ -29,6 +30,34 @@ def intent(message: str) -> str:
         if re.search(pattern, text):
             return "greeting" if name == "injectionless_greeting" else name
     return "general"
+
+
+AMT = re.compile(r"(?:₦|\bn)?\s?(\d[\d,]*(?:\.\d+)?)\s?(k|m|thousand|million)?\b", re.I)
+
+
+def parse_transfer(message: str, ctx: dict) -> dict:
+    """Pull the amount and payee out of "send ₦25,000 to Tunde for rent".
+    Only payees already saved in the app can be matched, so the model or a
+    crafted message can never introduce a new account number."""
+    amount = 0.0
+    for num, unit in AMT.findall(message):
+        v = float(num.replace(",", ""))
+        v *= {"k": 1e3, "thousand": 1e3, "m": 1e6, "million": 1e6}.get(unit.lower(), 1)
+        if v >= 100:
+            amount = v
+            break
+    text = message.lower()
+    payee = ""
+    for p in ctx.get("payees") or []:
+        words = [w for w in re.split(r"[\s,]+", p.lower()) if len(w) > 2]
+        if p.lower() in text or any(re.search(r"\b" + re.escape(w) + r"\b", text) for w in words):
+            payee = p
+            break
+    note = ""
+    m = re.search(r"\bfor (.+)$", message, re.I)
+    if m:
+        note = m.group(1).strip(" .")[:60]
+    return {"payee": payee, "amount": amount, "note": note}
 
 
 def naira(v) -> str:
@@ -59,8 +88,13 @@ def chart(name: str, ctx: dict):
     return None
 
 
-def actions(name: str, ctx: dict) -> list[dict]:
+def actions(name: str, ctx: dict, message: str = "") -> list[dict]:
     out = []
+    if name == "transfer":
+        t = parse_transfer(message, ctx)
+        if t["payee"] and t["amount"]:
+            return [{"kind": "transfer", "label": "Confirm and send", **t}]
+        return [{"kind": "open", "label": "Add a new payee", "to": "/pay"}]
     if name in ("save", "spend", "compare"):
         out.append({"kind": "save", "label": "Move ₦20,000 to savings", "amount": 20000})
     if name == "subscriptions":
@@ -157,6 +191,18 @@ T = {
         "ig": "{biz} nwetara {bin} ma mefuo {bout} n'ọnwa a. Mepee Business maka ụgwọ ndị ọrụ, ụtụ isi na oge ego ga-adị.",
         "ha": "{biz} ta samu {bin} ta kashe {bout} a wannan wata. Buɗe Business don albashi, haraji da tsawon lokacin kuɗi.",
     },
+    "transfer": {
+        "en": "Here is the transfer of {amt} to {payee}. After it you will still have {left} across your personal accounts. Check the details below; I will ask for your PIN and a face check before anything is sent.",
+        "yo": "Èyí ni owó {amt} tí o fẹ́ fi ránṣẹ́ sí {payee}. Lẹ́yìn rẹ̀, {left} yóò kù nínú àkáǹtì rẹ. Wo àlàyé ní ìsàlẹ̀; màá béèrè PIN rẹ àti ojú rẹ kí n tó fi ránṣẹ́.",
+        "ig": "Nke a bụ ego {amt} ị ga-eziga {payee}. Mgbe nke ahụ gasịrị, {left} ga-afọ n'akaụntụ gị. Lelee nkọwa n'okpuru; m ga-ajụ PIN gị na ihu gị tupu m ezipụ.",
+        "ha": "Ga kuɗin {amt} da za ka aika wa {payee}. Bayan haka, {left} zai rage a asusunka. Duba bayani a ƙasa; zan nemi PIN ɗinka da duba fuskarka kafin a aika.",
+    },
+    "no_payee": {
+        "en": "I can only send to people already saved in your payees: {list}. To pay someone new, add their account number on the Pay page first.",
+        "yo": "Mo lè fi ránṣẹ́ sí àwọn tí o ti fipamọ́ nìkan: {list}. Láti san fún ẹni tuntun, kọ́kọ́ fi nọ́mbà àkáǹtì wọn kún un ní ojú-ìwé Pay.",
+        "ig": "Enwere m ike iziga naanị ndị echekwara: {list}. Iji kwụọ onye ọhụrụ, buru ụzọ tinye nọmba akaụntụ ha na peeji Pay.",
+        "ha": "Zan iya aikawa ga waɗanda ka ajiye kawai: {list}. Don biyan sabon mutum, fara ƙara lambar asusunsa a shafin Pay.",
+    },
     "invest": {
         "en": "I can show how your investments are growing on the Loans and savings page. For a big investment decision, a Zenith relationship manager can advise you properly.",
         "yo": "Mo lè fi bí ìdókòwò rẹ ṣe ń dàgbà hàn ọ́ ní ojú-ìwé Loans and savings. Fún ìpinnu ńlá, bá olùtọ́jú Zenith sọ̀rọ̀.",
@@ -170,7 +216,7 @@ def refusal(kind: str, lang: str) -> str:
     return T[kind].get(lang, T[kind]["en"])
 
 
-def template(name: str, ctx: dict, lang: str) -> str:
+def template(name: str, ctx: dict, lang: str, message: str = "") -> str:
     month = ctx.get("this_month") or {}
     week = ctx.get("this_week") or {}
     cats = month.get("by_category") or []
@@ -182,7 +228,15 @@ def template(name: str, ctx: dict, lang: str) -> str:
         "wout": naira(week.get("out")), "win": naira(week.get("in")), "wtop": wcats[0]["category"] if wcats else "-",
     }
 
-    if name == "balance":
+    if name == "transfer":
+        t = parse_transfer(message, ctx)
+        if not (t["payee"] and t["amount"]):
+            v["list"] = ", ".join(ctx.get("payees") or []) or "-"
+            name = "no_payee"
+        else:
+            personal = sum(a["balance"] for a in ctx.get("accounts") or [] if "Ltd" not in a["name"])
+            v.update(amt=naira(t["amount"]), payee=t["payee"], left=naira(personal - t["amount"]))
+    elif name == "balance":
         accts = ctx.get("accounts") or []
         v.update(total=naira(sum(a["balance"] for a in accts)), n=len(accts),
                  accts=", ".join(f"{a['name']} {naira(a['balance'])}" for a in accts))
