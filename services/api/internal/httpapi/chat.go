@@ -113,6 +113,8 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 	if in.Lang == "" {
 		in.Lang = "en"
 	}
+	// Answer in the language the person actually wrote in.
+	in.Lang = detectLang(in.Message, in.Lang)
 	user := uid(r)
 	var history []chatMsg
 	if uuidRe.MatchString(in.Thread) {
@@ -135,6 +137,7 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		Sources json.RawMessage  `json:"sources"`
 		Thread  string           `json:"thread"`
 		Engine  string           `json:"engine"`
+		Lang    string           `json:"lang"`
 	}
 	start := time.Now()
 	resp, err := s.http.Do(req)
@@ -162,6 +165,7 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		out.Sources = json.RawMessage("[]")
 	}
 	out.Thread = in.Thread
+	out.Lang = in.Lang
 	s.saveChat(r.Context(), user, in.Thread, "user", in.Lang, in.Message, "", nil, "", 0)
 	s.saveChat(r.Context(), user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources, out.Engine, took)
 	writeJSON(w, 200, out)
