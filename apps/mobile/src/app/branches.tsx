@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Linking, Platform, View } from 'react-native'
-import Svg, { Circle, Path, Rect } from 'react-native-svg'
+import * as Location from 'expo-location'
+import { LiveMap } from '@/components/LiveMap'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
@@ -43,44 +44,39 @@ function status(b: Branch) {
 }
 const directions = (b: Branch) => Platform.OS === 'ios' ? `https://maps.apple.com/?daddr=${b.lat},${b.lon}` : `https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lon}`
 
-// p17 branch finder: a stylised map of the nearest pins, then the list. Distances are from
-// Victoria Island until location permission is added.
+// p17 branch finder: a live map of the nearest pins, then the list. Distances are from the
+// phone's location when allowed, otherwise from Victoria Island.
 export default function Branches() {
-  const { c, dark } = useTheme()
+  const { c } = useTheme()
   const { t } = useApp()
   const [q, setQ] = useState('')
   const [kind, setKind] = useState<'' | 'branch' | 'atm'>('')
-  const [sel, setSel] = useState<string>('ho')
+  const [sel, setSel] = useState<string>('')
+  const [me, setMe] = useState<[number, number]>(HOME)
+  const [located, setLocated] = useState(false)
+  useEffect(() => {
+    let live = true
+    ;(async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') return
+      const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      if (live) { setMe([p.coords.latitude, p.coords.longitude]); setLocated(true) }
+    })().catch(() => {})
+    return () => { live = false }
+  }, [])
   const list = useMemo(() => LIST
     .filter((b) => !kind || b.kind === kind)
     .filter((b) => !q.trim() || (b.name + b.address).toLowerCase().includes(q.trim().toLowerCase()))
-    .map((b) => ({ ...b, km: km(HOME, [b.lat, b.lon]) }))
-    .sort((a, b) => a.km - b.km), [q, kind])
+    .map((b) => ({ ...b, km: km(me, [b.lat, b.lon]) }))
+    .sort((a, b) => a.km - b.km), [q, kind, me])
   const near = list.filter((b) => b.km < 25).slice(0, 7)
   const pick = list.find((b) => b.id === sel) || list[0]
-  // Project the nearby pins into the 350x170 map frame.
-  const lats = near.map((b) => b.lat), lons = near.map((b) => b.lon)
-  const [minLa, maxLa, minLo, maxLo] = [Math.min(...lats, HOME[0]) - 0.01, Math.max(...lats, HOME[0]) + 0.01, Math.min(...lons, HOME[1]) - 0.01, Math.max(...lons, HOME[1]) + 0.01]
-  const px = (lo: number) => 20 + ((lo - minLo) / (maxLo - minLo || 1)) * 310
-  const py = (la: number) => 150 - ((la - minLa) / (maxLa - minLa || 1)) * 130
-  const land = dark ? '#1A1A1D' : '#EEF0F2', road = dark ? '#2A2A2E' : '#FFFFFF', water = dark ? '#10202A' : '#D6E7F2'
 
   return (
     <Screen gap={12} top={<TopBar title={t('branches')} />}>
       <Input icon="search" value={q} onChangeText={setQ} placeholder="Search area or branch" round height={46} />
-      <View style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: c.border }}>
-        <Svg width="100%" height={170} viewBox="0 0 350 170" preserveAspectRatio="xMidYMid slice">
-          <Rect width={350} height={170} fill={land} />
-          <Path d="M0 130 C80 120 140 150 220 138 S320 120 350 128 L350 170 L0 170Z" fill={water} />
-          <Path d="M0 60 L350 90 M90 0 L120 170 M230 0 L210 170 M0 110 L350 40" stroke={road} strokeWidth={7} />
-          <Path d="M0 60 L350 90 M90 0 L120 170 M230 0 L210 170 M0 110 L350 40" stroke={c.border} strokeWidth={1} opacity={0.6} />
-          <Circle cx={px(HOME[1])} cy={py(HOME[0])} r={14} fill={c.blue} opacity={0.18} />
-          <Circle cx={px(HOME[1])} cy={py(HOME[0])} r={5} fill={c.blue} stroke="#FFFFFF" strokeWidth={2} />
-          {[...near].sort((a) => (a.id === pick?.id ? 1 : -1)).map((b) => (
-            <Circle key={b.id} cx={px(b.lon)} cy={py(b.lat)} r={b.id === pick?.id ? 10 : 7} fill={b.kind === 'atm' ? c.blue : c.red} stroke="#FFFFFF" strokeWidth={2.5} onPress={() => setSel(b.id)} />
-          ))}
-        </Svg>
-      </View>
+      <LiveMap pins={near.length ? near : list.slice(0, 7)} me={me} selected={pick?.id} onSelect={setSel} />
+      {!located && <T v="xs" tone="mu">Distances are from Victoria Island. Allow location to see branches near you.</T>}
       <Row gap={8}>{([['', 'All'], ['branch', 'Branches'], ['atm', 'ATMs']] as ['' | 'branch' | 'atm', string][]).map(([k, l]) => <Chip key={l} label={l} on={kind === k} onPress={() => setKind(k)} />)}</Row>
       {pick && (
         <Card style={{ gap: 12 }}>

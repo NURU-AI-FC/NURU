@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { type ComponentType, type Ref, useEffect, useMemo, useRef } from 'react'
 import { View } from 'react-native'
-import { WebView } from 'react-native-webview'
+import { WebView as RNWebView } from 'react-native-webview'
 import { useTheme } from '@/lib/theme'
+
+// The package's prop types collapse to never under React Native 0.88, so describe the
+// few props we use here.
+type Handle = { injectJavaScript: (js: string) => void }
+const WebView = RNWebView as unknown as ComponentType<{
+  ref?: Ref<Handle>; originWhitelist: string[]; source: { html: string }; style?: object
+  scrollEnabled?: boolean; onLoadEnd?: () => void; onMessage?: (e: { nativeEvent: { data: string } }) => void
+}>
 
 export type Pin = { id: string; name: string; lat: number; lon: number; kind: 'branch' | 'atm' }
 
@@ -15,7 +23,7 @@ export function LiveMap({ pins, me, selected, onSelect, height = 220 }: {
   height?: number
 }) {
   const { c, dark } = useTheme()
-  const web = useRef<WebView>(null)
+  const web = useRef<Handle>(null)
   const ready = useRef(false)
   const state = JSON.stringify({ pins, me, selected })
 
