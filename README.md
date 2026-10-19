@@ -81,9 +81,37 @@ cd apps/web && npm install && npm run dev
 | api | `UPTIMEROBOT_API_KEY` | optional, 30 day uptime on NURU HQ's platform health |
 | api | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional, unresolved errors on NURU HQ |
 | api | `RESEND_API_KEY` | optional, marks email sending as connected on NURU HQ (sending itself is not wired yet) |
+| api | `REDIS_URL` | optional, Upstash `rediss://` URL. Keeps NURU HQ request metrics across restarts, sign-in rate limits across instances, and caches HQ and console totals for 45 seconds. Empty or unreachable: all of it runs in memory as before |
+| dbcopy | `SUPABASE_DB_URL` | only for the one-off move to Supabase, see below |
 | api, ai | `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_GIT_COMMIT_MESSAGE` | set by Railway, shown as the latest release on NURU HQ |
 | ai | `ANTHROPIC_API_KEY` | optional, enables Claude answers |
+| ai | `KNOWLEDGE_DB_URL` | optional, Postgres with pgvector (Supabase). When its `knowledge_chunks` table has rows, Claude answers get the closest guides. Best as a read only role |
 | web | `VITE_API_URL` | API address at build time, empty to use the `/api` proxy |
+
+## Moving to Supabase and Upstash
+
+Everything below is ready in the code and switches on when the variables are set; with none of them set NURU runs exactly as it does on Railway today.
+
+**Postgres to Supabase.** Migration `020` turns on pgvector and adds `knowledge_chunks` (384 dimension embeddings, HNSW index) where the extension exists; on Railway's Postgres it does nothing. To move the data:
+
+1. In Supabase, copy the connection string from Connect, using the direct connection or the session pooler (port 5432). The transaction pooler (6543) does not suit COPY or the API's prepared statements. Keep `sslmode=require`.
+2. Stop writes for a few minutes: scale the Railway API service to zero, or leave it up only if you accept losing what is written during the copy.
+3. Copy:
+   ```bash
+   cd services/api
+   DATABASE_URL='<railway url>' SUPABASE_DB_URL='<supabase url>' go run ./cmd/dbcopy
+   ```
+   It runs the migrations on Supabase, then in one transaction empties and fills every table in foreign key order, sets the sequences, and prints source and target row counts side by side. It exits non-zero if any count differs. Running it again is safe; if Supabase already has users it asks for `-overwrite`. `-dry-run` shows the plan only.
+4. Set the API's `DATABASE_URL` to the Supabase value and redeploy. Check sign in and NURU HQ.
+5. Keep the Railway Postgres service as the backup. Do not delete it until Supabase has run for a while; to roll back, point `DATABASE_URL` at Railway again.
+
+**Knowledge for answers.** Set `KNOWLEDGE_DB_URL` on the AI service, then load guides (markdown or text):
+```bash
+cd services/ai && KNOWLEDGE_DB_URL='<supabase url>' python knowledge.py ingest docs/guides/*.md
+```
+Embeddings are made locally by feature hashing (no model download, no paid API). It matches shared words and word pieces rather than meaning; swapping in a 384 dimension sentence model is one function in `knowledge.py`, followed by a fresh ingest.
+
+**Redis on Upstash.** Create a Redis database, copy its `rediss://` TCP URL into the API's `REDIS_URL` and redeploy. The API logs `cache: using redis` on start. If Redis goes away it logs once and carries on in memory, retrying every 30 seconds.
 
 ## Team
 
