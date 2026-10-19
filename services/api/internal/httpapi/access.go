@@ -164,7 +164,7 @@ func (s *Server) staffStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if found {
-		s.sendOTP(r.Context(), in.Email, "staff")
+		s.sendOTP(r, in.Email, "staff")
 	} else if err != pgx.ErrNoRows {
 		fail(w, 500, "try again")
 		return

@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 )
 
@@ -81,7 +82,7 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 	if err := seed.User(r.Context(), s.db, id, in.Business); err != nil {
 		log.Printf("seed %s: %v", id, err)
 	}
-	s.sendOTP(r.Context(), in.Email, "signup")
+	s.sendOTP(r, in.Email, "signup")
 	writeJSON(w, 201, map[string]any{"otp_required": true, "demo_code": s.demoCode()})
 }
 
@@ -119,7 +120,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		fail(w, 401, "email or password is wrong")
 		return
 	}
-	s.sendOTP(r.Context(), in.Email, "login")
+	s.sendOTP(r, in.Email, "login")
 	writeJSON(w, 200, map[string]any{"otp_required": true, "demo_code": s.demoCode()})
 }
 
@@ -184,7 +185,7 @@ func (s *Server) forgot(w http.ResponseWriter, r *http.Request) {
 	}
 	var id string
 	if s.db.QueryRow(r.Context(), `select id from users where email=$1`, in.Email).Scan(&id) == nil {
-		s.sendOTP(r.Context(), in.Email, "reset")
+		s.sendOTP(r, in.Email, "reset")
 		s.event(r.Context(), id, "password_reset_requested", "")
 	}
 	writeJSON(w, 200, map[string]any{"otp_required": true, "demo_code": s.demoCode()})
@@ -232,20 +233,31 @@ func (s *Server) demoCode() string {
 	return ""
 }
 
-// sendOTP stores a hashed one time code. In demo mode the code is always
-// 000000 so judges can sign in without a phone; otherwise it is random and
-// would be sent by SMS or email.
-func (s *Server) sendOTP(ctx context.Context, email, purpose string) {
+// sendOTP stores a hashed one time code and emails it. In demo mode the code
+// is always 000000 so judges can sign in without an inbox; otherwise it is
+// random. The email goes out in the background (see sendEmail).
+func (s *Server) sendOTP(r *http.Request, to, purpose string) {
+	ctx := r.Context()
 	code := "000000"
 	if !s.cfg.DemoMode {
 		n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 		code = fmt.Sprintf("%06d", n.Int64())
-		log.Printf("otp for %s issued", email)
+		log.Printf("otp for %s issued", to)
 	}
 	h, _ := auth.Hash(code)
 	s.db.Exec(ctx, `insert into otps(email,code_hash,purpose,expires_at) values($1,$2,$3,$4)
 		on conflict (email) do update set code_hash=excluded.code_hash, purpose=excluded.purpose, attempts=0, expires_at=excluded.expires_at`,
-		email, h, purpose, time.Now().Add(10*time.Minute))
+		to, h, purpose, time.Now().Add(10*time.Minute))
+	switch purpose {
+	case "signup":
+		var name string
+		s.db.QueryRow(ctx, `select name from users where email=$1`, to).Scan(&name)
+		s.sendEmail("", to, email.Welcome(name, code))
+	case "reset":
+		s.sendEmail("", to, email.PasswordReset(code))
+	default: // login, staff
+		s.sendEmail("", to, email.SignInCode(code, deviceName(r.UserAgent()), time.Now()))
+	}
 }
 
 func (s *Server) event(ctx context.Context, userID, kind, detail string) {

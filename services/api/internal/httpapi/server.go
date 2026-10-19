@@ -15,6 +15,7 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/cache"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
 )
 
@@ -27,12 +28,13 @@ type Server struct {
 	fx      *fxCache
 	metrics *metrics
 	cache   *cache.Cache // Redis when REDIS_URL is set, else memory
+	mail    *email.Client
 }
 
 func New(cfg config.Config, db *pgxpool.Pool, box *secure.Box) *Server {
 	c := cache.New(os.Getenv("REDIS_URL"))
 	return &Server{cfg: cfg, db: db, tokens: auth.NewSigner(cfg.JWTSecret), box: box,
-		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}, metrics: newMetrics(c), cache: c}
+		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}, metrics: newMetrics(c), cache: c, mail: email.FromEnv()}
 }
 
 func (s *Server) Routes() http.Handler {
