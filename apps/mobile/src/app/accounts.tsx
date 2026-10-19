@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { BankTile } from '@/components/BankTile'
+import { LinkBank } from '@/components/LinkBank'
 import { api, type Account } from '@/lib/api'
 import { useApp, useMoney } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
@@ -13,20 +14,16 @@ export default function Accounts() {
   const { t, toast } = useApp()
   const money = useMoney()
   const { data, error, reload } = useLoad<{ accounts: Account[]; total: number }>('/accounts')
-  const [busy, setBusy] = useState(false)
+  const [linking, setLinking] = useState(false)
   const net = data?.accounts.reduce((s, a) => s + a.balance, 0) || 0
-
-  async function demo() {
-    setBusy(true)
-    try { await api('/accounts/demo', { body: {} }); toast('Demo bank linked'); reload() } catch (e) { toast((e as Error).message) } finally { setBusy(false) }
-  }
+  const have = (data?.accounts || []).filter((a) => a.kind !== 'business').map((a) => a.bank)
   async function drop(a: Account) {
     try { await api('/accounts/' + a.id, { method: 'DELETE' }); toast(`${a.name} disconnected`); reload() } catch (e) { toast((e as Error).message) }
   }
 
   return (
-    <Screen top={<TopBar title={t('connectedAccounts')} right={<IconBtn name="plus" label="Link account" onPress={demo} />} />}
-      footer={<Button label={t('linkAnother')} variant="out" icon="link" loading={busy} onPress={demo} />}>
+    <Screen top={<TopBar title={t('connectedAccounts')} right={<IconBtn name="plus" label="Link account" onPress={() => setLinking(true)} />} />}
+      footer={<Button label={t('linkAnother')} variant="out" icon="link" onPress={() => setLinking(true)} />}>
       {error ? <ErrorNote text={error} onRetry={reload} /> : null}
       <Card style={{ gap: 6 }}>
         <T v="xs" tone="mu">{t('netWorth')}</T>
@@ -49,7 +46,8 @@ export default function Accounts() {
           </Row>
         </Card>
       )) : <Skeleton h={240} />}
-      <Note icon="info" iconColor={c.blue}>Judges can link the sandbox demo bank with the plus button. Real banks link through Mono on the web app.</Note>
+      <Note icon="info" iconColor={c.blue}>Links run through the Mono sandbox: pick any bank, use test login details, and six months of sample history arrives.</Note>
+      <LinkBank open={linking} have={have} onClose={() => setLinking(false)} onLinked={reload} />
     </Screen>
   )
 }
