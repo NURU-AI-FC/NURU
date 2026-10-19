@@ -78,15 +78,20 @@ cd apps/web && npm install && npm run dev
 | api | `AI_URL` | where `services/ai` runs |
 | api | `WEB_ORIGINS` | comma separated allowed origins |
 | api | `DEMO_MODE` | `true` creates the demo accounts and uses code 000000 |
-| api | `UPTIMEROBOT_API_KEY` | optional, 30 day uptime on NURU HQ's platform health |
-| api | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional, unresolved errors on NURU HQ |
-| api | `RESEND_API_KEY` | optional, marks email sending as connected on NURU HQ (sending itself is not wired yet) |
+| api | `UPTIMEROBOT_API_KEY` | optional. On start the API creates the `NURU web` and `NURU API health` HTTP monitors if they are missing (matched by name, never duplicated), and NURU HQ's platform health shows their 30 day uptime |
+| api | `APP_URL` | optional, public web address used in email buttons and the uptime monitors. Default `https://web-production-fd530.up.railway.app` |
+| api | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | optional, lets NURU HQ read unresolved errors from Sentry |
+| api, ai | `SENTRY_DSN` | optional, reports errors and panics to Sentry (each service can use its own project DSN). Release is `RAILWAY_GIT_COMMIT_SHA`. Empty: no SDK traffic at all |
+| api, ai, web | `SENTRY_ENVIRONMENT` | optional, Sentry environment. Defaults to `RAILWAY_ENVIRONMENT_NAME` (api, ai) or the Vite mode (web) |
+| api | `RESEND_API_KEY` | optional, sends email through Resend: sign-in and welcome codes, password reset, new device sign-in, transfer sent and money received receipts, weekly recap, budget alerts and team invites. Empty: every email is still written to `email_log` as `skipped:no_key` and shows on NURU HQ as not sent. `@nuru.app` demo accounts are always logged, never sent |
+| api | `EMAIL_FROM` | optional, sender. Default `NURU <onboarding@resend.dev>`, which only delivers to the Resend account owner until a domain is verified |
 | api | `REDIS_URL` | optional, Upstash `rediss://` URL. Keeps NURU HQ request metrics across restarts, sign-in rate limits across instances, and caches HQ and console totals for 45 seconds. Empty or unreachable: all of it runs in memory as before |
 | dbcopy | `SUPABASE_DB_URL` | only for the one-off move to Supabase, see below |
 | api, ai | `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_GIT_COMMIT_MESSAGE` | set by Railway, shown as the latest release on NURU HQ |
 | ai | `ANTHROPIC_API_KEY` | optional, enables Claude answers |
 | ai | `KNOWLEDGE_DB_URL` | optional, Postgres with pgvector (Supabase). When its `knowledge_chunks` table has rows, Claude answers get the closest guides. Best as a read only role |
 | web | `VITE_API_URL` | API address at build time, empty to use the `/api` proxy |
+| web | `VITE_SENTRY_DSN` | optional, read at build time (the Dockerfile passes it, with `RAILWAY_GIT_COMMIT_SHA` as the release, as build args). Empty: the Sentry SDK is never loaded |
 
 ## Moving to Supabase and Upstash
 
