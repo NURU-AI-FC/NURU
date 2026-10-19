@@ -6,10 +6,11 @@ import (
 )
 
 // Letters only Yorùbá, Igbo or Hausa use. One is enough to tell the language.
-var langLetters = map[string]string{
-	"yo": "ẹọṣẸỌṢ",
-	"ig": "ịụṅỊỤṄ",
-	"ha": "ɗƙɓƊƘƁ",
+// ọ is left out because Yorùbá and Igbo both use it.
+var langLetters = []struct{ lang, letters string }{
+	{"ig", "ịụṅỊỤṄ"},
+	{"ha", "ɗƙɓƊƘƁ"},
+	{"yo", "ẹṣẸṢ"},
 }
 
 // Common words that are distinctive to each language, without tone marks.
@@ -26,9 +27,9 @@ var langWeak = map[string]bool{"mi": true, "ni": true, "ka": true, "m": true, "n
 // and speaks in that language even if the app is set to another. It returns
 // fallback unless the message clearly reads as Yorùbá, Igbo or Hausa.
 func detectLang(msg, fallback string) string {
-	for lang, letters := range langLetters {
-		if strings.ContainsAny(msg, letters) {
-			return lang
+	for _, l := range langLetters {
+		if strings.ContainsAny(msg, l.letters) {
+			return l.lang
 		}
 	}
 	words := strings.FieldsFunc(strings.ToLower(stripTones(msg)), func(r rune) bool { return !unicode.IsLetter(r) })
