@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
 type note struct {
@@ -26,8 +28,9 @@ type note struct {
 	At     time.Time `json:"at"`
 }
 
-// notify stores a notification once; the key stops duplicates.
-func (s *Server) notify(ctx context.Context, user string, n note) {
+// notify stores a notification once; the key stops duplicates. It reports
+// whether the notification is new.
+func (s *Server) notify(ctx context.Context, user string, n note) bool {
 	var tx any
 	if n.TxID != "" {
 		tx = n.TxID
@@ -36,8 +39,9 @@ func (s *Server) notify(ctx context.Context, user string, n note) {
 	if at.IsZero() {
 		at = time.Now()
 	}
-	s.db.Exec(ctx, `insert into notifications(user_id,key,kind,tone,icon,title,body,amount,tx_id,link,created_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+	tag, err := s.db.Exec(ctx, `insert into notifications(user_id,key,kind,tone,icon,title,body,amount,tx_id,link,created_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		on conflict (user_id,key) do nothing`, user, n.Key, n.Kind, n.Tone, n.Icon, n.Title, n.Body, n.Amount, tx, n.Link, at)
+	return err == nil && tag.RowsAffected() == 1
 }
 
 type notifyPrefs struct {
@@ -164,6 +168,36 @@ func (s *Server) syncNotes(ctx context.Context, user string) {
 	}
 
 	month := time.Now().Format("2006-01")
+	// budgets at 80% and again when used up: one notification and one email each
+	if p.MonthlyPlan || p.Unusual {
+		budgets, _ := s.listBudgets(ctx, user)
+		_, end := monthBounds(time.Now())
+		days := int(time.Until(end).Hours()/24) + 1
+		for _, b := range budgets {
+			step := 0
+			switch {
+			case b.Pct >= 100:
+				step = 100
+			case b.Pct >= 80:
+				step = 80
+			}
+			if step == 0 {
+				continue
+			}
+			body := naira(b.Limit-b.Spent) + " left for " + strconv.Itoa(days) + " days."
+			if step == 100 {
+				body = naira(b.Spent-b.Limit) + " over with " + strconv.Itoa(days) + " days to go."
+			}
+			if s.notify(ctx, user, note{Key: "budget:" + b.ID + ":" + month + ":" + strconv.Itoa(step), Kind: "alert", Tone: "amber", Icon: "pie",
+				Title: b.Category + " budget: " + strconv.Itoa(b.Pct) + "% used", Body: body, Amount: b.Spent, Link: "/insights/budgets"}) {
+				s.sendEmail(user, "", email.BudgetAlert(email.Budget{Category: b.Category, Spent: b.Spent, Limit: b.Limit, DaysLeft: days}))
+			}
+		}
+	}
+	if p.WeeklyRecap {
+		s.mailWeekly(ctx, user)
+	}
+
 	for _, in := range s.computeInsights(ctx, user) {
 		icon, kind := "sparkles", "insight"
 		switch in.Kind {

@@ -199,7 +199,7 @@ func (s *Server) hqAttention(ctx context.Context, checks []map[string]any) []map
 	s.db.QueryRow(ctx, `select coalesce(avg(case when opened_at is not null then 100 else 0 end) filter (where sent_at>now()-interval '7 days'),0)::float8,
 		coalesce(avg(case when opened_at is not null then 100 else 0 end) filter (where sent_at<=now()-interval '7 days'),0)::float8,
 		count(*) filter (where sent_at>now()-interval '7 days')::float8, count(*) filter (where sent_at<=now()-interval '7 days')::float8
-		from email_log where sent_at>now()-interval '14 days'`).Scan(&now, &prev, &nNow, &nPrev)
+		from email_log where sent_at>now()-interval '14 days' and `+delivered).Scan(&now, &prev, &nNow, &nPrev)
 	if nNow >= 20 && nPrev >= 20 && prev-now >= 5 {
 		out = append(out, map[string]any{"icon": "mail", "tone": "blue", "title": "Email open rate fell to " + strconv.Itoa(int(now)) + "%",
 			"sub": "Down from " + strconv.Itoa(int(prev)) + "% last week", "area": "emails"})
@@ -328,23 +328,30 @@ func (s *Server) hqTicket(w http.ResponseWriter, r *http.Request) {
 var emailNames = map[string]string{
 	"welcome": "Welcome and verify", "transfer_sent": "Transfer sent", "describe_payment": "What was this payment for?",
 	"weekly_recap": "Weekly money recap", "budget_alert": "Budget almost used", "winback": "We miss you",
+	"signin_code": "Sign-in code", "pin_reset": "Password reset code", "new_device": "New device sign-in",
+	"transfer_received": "Money received", "staff_invite": "Team invite",
 }
+
+// delivered matches email_log rows that really went out, not the ones logged
+// while sending was off, for a demo account, or that the provider refused.
+const delivered = `provider_id not like 'skipped:%' and provider_id<>'failed'`
 
 func (s *Server) hqEmails(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	days := hqDays(r)
 	from := since(days)
-	var sent, opened, clicked, total, templates float64
-	s.db.QueryRow(ctx, `select count(*) filter (where sent_at>=$1)::float8, count(*) filter (where sent_at>=$1 and opened_at is not null)::float8,
-		count(*) filter (where sent_at>=$1 and clicked_at is not null)::float8, count(*)::float8, count(distinct template)::float8 from email_log`, from).
-		Scan(&sent, &opened, &clicked, &total, &templates)
+	var sent, opened, clicked, total, templates, skipped, failed float64
+	s.db.QueryRow(ctx, `select count(*) filter (where sent_at>=$1 and `+delivered+`)::float8, count(*) filter (where sent_at>=$1 and opened_at is not null)::float8,
+		count(*) filter (where sent_at>=$1 and clicked_at is not null)::float8, count(*)::float8, count(distinct template) filter (where sent_at>=$1)::float8,
+		count(*) filter (where sent_at>=$1 and provider_id like 'skipped:%')::float8, count(*) filter (where sent_at>=$1 and provider_id='failed')::float8 from email_log`, from).
+		Scan(&sent, &opened, &clicked, &total, &templates, &skipped, &failed)
 	// came back: customers with a sign in or question within 7 days after a win back email
 	back := 0.0
 	s.db.QueryRow(ctx, `select count(distinct e.user_id)::float8 from email_log e where e.template='winback' and e.sent_at>=$1
 		and (exists (select 1 from sessions x where x.user_id=e.user_id and x.created_at between e.sent_at and e.sent_at+interval '7 days')
 		  or exists (select 1 from chats c where c.user_id=e.user_id and c.role='user' and c.created_at between e.sent_at and e.sent_at+interval '7 days'))`, from).Scan(&back)
-	rows, err := s.db.Query(ctx, `select template, count(*)::float8, count(opened_at)::float8, count(clicked_at)::float8 from email_log
-		where sent_at>=$1 group by 1 order by 2 desc`, from)
+	rows, err := s.db.Query(ctx, `select template, count(*) filter (where `+delivered+`)::float8, count(opened_at)::float8, count(clicked_at)::float8,
+		count(*) filter (where not (`+delivered+`))::float8 from email_log where sent_at>=$1 group by 1 order by 2 desc, 5 desc`, from)
 	if err != nil {
 		fail(w, 500, "could not load emails")
 		return
@@ -353,14 +360,14 @@ func (s *Server) hqEmails(w http.ResponseWriter, r *http.Request) {
 	list := []map[string]any{}
 	for rows.Next() {
 		var t string
-		var n, o, c float64
-		rows.Scan(&t, &n, &o, &c)
+		var n, o, c, sk float64
+		rows.Scan(&t, &n, &o, &c, &sk)
 		name := emailNames[t]
 		if name == "" {
 			name = t
 		}
-		list = append(list, map[string]any{"template": t, "name": name, "sent": n, "open_rate": math.Round(pct(o, n)), "click_rate": math.Round(pct(c, n))})
+		list = append(list, map[string]any{"template": t, "name": name, "sent": n, "not_sent": sk, "open_rate": math.Round(pct(o, n)), "click_rate": math.Round(pct(c, n))})
 	}
 	writeJSON(w, 200, map[string]any{"days": days, "sent": sent, "open_rate": math.Round(pct(opened, sent)), "click_rate": math.Round(pct(clicked, sent)),
-		"came_back": back, "ever": total, "templates": templates, "emails": list, "provider": map[bool]string{true: "Resend", false: ""}[resendReady()]})
+		"came_back": back, "ever": total, "skipped": skipped, "failed": failed, "templates": templates, "emails": list, "provider": map[bool]string{true: "Resend", false: ""}[resendReady()]})
 }
