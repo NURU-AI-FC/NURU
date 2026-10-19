@@ -39,12 +39,20 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 120,
           "backgroundColor": "#E30613",
-          "dark": { "backgroundColor": "#5C0008" }
+          "dark": {
+            "backgroundColor": "#5C0008"
+          }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": false
+    },
+    "owner": "nuruai",
+    "extra": {
+      "eas": {
+        "projectId": "53254f6f-36d3-4c72-9f50-a26fc64be5f6"
+      }
     }
   }
 }
