@@ -9,6 +9,7 @@ import { useLoad } from '@/lib/useLoad'
 import { Bars, Donut, Legend, LineChart, Ring } from '@/ui/charts'
 import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Card, Col, ErrorNote, Ic, IconBtn, Note, Progress, Row, Screen, SectionTitle, Seg, Skeleton, T, TopBar } from '@/ui/kit'
+import { MenuButton } from '@/components/Drawer'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 const PERIOD_NAME: Record<Period, string> = { day: 'today', week: 'this week', month: 'in ' + monthName(), year: 'this year' }
@@ -36,7 +37,7 @@ export default function Insights() {
   const shortLabels = labels.map((l, i) => (i % every === 0 || i === labels.length - 1 ? l.replace(':00', '') : ''))
 
   return (
-    <Screen tab gap={14} top={<TopBar title={t('insights')} back={false} right={<IconBtn name="calendar" label="Planner" onPress={() => router.push('/planner')} />} />}>
+    <Screen tab gap={14} top={<TopBar title={t('insights')} left={<MenuButton />} right={<IconBtn name="calendar" label="Planner" onPress={() => router.push('/planner')} />} />}>
       <Seg value={period} onChange={setPeriod} options={[['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['year', 'Year']]} />
       {sum.error ? <ErrorNote text={sum.error} onRetry={sum.reload} /> : null}
 

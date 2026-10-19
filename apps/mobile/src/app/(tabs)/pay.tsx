@@ -8,6 +8,7 @@ import { useTheme } from '@/lib/theme'
 import { useLoad } from '@/lib/useLoad'
 import { Icon, type IconName } from '@/ui/Icon'
 import { Avatar, Card, Chip, Divider, Ic, IconBtn, ListRow, Row, Screen, SectionTitle, Skeleton, Soft, T, TopBar } from '@/ui/kit'
+import { MenuButton } from '@/components/Drawer'
 
 // p08 "01 Pay hub" with the saved beneficiaries list (13) below.
 export default function Pay() {
@@ -24,7 +25,7 @@ export default function Pay() {
   const soon = () => toast('This payment type is on the web app for now.')
 
   return (
-    <Screen tab gap={18} top={<TopBar title={tabs.pay} back={false} right={<IconBtn name="qr" label="Scan to pay" onPress={soon} />} />}>
+    <Screen tab gap={18} top={<TopBar title={tabs.pay} left={<MenuButton />} right={<IconBtn name="qr" label="Scan to pay" onPress={soon} />} />}>
       <Soft style={{ paddingHorizontal: 16 }}>
         <Row between>
           <View style={{ gap: 4 }}>

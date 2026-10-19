@@ -10,12 +10,11 @@ import { Icon, type IconName } from '@/ui/Icon'
 import { Avatar, Button, Card, Ic, Label, ListRow, Row, Screen, T, Toggle, TopBar } from '@/ui/kit'
 import { Sheet } from '@/ui/Sheet'
 
-// p12 "01 Settings" as the More tab, with the money tools listed first.
-export default function More() {
+// p12 "01 Settings", opened from the side menu.
+export default function Settings() {
   const { c, pref } = useTheme()
-  const { user, t, tabs, lang, signOut } = useApp()
+  const { user, t, lang, signOut } = useApp()
   const accts = useLoad<{ accounts: Account[] }>('/accounts').data?.accounts
-  const unread = useLoad<{ unread: number }>('/notifications?count=1').data?.unread || 0
   const [logout, setLogout] = useState(false)
   const [all, setAll] = useState(false)
   const val = (s: string) => <Row gap={6}><T v="xs" tone="t2">{s}</T><Icon name="chevr" size={18} color={c.muted} /></Row>
@@ -24,7 +23,7 @@ export default function More() {
     <ListRow key={title} icon={icon} title={title} tone={tone} size={36} pad={6} onPress={go(path)} right={right} />
 
   return (
-    <Screen tab gap={8} top={<TopBar title={tabs.more} back={false} />}>
+    <Screen gap={8} top={<TopBar title={t('settings')} />}>
       <Card pad={14} onPress={go('/settings/profile')}>
         <Row gap={12}>
           <Avatar name={user?.name || 'NURU'} size={48} bg={c.red} />
@@ -36,13 +35,9 @@ export default function More() {
         </Row>
       </Card>
 
-      <Label style={{ marginTop: 8 }}>Your money</Label>
+      <Label style={{ marginTop: 8 }}>Account</Label>
       {item('wallet', t('connectedAccounts'), '/accounts', val(String(accts?.length ?? '')))}
       {item('briefcase', t('business'), '/business', val(user?.business_name ? 'On' : 'Set up'), 'red')}
-      {item('calendar', t('planner'), '/planner')}
-      {item('bell', t('notificationsTitle'), '/notifications', unread ? <Row gap={6}><View style={{ minWidth: 20, height: 20, paddingHorizontal: 6, borderRadius: 10, backgroundColor: c.red, alignItems: 'center', justifyContent: 'center' }}><T v="xs" w={700} color="#FFFFFF">{unread}</T></View><Icon name="chevr" size={18} color={c.muted} /></Row> : undefined)}
-      {item('history', t('historyTitle'), '/history')}
-      {item('pin', t('branches'), '/branches')}
 
       <Label style={{ marginTop: 8 }}>Preferences</Label>
       {item('sun', t('appearance'), '/settings/appearance', val(pref === 'system' ? 'System' : pref === 'dark' ? 'Dark' : 'Light'))}

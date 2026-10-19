@@ -349,10 +349,10 @@ export const KV = ({ k, v, strong }: { k: string; v: ReactNode; strong?: boolean
 )
 
 // ---------- screens ----------
-export function TopBar({ title, back = true, right, onBack }: { title?: string; back?: boolean; right?: ReactNode; onBack?: () => void }) {
+export function TopBar({ title, back = true, right, left, onBack }: { title?: string; back?: boolean; right?: ReactNode; left?: ReactNode; onBack?: () => void }) {
   return (
     <Row between style={{ height: 52, paddingHorizontal: 20 }}>
-      {back ? <IconBtn name="chevl" label="Back" onPress={onBack || (() => (router.canGoBack() ? router.back() : router.replace('/')))} /> : <View style={{ width: 40 }} />}
+      {left || (back ? <IconBtn name="chevl" label="Back" onPress={onBack || (() => (router.canGoBack() ? router.back() : router.replace('/')))} /> : <View style={{ width: 40 }} />)}
       <T v="h4" lines={1} style={{ flex: 1, textAlign: 'center', marginHorizontal: 8 }}>{title || ''}</T>
       {right || <View style={{ width: 40 }} />}
     </Row>

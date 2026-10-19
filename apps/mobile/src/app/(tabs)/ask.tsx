@@ -2,6 +2,7 @@ import { useLocalSearchParams, router } from 'expo-router'
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio'
 import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
+import { MenuButton } from '@/components/Drawer'
 import { askLine, DescribeCard, ReminderCard, TransferCard, type Described } from '@/components/ChatCards'
 import { suggestions } from '@/i18n'
 import { api, type ChatAction, type ChatMsg, type ChatReply, type Pending, type Source, type Thread } from '@/lib/api'
@@ -30,7 +31,7 @@ export default function Ask() {
   const { user, lang, t, toast } = useApp()
   const money = useMoney()
   const insets = useSafeAreaInsets()
-  const params = useLocalSearchParams<{ q?: string }>()
+  const params = useLocalSearchParams<{ q?: string; thread?: string; new?: string }>()
   const [msgs, setMsgs] = useState<ChatMsg[]>([])
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -64,6 +65,13 @@ export default function Ask() {
   useEffect(() => {
     if (params.q && asked.current !== params.q) { asked.current = params.q; router.setParams({ q: undefined }); send(params.q) }
   }, [params.q]) // eslint-disable-line react-hooks/exhaustive-deps
+  // the side menu opens a recent chat or starts a new one
+  useEffect(() => {
+    if (params.thread) { const id = params.thread; router.setParams({ thread: undefined }); openThread(id) }
+  }, [params.thread]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (params.new) { router.setParams({ new: undefined }); setMsgs([]); setThread('') }
+  }, [params.new])
   useEffect(() => { setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 80) }, [msgs, busy])
 
   const now = () => new Date().toISOString()
@@ -163,12 +171,15 @@ export default function Ask() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
       <Row between style={{ height: 56, paddingHorizontal: 20 }}>
-        <IconBtn name="menu" label="Chat history" onPress={openHistory} />
-        <View style={{ alignItems: 'center', gap: 2 }}>
+        <MenuButton />
+        <View style={{ alignItems: 'center', gap: 2, flex: 1 }}>
           <T v="h4">{t('ask')}</T>
           <T v="xs" tone="mu">Only answers about your money</T>
         </View>
-        <IconBtn name="edit" label="New chat" onPress={() => { setMsgs([]); setThread('') }} />
+        <Row gap={8}>
+          <IconBtn name="history" label="Chat history" onPress={openHistory} />
+          <IconBtn name="edit" label="New chat" onPress={() => { setMsgs([]); setThread('') }} />
+        </Row>
       </Row>
       <KeyAvoid>
         <KeyboardScroll ref={scroll} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 }}>

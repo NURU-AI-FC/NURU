@@ -1,4 +1,5 @@
-// Tab bar from the design: Home, Insights, a raised Ask NURU button, Pay, More.
+// Tab bar: Home, Insights, a raised Ask NURU button and Pay. Everything that
+// used to sit under More is in the side menu (components/Drawer.tsx).
 import type { BottomTabBarProps } from 'expo-router/js-tabs'
 import { Platform, Pressable, Text, View, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -6,12 +7,11 @@ import { useApp } from '../lib/store'
 import { font, useTheme } from '../lib/theme'
 import { Icon, type IconName } from './Icon'
 
-const TABS: { name: string; key: 'home' | 'insights' | 'ask' | 'pay' | 'more'; icon: IconName }[] = [
+const TABS: { name: string; key: 'home' | 'insights' | 'ask' | 'pay'; icon: IconName }[] = [
   { name: 'home', key: 'home', icon: 'home' },
   { name: 'insights', key: 'insights', icon: 'chart' },
   { name: 'ask', key: 'ask', icon: 'sparkles' },
   { name: 'pay', key: 'pay', icon: 'send' },
-  { name: 'more', key: 'more', icon: 'grid' },
 ]
 
 export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
@@ -31,7 +31,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         if (t.key === 'ask') {
           return (
             <Pressable key={t.key} onPress={go} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tabs.ask}
-              style={{ width: 72, alignItems: 'center', gap: 4 }}>
+              style={{ flex: 1, maxWidth: 96, alignItems: 'center', gap: 4 }}>
               <View style={[{ width: 56, height: 56, borderRadius: 18, backgroundColor: c.red, alignItems: 'center', justifyContent: 'center', marginTop: -22 }, fab]}>
                 <Icon name="sparkles" size={26} color="#FFFFFF" />
               </View>
@@ -41,7 +41,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         }
         return (
           <Pressable key={t.key} onPress={go} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tabs[t.key]}
-            style={{ width: 64, alignItems: 'center', gap: 4 }}>
+            style={{ flex: 1, maxWidth: 96, alignItems: 'center', gap: 4 }}>
             <Icon name={t.icon} size={22} color={on ? c.red : c.muted} />
             <Text numberOfLines={1} style={{ fontSize: 10, fontFamily: font[500], color: on ? c.red : c.muted }}>{tabs[t.key]}</Text>
           </Pressable>

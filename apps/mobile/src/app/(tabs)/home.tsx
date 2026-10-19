@@ -11,6 +11,7 @@ import { Bars } from '@/ui/charts'
 import { Icon, type IconName } from '@/ui/Icon'
 import { BankTile } from '@/components/BankTile'
 import { Badge, Button, Card, Col, ErrorNote, Hero, Ic, IconBtn, Row, Screen, SectionTitle, Seg, Skeleton, T, TxRow } from '@/ui/kit'
+import { MenuButton } from '@/components/Drawer'
 
 const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR']
 
@@ -55,7 +56,7 @@ export default function Home() {
       top={
         <Row between style={{ height: 56, paddingHorizontal: 20 }}>
           <Row gap={10}>
-            <IconBtn name="menu" label="Menu" onPress={() => router.push('/more')} />
+            <MenuButton />
             <Col><T v="xs" tone="mu">{t(greeting())}</T><T v="h4">{first}</T></Col>
           </Row>
           <Row gap={8}>
@@ -92,7 +93,7 @@ export default function Home() {
         <QA icon="send" label="Send" onPress={() => router.push('/send')} />
         <QA icon="receipt" label="Pay bills" onPress={() => router.push('/pay')} />
         <QA icon="exchange" label="Convert" onPress={() => toast('Currency converter is on the web app for now.')} />
-        <QA icon="grid" label="More" onPress={() => router.push('/more')} />
+        <QA icon="calendar" label="Planner" onPress={() => router.push('/planner')} />
       </Row>
 
       {tip && (
