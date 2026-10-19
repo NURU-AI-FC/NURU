@@ -22,7 +22,7 @@ func (s *Server) hqRoutes(r chi.Router) {
 	r.Group(func(r chi.Router) {
 		r.Use(func(h http.Handler) http.Handler { return auth.RequireRole("hq", h) })
 		in := func(area string) func(http.Handler) http.Handler { return s.gate("hq", hqAreas, area) }
-		r.With(in("overview")).Get("/hq/overview", s.hqOverview)
+		r.With(in("overview"), s.cached(45*time.Second)).Get("/hq/overview", s.hqOverview)
 		r.With(in("health")).Get("/hq/health", s.hqHealth)
 		r.With(in("support")).Get("/hq/support", s.hqSupport)
 		r.With(in("support")).Post("/hq/support", s.hqNewTicket)
