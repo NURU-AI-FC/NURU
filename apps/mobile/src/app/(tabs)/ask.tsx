@@ -1,6 +1,7 @@
 import { useLocalSearchParams, router } from 'expo-router'
+import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio'
 import { useEffect, useRef, useState } from 'react'
-import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
+import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
 import { askLine, DescribeCard, ReminderCard, TransferCard, type Described } from '@/components/ChatCards'
 import { suggestions } from '@/i18n'
 import { api, type ChatAction, type ChatMsg, type ChatReply, type Pending, type Source, type Thread } from '@/lib/api'
@@ -12,6 +13,7 @@ import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Button, Card, Chip, Ic, IconBtn, Logo, Mark, Row, T } from '@/ui/kit'
 import { KeyAvoid, KeyboardScroll } from '@/ui/KeyboardScroll'
 import { Sheet } from '@/ui/Sheet'
+import { speak, stopSpeaking, transcribe } from '@/lib/voice'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STARTERS: [IconName, string][] = [
@@ -40,6 +42,23 @@ export default function Ask() {
   const [history, setHistory] = useState<Thread[] | null>(null)
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const asked = useRef('')
+  // voice: tap the mic to record, tap again to stop and send
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
+  const [rec, setRec] = useState<'idle' | 'starting' | 'recording' | 'hearing'>('idle')
+  const [secs, setSecs] = useState(0)
+  const [speaking, setSpeaking] = useState(false)
+  const tick = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pulse = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    if (rec !== 'recording') { pulse.stopAnimation(); pulse.setValue(0); return }
+    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1100, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' }))
+    loop.start()
+    return () => loop.stop()
+  }, [rec, pulse])
+  useEffect(() => () => { if (tick.current) clearInterval(tick.current); stopSpeaking() }, [])
+  // stop on its own after a minute so a forgotten recording does not run on
+  useEffect(() => { if (rec === 'recording' && secs >= 60) stopRecording() }, [secs, rec]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { api<Pending>('/transactions/undescribed').then(setPending).catch(() => {}) }, [])
   useEffect(() => {
@@ -50,7 +69,7 @@ export default function Ask() {
   const now = () => new Date().toISOString()
   const say = (content: string, actions: ChatAction[] = []) => setMsgs((m) => [...m, { role: 'assistant', content, lang, at: now(), actions }])
 
-  async function send(q = text) {
+  async function send(q = text, byVoice = false) {
     q = q.trim()
     if (!q || busy) return
     setText('')
@@ -60,9 +79,58 @@ export default function Ask() {
       const r = await api<ChatReply>('/chat', { body: { message: q, lang, thread } })
       if (r.thread) setThread(r.thread)
       setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang, at: now(), chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      if (byVoice && r.answer) readAloud(r.answer)
     } catch (e) {
       say((e as Error).message)
     } finally { setBusy(false) }
+  }
+
+  function readAloud(s: string, force = false) {
+    setSpeaking(true)
+    speak(s, lang, () => setSpeaking(false), { force }).catch(() => setSpeaking(false))
+  }
+  function quiet() { stopSpeaking(); setSpeaking(false) }
+
+  async function startRecording() {
+    if (rec !== 'idle' || busy) return
+    quiet()
+    setRec('starting')
+    try {
+      const perm = await requestRecordingPermissionsAsync()
+      if (!perm.granted) {
+        setRec('idle')
+        toast(perm.canAskAgain === false ? 'Turn on the microphone for NURU in your phone settings.' : 'NURU needs the microphone to hear you.')
+        return
+      }
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true })
+      await recorder.prepareToRecordAsync()
+      recorder.record()
+      setSecs(0)
+      tick.current = setInterval(() => setSecs((n) => n + 1), 1000)
+      setRec('recording')
+    } catch {
+      setRec('idle')
+      toast('Could not start the microphone. Try again.')
+    }
+  }
+
+  async function stopRecording(cancel = false) {
+    if (rec !== 'recording') return
+    if (tick.current) { clearInterval(tick.current); tick.current = null }
+    setRec(cancel ? 'idle' : 'hearing')
+    try {
+      await recorder.stop()
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => {})
+      if (cancel) return
+      const uri = recorder.uri
+      if (!uri || secs < 1) { toast('Hold on a little longer, then tap stop.'); return }
+      const heard = await transcribe(uri, lang)
+      setText(heard)
+      setRec('idle')
+      await send(heard, true)
+    } catch (e) {
+      toast((e as Error).message || 'Could not hear that, try again')
+    } finally { setRec('idle') }
   }
 
   function offer(a: ChatAction) {
@@ -139,10 +207,15 @@ export default function Ask() {
               {m.actions?.filter((a) => a.kind === 'transfer').map((a, j) => <TransferCard key={j} action={a} onSent={(s) => say(s)} />)}
               {m.actions?.filter((a) => a.kind === 'reminder').map((a, j) => <ReminderCard key={j} action={a} onSet={(s) => say(s)} />)}
               {!!m.sources?.length && (
-                <Pressable onPress={() => setSources(m.sources!)} style={{ marginLeft: 36, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                  <Icon name="volume" size={16} color={c.muted} /><Icon name="copy" size={16} color={c.muted} /><Icon name="thumbup" size={16} color={c.muted} />
-                  <T v="xs" tone="mu" lines={1} style={{ flex: 1, marginLeft: 4 }}>Source: {m.sources.map((s) => s.detail).join(', ')}</T>
-                </Pressable>
+                <Row gap={6} style={{ marginLeft: 36 }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Read aloud" hitSlop={8} onPress={() => (speaking ? quiet() : readAloud(m.content, true))}>
+                    <Icon name={speaking ? 'stop' : 'volume'} size={16} color={speaking ? c.red : c.muted} />
+                  </Pressable>
+                  <Pressable onPress={() => setSources(m.sources!)} style={{ flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <Icon name="copy" size={16} color={c.muted} /><Icon name="thumbup" size={16} color={c.muted} />
+                    <T v="xs" tone="mu" lines={1} style={{ flex: 1, marginLeft: 4 }}>Source: {m.sources.map((s) => s.detail).join(', ')}</T>
+                  </Pressable>
+                </Row>
               )}
               <Row gap={6} style={{ marginLeft: 36, flexWrap: 'wrap' }}>
                 {m.actions?.filter((a) => a.kind === 'offer' && !declined.includes(m.at)).map((a) => (
@@ -170,6 +243,11 @@ export default function Ask() {
           {msgs.length > 0 && <Row gap={6} style={{ marginLeft: 36 }}><Icon name="shieldcheck" size={14} color={c.muted} /><T v="xs" tone="mu">NURU never sends money without your PIN and face check</T></Row>}
         </KeyboardScroll>
 
+        {speaking && (
+          <Row center style={{ paddingBottom: 8 }}>
+            <Chip icon="volume" label="Reading aloud · Stop" onPress={quiet} />
+          </Row>
+        )}
         {followUps.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingBottom: 8 }}>
             {followUps.map((f) => <Chip key={f} label={f} onPress={() => send(f)} />)}
@@ -177,13 +255,42 @@ export default function Ask() {
         )}
         <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: c.border, backgroundColor: c.bg }}>
           <Row gap={8}>
-            <View style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: c.border, backgroundColor: dark ? c.surface : c.bg, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}>
-              <TextInput value={text} onChangeText={setText} onSubmitEditing={() => send()} returnKeyType="send" placeholder={t('askPlaceholder')} placeholderTextColor={c.muted}
-                style={[{ flex: 1, height: '100%', fontSize: 15, fontFamily: font[400], color: c.text }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
-              <Badge label={lang.toUpperCase()} />
+            {rec === 'recording' || rec === 'hearing' ? (
+              <View style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: c.red, backgroundColor: c.red50, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 }}>
+                {rec === 'recording' ? (
+                  <>
+                    <View style={{ width: 12, height: 12, alignItems: 'center', justifyContent: 'center' }}>
+                      <Animated.View style={{ position: 'absolute', width: 12, height: 12, borderRadius: 6, backgroundColor: c.red, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 2.6] }) }] }} />
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.red }} />
+                    </View>
+                    <T v="s" w={600} tone="rd" style={{ flex: 1 }}>Listening · {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, '0')}</T>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Cancel recording" hitSlop={8} onPress={() => stopRecording(true)}>
+                      <Icon name="x" size={18} color={c.text2} />
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <ActivityIndicator size="small" color={c.red} />
+                    <T v="s" w={600} tone="rd" style={{ flex: 1 }}>Getting your words…</T>
+                  </>
+                )}
+              </View>
+            ) : (
+              <View style={{ flex: 1, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: c.border, backgroundColor: dark ? c.surface : c.bg, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}>
+                <TextInput value={text} onChangeText={setText} onSubmitEditing={() => send()} returnKeyType="send" placeholder={t('askPlaceholder')} placeholderTextColor={c.muted}
+                  style={[{ flex: 1, height: '100%', fontSize: 15, fontFamily: font[400], color: c.text }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
+                <Badge label={lang.toUpperCase()} />
+              </View>
+            )}
+            <View>
+              {rec === 'recording' && (
+                <Animated.View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width: 48, height: 48, borderRadius: 24, backgroundColor: c.red, opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] }), transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.6] }) }] }} />
+              )}
+              <IconBtn size={48} color="#FFFFFF" bg={c.red}
+                name={rec === 'recording' ? 'stop' : text.trim() && rec === 'idle' ? 'send' : 'mic'}
+                label={rec === 'recording' ? 'Stop recording and send' : text.trim() ? 'Send' : 'Ask by voice'}
+                onPress={() => (rec === 'recording' ? stopRecording() : rec !== 'idle' ? undefined : text.trim() ? send() : startRecording())} />
             </View>
-            <IconBtn size={48} name={text.trim() ? 'send' : 'mic'} color="#FFFFFF" bg={c.red} label={text.trim() ? 'Send' : 'Voice'}
-              onPress={() => (text.trim() ? send() : toast('Voice input arrives with the store build. Type your question for now.'))} />
           </Row>
         </View>
       </KeyAvoid>
