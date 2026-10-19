@@ -5,7 +5,7 @@ import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, T
 import { MenuButton } from '@/components/Drawer'
 import { askLine, DescribeCard, ReminderCard, TransferCard, type Described } from '@/components/ChatCards'
 import { suggestions } from '@/i18n'
-import { api, type ChatAction, type ChatMsg, type ChatReply, type Pending, type Source, type Thread } from '@/lib/api'
+import { api, type ChatAction, type ChatMsg, type ChatReply, type Lang, type Pending, type Source, type Thread } from '@/lib/api'
 import { greeting, when } from '@/lib/format'
 import { useApp, useMoney } from '@/lib/store'
 import { font, useTheme } from '@/lib/theme'
@@ -14,7 +14,7 @@ import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Button, Card, Chip, Ic, IconBtn, Logo, Mark, Row, T } from '@/ui/kit'
 import { KeyAvoid, KeyboardScroll } from '@/ui/KeyboardScroll'
 import { Sheet } from '@/ui/Sheet'
-import { speak, stopSpeaking, transcribe } from '@/lib/voice'
+import { readAloudOn, setReadAloud, speak, stopSpeaking, transcribe } from '@/lib/voice'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STARTERS: [IconName, string][] = [
@@ -48,6 +48,9 @@ export default function Ask() {
   const [rec, setRec] = useState<'idle' | 'starting' | 'recording' | 'hearing'>('idle')
   const [secs, setSecs] = useState(0)
   const [speaking, setSpeaking] = useState(false)
+  // speaker switch: when on, NURU speaks every answer in the language it answered in
+  const [talk, setTalk] = useState(true)
+  useEffect(() => { readAloudOn().then(setTalk).catch(() => {}) }, [])
   const tick = useRef<ReturnType<typeof setInterval> | null>(null)
   const pulse = useRef(new Animated.Value(0)).current
 
@@ -77,7 +80,7 @@ export default function Ask() {
   const now = () => new Date().toISOString()
   const say = (content: string, actions: ChatAction[] = []) => setMsgs((m) => [...m, { role: 'assistant', content, lang, at: now(), actions }])
 
-  async function send(q = text, byVoice = false) {
+  async function send(q = text) {
     q = q.trim()
     if (!q || busy) return
     setText('')
@@ -86,18 +89,27 @@ export default function Ask() {
     try {
       const r = await api<ChatReply>('/chat', { body: { message: q, lang, thread } })
       if (r.thread) setThread(r.thread)
-      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang, at: now(), chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
-      if (byVoice && r.answer) readAloud(r.answer)
+      // the API answers in the language the question was written or spoken in
+      const l = r.lang || lang
+      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang: l, at: now(), chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      if (talk && r.answer) readAloud(r.answer, l)
     } catch (e) {
       say((e as Error).message)
     } finally { setBusy(false) }
   }
 
-  function readAloud(s: string, force = false) {
+  function readAloud(s: string, l: Lang = lang) {
     setSpeaking(true)
-    speak(s, lang, () => setSpeaking(false), { force }).catch(() => setSpeaking(false))
+    speak(s, l, () => setSpeaking(false), { force: true }).catch(() => setSpeaking(false))
   }
   function quiet() { stopSpeaking(); setSpeaking(false) }
+  function toggleTalk() {
+    const on = !talk
+    setTalk(on)
+    if (!on) quiet()
+    setReadAloud(on)
+    toast(on ? 'NURU will speak its answers' : 'NURU will answer in text only')
+  }
 
   async function startRecording() {
     if (rec !== 'idle' || busy) return
@@ -135,7 +147,7 @@ export default function Ask() {
       const heard = await transcribe(uri, lang)
       setText(heard)
       setRec('idle')
-      await send(heard, true)
+      await send(heard)
     } catch (e) {
       toast((e as Error).message || 'Could not hear that, try again')
     } finally { setRec('idle') }
@@ -177,6 +189,7 @@ export default function Ask() {
           <T v="xs" tone="mu">Only answers about your money</T>
         </View>
         <Row gap={8}>
+          <IconBtn name={talk ? 'volume' : 'volumeoff'} label={talk ? 'Turn off spoken answers' : 'Turn on spoken answers'} onPress={toggleTalk} />
           <IconBtn name="history" label="Chat history" onPress={openHistory} />
           <IconBtn name="edit" label="New chat" onPress={() => { setMsgs([]); setThread('') }} />
         </Row>
@@ -219,7 +232,7 @@ export default function Ask() {
               {m.actions?.filter((a) => a.kind === 'reminder').map((a, j) => <ReminderCard key={j} action={a} onSet={(s) => say(s)} />)}
               {!!m.sources?.length && (
                 <Row gap={6} style={{ marginLeft: 36 }}>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Read aloud" hitSlop={8} onPress={() => (speaking ? quiet() : readAloud(m.content, true))}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Read aloud" hitSlop={8} onPress={() => (speaking ? quiet() : readAloud(m.content, m.lang))}>
                     <Icon name={speaking ? 'stop' : 'volume'} size={16} color={speaking ? c.red : c.muted} />
                   </Pressable>
                   <Pressable onPress={() => setSources(m.sources!)} style={{ flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
