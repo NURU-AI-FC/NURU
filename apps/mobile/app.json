@@ -15,7 +15,8 @@
         "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves.",
         "NSMicrophoneUsageDescription": "NURU uses the microphone so you can ask questions about your money by voice.",
         "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you."
-      }
+      },
+      "buildNumber": "1"
     },
     "android": {
       "package": "app.nuru.mobile",
@@ -29,7 +30,8 @@
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png",
