@@ -16,6 +16,7 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/cache"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/monitor"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
 )
 
@@ -39,7 +40,7 @@ func New(cfg config.Config, db *pgxpool.Pool, box *secure.Box) *Server {
 
 func (s *Server) Routes() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer)
+	r.Use(middleware.RequestID, middleware.RealIP, middleware.Recoverer, monitor.Middleware())
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   s.cfg.WebOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},

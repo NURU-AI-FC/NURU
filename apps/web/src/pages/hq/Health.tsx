@@ -8,7 +8,7 @@ type Health = {
   hours: { label: string; requests: number; errors: number }[]; checks: Check[]; engines: Record<string, number>
   releases: { service: string; sha: string; message: string; at?: string }[]
   uptimerobot: { connected: boolean; error: string; average: number; monitors: { name: string; status: string; uptime: number; ms: number | string }[] | null }
-  sentry: { connected: boolean; error: string; open: number; new: number }
+  sentry: { connected: boolean; error: string; open: number; new: number; reporting?: boolean }
 }
 const STATUS: Record<string, [string, string]> = {
   up: ['Up', 'var(--green)'], warn: ['Degraded', 'var(--amber)'], down: ['Down', 'var(--red)'], configured: ['Configured', 'var(--green)'], off: ['Off', 'var(--muted)'], unknown: ['Unknown', 'var(--muted)'],
@@ -40,7 +40,7 @@ export default function Health() {
         {h ? <>
           <HKpi icon="zap" label={startedToday ? 'Requests since ' + time(h.started) : 'Requests today'} value={n(h.requests)} note={startedToday ? 'Counted since the API last started' : 'Counted by the API'} tone="mu" />
           <HKpi icon="alert" label="Errors" value={h.sentry.connected && !h.sentry.error ? n(h.sentry.open) : h.error_rate + '%'}
-            note={h.sentry.connected ? h.sentry.error || `Unresolved in Sentry, ${h.sentry.new} new today` : `${n(h.errors)} server errors · Sentry not connected`} tone={h.errors || h.sentry.open ? 'red' : 'pos'} />
+            note={h.sentry.connected ? h.sentry.error || `Unresolved in Sentry, ${h.sentry.new} new today` : `${n(h.errors)} server errors · ${h.sentry.reporting ? 'Sentry reporting, not read here' : 'Sentry not connected'}`} tone={h.errors || h.sentry.open ? 'red' : 'pos'} />
           <HKpi icon="clock" label="API p95" value={h.samples ? h.p95_ms + 'ms' : '—'} note={h.samples ? `Target under 300ms · last ${n(h.samples)} requests` : 'No requests yet'} tone={h.p95_ms <= 300 ? 'pos' : 'amber'} />
           <HKpi icon="sparkles" label="AI reply p95" value={h.ai_p95_ms != null ? (h.ai_p95_ms / 1000).toFixed(1) + 's' : '—'} note={h.ai_p95_ms != null ? 'Target under 2s, ' + range.label : 'No timed replies ' + range.label} tone={h.ai_p95_ms != null && h.ai_p95_ms <= 2000 ? 'pos' : 'mu'} />
         </> : Array.from({ length: 4 }, (_, i) => <Skeleton key={i} h={128} />)}

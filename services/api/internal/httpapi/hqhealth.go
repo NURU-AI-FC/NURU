@@ -10,12 +10,17 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/monitor"
 )
 
 // Platform health: live checks run from this API on every visit. Uptime and
 // error history come from UptimeRobot and Sentry only when their keys are
 // set (UPTIMEROBOT_API_KEY, SENTRY_AUTH_TOKEN with SENTRY_ORG and
 // SENTRY_PROJECT); otherwise the page says they are not connected.
+// Reporting is separate: SENTRY_DSN sends errors from each service (see
+// internal/monitor), and on start the API creates the UptimeRobot monitors
+// this page reads, matched by name.
 
 func resendReady() bool { return os.Getenv("RESEND_API_KEY") != "" }
 
@@ -103,6 +108,11 @@ func (s *Server) liveChecks(ctx context.Context) []map[string]any {
 		add("voice", "Voice", map[bool]string{true: "Azure Speech", false: "Spitch"}[azureReady()], "configured", "One provider set, phones read the rest aloud", 0)
 	default:
 		add("voice", "Voice", "Phone speech", "off", "No Azure or Spitch key, phones read aloud", 0)
+	}
+	if resendReady() {
+		add("email", "Email", "Resend", "configured", "Keys set. Every send is in the email log", 0)
+	} else {
+		add("email", "Email", "Resend", "off", "No RESEND_API_KEY, emails are logged but not sent", 0)
 	}
 	return checks
 }
@@ -311,7 +321,7 @@ func (s *Server) hqHealth(w http.ResponseWriter, r *http.Request) {
 		"started": m.Started, "requests": m.Req, "errors": m.Errs, "error_rate": pct(float64(m.Errs), float64(m.Req)),
 		"p95_ms": m.P95.Milliseconds(), "samples": m.Samples, "hours": hours, "checks": checks, "engines": engines, "releases": releases,
 		"uptimerobot": map[string]any{"connected": ur.Connected, "error": ur.Error, "average": ur.Average, "monitors": ur.Monitors},
-		"sentry":      map[string]any{"connected": se.Connected, "error": se.Error, "open": se.Open, "new": se.New},
+		"sentry":      map[string]any{"connected": se.Connected, "error": se.Error, "open": se.Open, "new": se.New, "reporting": monitor.Enabled()},
 	}
 	if aiP95 != nil {
 		out["ai_p95_ms"] = math.Round(*aiP95)

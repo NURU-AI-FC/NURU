@@ -15,6 +15,7 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/db"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/httpapi"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/monitor"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 )
@@ -22,6 +23,8 @@ import (
 func main() {
 	cfg := config.Load()
 	ctx := context.Background()
+	_, flush := monitor.InitSentry("api")
+	defer flush()
 
 	pool, err := db.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -38,6 +41,8 @@ func main() {
 	if cfg.DemoMode {
 		ensureDemoUsers(ctx, pool)
 	}
+
+	go monitor.EnsureUptimeMonitors(ctx)
 
 	srv := &http.Server{Addr: ":" + cfg.Port, Handler: httpapi.New(cfg, pool, box).Routes(), ReadHeaderTimeout: 10 * time.Second}
 	go func() {
