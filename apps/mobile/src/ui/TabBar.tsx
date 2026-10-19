@@ -1,22 +1,25 @@
-// Tab bar: Home, Insights, a raised Ask NURU button and Pay. Everything that
-// used to sit under More is in the side menu (components/Drawer.tsx).
+// Tab bar: Home, Insights, a raised Ask NURU button in the middle, Pay and More.
+// More opens the side menu (components/Drawer.tsx) rather than a screen.
 import type { BottomTabBarProps } from 'expo-router/js-tabs'
 import { Platform, Pressable, Text, View, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useDrawer } from '../components/Drawer'
 import { useApp } from '../lib/store'
 import { font, useTheme } from '../lib/theme'
 import { Icon, type IconName } from './Icon'
 
-const TABS: { name: string; key: 'home' | 'insights' | 'ask' | 'pay'; icon: IconName }[] = [
+const TABS: { name: string; key: 'home' | 'insights' | 'ask' | 'pay' | 'more'; icon: IconName }[] = [
   { name: 'home', key: 'home', icon: 'home' },
   { name: 'insights', key: 'insights', icon: 'chart' },
   { name: 'ask', key: 'ask', icon: 'sparkles' },
   { name: 'pay', key: 'pay', icon: 'send' },
+  { name: 'more', key: 'more', icon: 'menu' },
 ]
 
 export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
   const { c } = useTheme()
   const { tabs } = useApp()
+  const drawer = useDrawer()
   const insets = useSafeAreaInsets()
   const active = state.routes[state.index]?.name
   return (
@@ -27,7 +30,7 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
       {TABS.map((t) => {
         const route = state.routes.find((r) => r.name === t.name)
         const on = active === t.name
-        const go = () => route && navigateToTab(route.key)
+        const go = () => (t.key === 'more' ? drawer.open() : route && navigateToTab(route.key))
         if (t.key === 'ask') {
           return (
             <Pressable key={t.key} onPress={go} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tabs.ask}
