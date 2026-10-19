@@ -22,14 +22,20 @@ func (s *Server) linkAccount(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &in) {
 		return
 	}
-	if _, ok := seed.Banks[in.Bank]; !ok {
-		fail(w, 400, "that bank is not in the sandbox yet")
+	var have []string
+	rows, err := s.db.Query(r.Context(), `select bank from accounts where user_id=$1 and kind<>'business'`, uid(r))
+	if err != nil {
+		fail(w, 500, "could not load your accounts")
 		return
 	}
-	var n int
-	s.db.QueryRow(r.Context(), `select count(*) from accounts where user_id=$1`, uid(r)).Scan(&n)
-	if n >= 8 {
-		fail(w, 400, "you can link up to 8 accounts")
+	for rows.Next() {
+		var b string
+		rows.Scan(&b)
+		have = append(have, b)
+	}
+	rows.Close()
+	if code, msg := canLink(in.Bank, have); code != 0 {
+		fail(w, code, msg)
 		return
 	}
 	a, err := seed.Link(r.Context(), s.db, uid(r), in.Bank)
@@ -40,6 +46,29 @@ func (s *Server) linkAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	s.event(r.Context(), uid(r), "account_linked", in.Bank)
 	writeJSON(w, 201, a)
+}
+
+// maxLinked caps personal accounts: one per sandbox bank plus room for the
+// accounts a new user starts with.
+var maxLinked = len(seed.Banks) + 2
+
+// canLink says whether another account at bank may be linked when the user
+// already has personal accounts at the banks in have. It returns 0 when the
+// link may go ahead, or the status code and message to refuse it with.
+// Several banks are fine; the same bank twice is not.
+func canLink(bank string, have []string) (int, string) {
+	if _, ok := seed.Banks[bank]; !ok {
+		return 400, "that bank is not in the sandbox yet"
+	}
+	for _, b := range have {
+		if b == bank {
+			return 409, bank + " is already linked. Pick another bank or disconnect it first."
+		}
+	}
+	if len(have) >= maxLinked {
+		return 400, fmt.Sprintf("you can link up to %d accounts", maxLinked)
+	}
+	return 0, ""
 }
 
 func (s *Server) unlinkAccount(w http.ResponseWriter, r *http.Request) {

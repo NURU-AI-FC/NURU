@@ -32,3 +32,25 @@ func TestDeviceName(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestCanLink(t *testing.T) {
+	seeded := []string{"Zenith Bank", "OPay", "Kuda"}
+	// a seeded user can add every other sandbox bank, one after another
+	have := append([]string{}, seeded...)
+	for _, b := range []string{"GTBank", "Access Bank", "First Bank", "UBA", "Moniepoint", "Demo Bank"} {
+		if code, msg := canLink(b, have); code != 0 {
+			t.Fatalf("link %s with %v: %d %s", b, have, code, msg)
+		}
+		have = append(have, b)
+	}
+	if code, _ := canLink("Kuda", seeded); code != 409 {
+		t.Errorf("same bank twice: got %d, want 409", code)
+	}
+	if code, _ := canLink("Wakanda Bank", nil); code != 400 {
+		t.Errorf("unknown bank: got %d, want 400", code)
+	}
+	full := make([]string, maxLinked)
+	if code, _ := canLink("GTBank", full); code != 400 {
+		t.Errorf("over the cap: got %d, want 400", code)
+	}
+}
