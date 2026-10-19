@@ -46,6 +46,22 @@ Style:
 - Lead with the answer. Two to five short sentences, or a short list when comparing. No headings, no tables, no markdown bold.
 - Warm and direct, like a friend who is good with money."""
 
+# Errors go to Sentry when SENTRY_DSN is set; otherwise this does nothing.
+# Request bodies and local variables stay out: they hold customers' money.
+if os.getenv("SENTRY_DSN"):
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        release=os.getenv("RAILWAY_GIT_COMMIT_SHA") or None,
+        environment=os.getenv("SENTRY_ENVIRONMENT") or os.getenv("RAILWAY_ENVIRONMENT_NAME") or "development",
+        send_default_pii=False,
+        max_request_body_size="never",
+        include_local_variables=False,
+        traces_sample_rate=0,
+    )
+    sentry_sdk.set_tag("service", "ai")
+
 app = FastAPI(title="NURU AI", docs_url=None, redoc_url=None)
 client = anthropic.Anthropic(max_retries=2, timeout=40.0) if os.getenv("ANTHROPIC_API_KEY") else None
 
