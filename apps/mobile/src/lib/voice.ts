@@ -19,6 +19,14 @@ let prefs: Promise<VoicePrefs> | null = null
 const voicePrefs = () => (prefs ??= api<VoicePrefs>('/me/prefs').catch((): VoicePrefs => ({})))
 /** Forget cached prefs after the user changes them in settings. */
 export const resetVoicePrefs = () => { prefs = null }
+/** readAloudOn says whether NURU speaks every answer. On unless the user turned it off. */
+export const readAloudOn = async () => (await voicePrefs()).read_aloud !== false
+/** setReadAloud saves the speaker switch in Ask NURU to the user's prefs. */
+export async function setReadAloud(on: boolean) {
+  const p = await voicePrefs()
+  prefs = Promise.resolve({ ...p, read_aloud: on })
+  await api('/me/prefs', { method: 'PATCH', body: { read_aloud: on } }).catch(() => {})
+}
 
 let player: AudioPlayer | null = null
 let webUrl = ''
