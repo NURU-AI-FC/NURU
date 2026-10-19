@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/cache"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
 )
@@ -24,11 +26,13 @@ type Server struct {
 	http    *http.Client
 	fx      *fxCache
 	metrics *metrics
+	cache   *cache.Cache // Redis when REDIS_URL is set, else memory
 }
 
 func New(cfg config.Config, db *pgxpool.Pool, box *secure.Box) *Server {
+	c := cache.New(os.Getenv("REDIS_URL"))
 	return &Server{cfg: cfg, db: db, tokens: auth.NewSigner(cfg.JWTSecret), box: box,
-		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}, metrics: newMetrics()}
+		http: &http.Client{Timeout: 45 * time.Second}, fx: &fxCache{}, metrics: newMetrics(c), cache: c}
 }
 
 func (s *Server) Routes() http.Handler {
@@ -48,7 +52,7 @@ func (s *Server) Routes() http.Handler {
 
 	r.Group(func(r chi.Router) {
 		// slow down guessing of passwords and codes
-		r.Use(httprate.LimitByIP(20, time.Minute))
+		r.Use(s.limitByIP("auth", 20, time.Minute))
 		r.Post("/auth/signup", s.signup)
 		r.Post("/auth/login", s.login)
 		r.Post("/auth/verify", s.verifyOTP)

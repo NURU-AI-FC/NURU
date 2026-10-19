@@ -151,7 +151,7 @@ func TestGate(t *testing.T) {
 }
 
 func TestMetricsP95(t *testing.T) {
-	m := newMetrics()
+	m := newMetrics(nil)
 	now := time.Now()
 	for i := 1; i <= 100; i++ {
 		status := 200
