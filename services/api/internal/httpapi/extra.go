@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
 // stepUp guards every payment: no lockout, a PIN and an enrolled face, the
@@ -165,7 +166,12 @@ func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.db.Exec(r.Context(), `insert into payees(user_id,name,bank,account) values($1,$2,$3,$4) on conflict do nothing`, uid(r), in.ToName, in.ToBank, in.ToAccount)
-	writeJSON(w, 201, receipt(id, at, in.Amount, in.ToName))
+	rec := receipt(id, at, in.Amount, in.ToName)
+	var from string
+	s.db.QueryRow(r.Context(), `select name from accounts where id=$1`, in.From).Scan(&from)
+	s.sendEmail(uid(r), "", email.TransferSent(email.Transfer{Amount: in.Amount, Name: in.ToName, Bank: in.ToBank, Account: in.ToAccount[6:],
+		Note: strings.TrimSpace(in.Note), From: from, Reference: rec["reference"].(string), At: at}))
+	writeJSON(w, 201, rec)
 }
 
 func (s *Server) investments(w http.ResponseWriter, r *http.Request) {

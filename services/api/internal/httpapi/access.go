@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
 // Two kinds of staff sign in: the NURU team to HQ (role 'hq') and Zenith staff
@@ -280,6 +282,7 @@ func (s *Server) teamInvite(t teamScope) http.HandlerFunc {
 			return
 		}
 		s.audit(r.Context(), t.Scope, me.ID, "invited", in.Name+" as "+t.Roles[in.Role])
+		s.sendEmail("", in.Email, email.StaffInvite(in.Name, me.Name, t.Roles[in.Role], t.Scope))
 		s.teamList(t)(w, r)
 	}
 }

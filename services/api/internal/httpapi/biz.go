@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
 // slip is one month of pay for a staff member: PAYE estimated at 6.33%,
@@ -372,6 +373,7 @@ func (s *Server) payInvoice(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, "try again")
 		return
 	}
+	s.sendEmail(uid(r), "", email.TransferReceived(email.Transfer{Amount: amt, Name: cust, From: "your business account", Reference: num, At: time.Now()}))
 	s.invoices(w, r)
 }
 
