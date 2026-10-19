@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
+import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
 import { askLine, DescribeCard, ReminderCard, TransferCard, type Described } from '@/components/ChatCards'
 import { suggestions } from '@/i18n'
 import { api, type ChatAction, type ChatMsg, type ChatReply, type Pending, type Source, type Thread } from '@/lib/api'
@@ -10,6 +10,7 @@ import { font, useTheme } from '@/lib/theme'
 import { Bars, Donut, Legend, LineChart } from '@/ui/charts'
 import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Button, Card, Chip, Ic, IconBtn, Logo, Mark, Row, T } from '@/ui/kit'
+import { KeyAvoid, KeyboardScroll } from '@/ui/KeyboardScroll'
 import { Sheet } from '@/ui/Sheet'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -101,8 +102,8 @@ export default function Ask() {
         </View>
         <IconBtn name="edit" label="New chat" onPress={() => { setMsgs([]); setThread('') }} />
       </Row>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 56}>
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 }} keyboardShouldPersistTaps="handled">
+      <KeyAvoid>
+        <KeyboardScroll ref={scroll} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 }}>
           {msgs.length === 0 && !showDescribe && (
             <>
               <View style={{ alignItems: 'center', gap: 12, paddingTop: 20, paddingHorizontal: 8 }}>
@@ -167,7 +168,7 @@ export default function Ask() {
 
           {busy && <AiBubble>…</AiBubble>}
           {msgs.length > 0 && <Row gap={6} style={{ marginLeft: 36 }}><Icon name="shieldcheck" size={14} color={c.muted} /><T v="xs" tone="mu">NURU never sends money without your PIN and face check</T></Row>}
-        </ScrollView>
+        </KeyboardScroll>
 
         {followUps.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20, paddingBottom: 8 }}>
@@ -185,7 +186,7 @@ export default function Ask() {
               onPress={() => (text.trim() ? send() : toast('Voice input arrives with the store build. Type your question for now.'))} />
           </Row>
         </View>
-      </KeyboardAvoidingView>
+      </KeyAvoid>
 
       <Sheet open={!!sources} onClose={() => setSources(null)}>
         <T v="h3">How NURU got this answer</T>

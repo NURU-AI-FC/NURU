@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { AccountPicker, BANKS, ReceiptView } from '@/components/pay'
 import { TransferGuard, type Draft } from '@/components/TransferGuard'
 import type { Account, Payee, Receipt } from '@/lib/api'
@@ -9,6 +9,7 @@ import { useTheme } from '@/lib/theme'
 import { useLoad } from '@/lib/useLoad'
 import { Icon } from '@/ui/Icon'
 import { Avatar, Button, Card, Chip, Divider, ErrorNote, Field, Input, KV, Note, Row, Screen, Skeleton, Soft, T, TopBar } from '@/ui/kit'
+import { KeyboardScroll, useKeyboardShown } from '@/ui/KeyboardScroll'
 import { applyKey, Keypad } from '@/ui/PinPad'
 import { Sheet } from '@/ui/Sheet'
 
@@ -36,6 +37,7 @@ export default function Send() {
   const [bankOpen, setBankOpen] = useState(false)
   const [guard, setGuard] = useState(false)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const typing = useKeyboardShown()
 
   useEffect(() => { if (accts && !from) setFrom(accts.find((a) => a.kind !== 'business')?.id || '') }, [accts]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function Send() {
 
   if (step === 'amount') return (
     <Screen scroll={false} top={<TopBar title={`Send to ${name.split(/[\s,]+/)[0]}`} onBack={back} />}>
-      <ScrollView contentContainerStyle={{ alignItems: 'center', gap: 8, paddingTop: 14, paddingHorizontal: 20, paddingBottom: 12 }} keyboardShouldPersistTaps="handled">
+      <KeyboardScroll contentContainerStyle={{ alignItems: 'center', gap: 8, paddingTop: 14, paddingHorizontal: 20, paddingBottom: 12 }}>
         <Avatar name={name} />
         <T v="s" tone="t2">{acctLabel}</T>
         <T num w={700} style={{ fontSize: 44, lineHeight: 54, letterSpacing: -1, marginTop: 6 }}>{amt ? money(amt) : '₦0'}</T>
@@ -124,8 +126,8 @@ export default function Send() {
           {accts && <AccountPicker accts={accts} value={from} onChange={setFrom} />}
           {fromAcct && amt > fromAcct.balance && <T v="xs" tone="rd">That is more than the {money(fromAcct.balance)} in this account.</T>}
         </View>
-      </ScrollView>
-      <View style={{ paddingHorizontal: 24 }}><Keypad extra="." onKey={(k) => setAmount((x) => k === '.' ? (x.includes('.') ? x : x + '.') : applyKey(x, k, 9))} /></View>
+      </KeyboardScroll>
+      {!typing && <View style={{ paddingHorizontal: 24 }}><Keypad extra="." onKey={(k) => setAmount((x) => k === '.' ? (x.includes('.') ? x : x + '.') : applyKey(x, k, 9))} /></View>}
       <View style={{ padding: 20, paddingTop: 10 }}>
         <Button label="Review" disabled={!amt || !fromAcct || amt > fromAcct.balance} onPress={() => setStep('review')} />
       </View>

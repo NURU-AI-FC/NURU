@@ -12,6 +12,7 @@ import type { Tone } from '../lib/format'
 import { initials as toInitials, avatarColor } from '../lib/format'
 import { font, radius, type, useTheme, type Colors, type TypeVariant, type Weight } from '../lib/theme'
 import { Icon, type IconName } from './Icon'
+import { focusChanged, KeyAvoid, KeyboardScroll } from './KeyboardScroll'
 
 // ---------- text ----------
 type ToneName = 'text' | 't2' | 'mu' | 'rd' | 'gr' | 'am' | 'bl' | 'white'
@@ -200,7 +201,7 @@ export function Input({ icon, left, right, style, height = 52, round, ...p }: Te
         <TextInput
           placeholderTextColor={c.muted}
           {...p}
-          onFocus={(e) => { setFocus(true); p.onFocus?.(e) }}
+          onFocus={(e) => { setFocus(true); focusChanged(); p.onFocus?.(e) }}
           onBlur={(e) => { setFocus(false); p.onBlur?.(e) }}
           style={[{ flex: 1, height: '100%', fontSize: 15, fontFamily: font[400], color: c.text, paddingVertical: 0 }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null]}
         />
@@ -368,13 +369,15 @@ export function Screen({ children, scroll = true, top, footer, gap = 16, tab, pa
   return (
     <View style={{ flex: 1, backgroundColor: bg || c.bg, paddingTop: insets.top }}>
       {top}
-      {scroll ? (
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-          contentContainerStyle={[{ paddingHorizontal: pad, paddingTop: 8, paddingBottom: bottom, gap }, style]}>
-          {children}
-        </ScrollView>
-      ) : <View style={[{ flex: 1 }, style]}>{children}</View>}
-      {footer && <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: insets.bottom + 16, gap: 10, backgroundColor: bg || c.bg }}>{footer}</View>}
+      <KeyAvoid>
+        {scroll ? (
+          <KeyboardScroll showsVerticalScrollIndicator={false}
+            contentContainerStyle={[{ paddingHorizontal: pad, paddingTop: 8, paddingBottom: bottom, gap }, style]}>
+            {children}
+          </KeyboardScroll>
+        ) : <View style={[{ flex: 1 }, style]}>{children}</View>}
+        {footer && <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: insets.bottom + 16, gap: 10, backgroundColor: bg || c.bg }}>{footer}</View>}
+      </KeyAvoid>
     </View>
   )
 }
