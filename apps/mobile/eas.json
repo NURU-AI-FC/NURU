@@ -11,13 +11,15 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://web-production-fd530.up.railway.app/api"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://web-production-fd530.up.railway.app/api"
-      }
+      },
+      "channel": "production"
     },
     "development": {
       "developmentClient": false,
