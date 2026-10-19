@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
 // deviceName turns a user agent into something a person recognises.
@@ -61,10 +62,19 @@ func (s *Server) startSession(r *http.Request, userID string) string {
 	if p := strings.Split(ip, "."); len(p) == 4 {
 		ip = p[0] + "." + p[1] + ".xx.xx"
 	}
+	device := deviceName(ua)
+	// a device this account has signed in from before gets no warning; the
+	// very first sign in has nothing to compare with
+	var before, known bool
+	s.db.QueryRow(r.Context(), `select exists(select 1 from sessions where user_id=$1), exists(select 1 from sessions where user_id=$1 and device=$2)`,
+		userID, device).Scan(&before, &known)
 	var id string
 	if err := s.db.QueryRow(r.Context(), `insert into sessions(user_id,device,user_agent,ip) values($1,$2,$3,$4) returning id`,
-		userID, deviceName(ua), ua, ip).Scan(&id); err != nil {
+		userID, device, ua, ip).Scan(&id); err != nil {
 		return ""
+	}
+	if before && !known && s.notifyPrefs(r.Context(), userID).NewDevice {
+		s.sendEmail(userID, "", email.NewDevice(device, ip, time.Now()))
 	}
 	return id
 }
