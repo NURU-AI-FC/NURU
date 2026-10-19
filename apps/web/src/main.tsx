@@ -75,6 +75,9 @@ import HQSupport from './pages/hq/Support'
 import HQEmails from './pages/hq/Emails'
 import HQTeam from './pages/hq/Team'
 import './styles.css'
+import { initSentry, reportError } from './sentry'
+
+initSentry()
 
 // Private keeps each kind of account in its own app: customers, Zenith staff
 // in the console and the NURU team in HQ.
@@ -95,7 +98,7 @@ function Root() {
   return user.role === 'customer' ? <Home /> : <Navigate to={homeFor(user)} replace />
 }
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root')!, { onUncaughtError: reportError, onCaughtError: reportError }).render(
   <StrictMode>
     <AppProvider>
       <BrowserRouter>
