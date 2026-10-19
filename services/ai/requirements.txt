@@ -2,3 +2,4 @@ fastapi==0.143.3
 uvicorn==0.53.0
 anthropic==1.15.0
 sentry-sdk[fastapi]==2.72.0
+psycopg[binary]==3.3.6
