@@ -12,7 +12,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.nuru.mobile",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves."
+        "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves.",
+        "NSMicrophoneUsageDescription": "NURU uses the microphone so you can ask questions about your money by voice."
       }
     },
     "android": {
@@ -23,7 +24,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -43,7 +47,17 @@
             "backgroundColor": "#5C0008"
           }
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "NURU uses the microphone so you can ask questions about your money by voice.",
+          "recordAudioAndroid": true,
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": false
