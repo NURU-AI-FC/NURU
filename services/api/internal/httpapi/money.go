@@ -219,36 +219,40 @@ type monthCompare struct {
 }
 
 // computeCompare returns weekly spending for the current and previous two
-// months, the three month comparison on the dashboard.
+// months, the three month comparison on the dashboard. One query covers all
+// three months; m is 0 for the oldest month and 2 for this one.
 func (s *Server) computeCompare(ctx context.Context, user string) ([]monthCompare, error) {
 	now := time.Now()
 	first := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	out := []monthCompare{}
-	for i := 2; i >= 0; i-- {
-		start := first.AddDate(0, -i, 0)
-		end := start.AddDate(0, 1, 0)
-		mc := monthCompare{Month: start.Format("January"), Weeks: make([]float64, 4)}
-		rows, err := s.db.Query(ctx, `select least(((extract(day from created_at)::int-1)/7),3) w, direction, sum(amount)::float8
-			from transactions t join accounts a on a.id=t.account_id where t.user_id=$1 and a.kind<>'business' and created_at>=$2 and created_at<$3 group by w, direction`, user, start, end)
-		if err != nil {
-			return nil, err
-		}
-		for rows.Next() {
-			var wk int
-			var dir string
-			var v float64
-			rows.Scan(&wk, &dir, &v)
-			if dir == "debit" {
-				mc.Weeks[wk] += v
-				mc.Total += v
-			} else {
-				mc.In += v
-			}
-		}
-		rows.Close()
-		out = append(out, mc)
+	starts := []time.Time{first.AddDate(0, -2, 0), first.AddDate(0, -1, 0), first}
+	out := make([]monthCompare, 3)
+	for i, st := range starts {
+		out[i] = monthCompare{Month: st.Format("January"), Weeks: make([]float64, 4)}
 	}
-	return out, nil
+	rows, err := s.db.Query(ctx, `select case when created_at<$3 then 0 when created_at<$4 then 1 else 2 end m,
+		least(((extract(day from created_at)::int-1)/7),3) w, direction, sum(amount)::float8
+		from transactions t join accounts a on a.id=t.account_id
+		where t.user_id=$1 and a.kind<>'business' and created_at>=$2 and created_at<$5 group by m, w, direction`,
+		user, starts[0], starts[1], starts[2], first.AddDate(0, 1, 0))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var m, wk int
+		var dir string
+		var v float64
+		if err := rows.Scan(&m, &wk, &dir, &v); err != nil || m < 0 || m > 2 || wk < 0 || wk > 3 {
+			continue
+		}
+		if dir == "debit" {
+			out[m].Weeks[wk] += v
+			out[m].Total += v
+		} else {
+			out[m].In += v
+		}
+	}
+	return out, rows.Err()
 }
 
 func (s *Server) compare(w http.ResponseWriter, r *http.Request) {
