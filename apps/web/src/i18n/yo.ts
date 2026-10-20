@@ -44,4 +44,4 @@ const yo: Partial<Dict> = {
 }
 export default yo
 
-export const suggestions = ['Ibo ni owó mi lọ lóṣù yìí?', 'Fi oṣù mẹ́ta tó kọjá wé ara wọn', 'Ṣé owó mi yóò tó títí òpin oṣù?', 'Àwọn owó ìforúkọsílẹ̀ wo ni mo ń san?', 'Báwo ni iṣẹ́ òwò mi ṣe ń lọ?']
+export const suggestions = ['Ibo ni owó mi lọ lóṣù yìí?', 'Fi oṣù mẹ́ta tó kọjá wé ara wọn', 'Ṣé owó mi yóò tó títí òpin oṣù?', 'Àwọn subscription wo ni mo ń sanwó fún?', 'Báwo ni business mi ṣe ń lọ?']
