@@ -13,12 +13,27 @@ import (
 	"strings"
 )
 
-// Voice: Azure Speech reads English in a Nigerian voice, Spitch reads
-// Yorùbá, Igbo and Hausa and transcribes all four languages. Keys come from
-// AZURE_SPEECH_KEY, AZURE_SPEECH_REGION and SPITCH_API_KEY. Without them the
-// app falls back to the phone's own speech.
+// Voice: ElevenLabs reads English in a Nigerian voice, with Azure Speech as
+// the backup. Spitch reads Yorùbá, Igbo and Hausa and transcribes all four
+// languages, with ElevenLabs Scribe as the backup. Keys come from
+// ELEVENLABS_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION and SPITCH_API_KEY.
+// Without them the app falls back to the phone's own speech.
 
-const spitchURL = "https://api.spitch.app/v1"
+const (
+	spitchURL = "https://api.spitch.app/v1"
+	elevenURL = "https://api.elevenlabs.io/v1"
+)
+
+// Nigerian English voices from the ElevenLabs library (Nana and Uyi), unless
+// ELEVENLABS_VOICE_FEMALE or ELEVENLABS_VOICE_MALE pick others.
+var elevenVoices = map[string]string{"female": "QQswKXAu7aQVNxKFmOP8", "male": "NwBN5lRnglDs8TBVmser"}
+
+func elevenVoice(gender string) string {
+	if v := os.Getenv("ELEVENLABS_VOICE_" + strings.ToUpper(gender)); v != "" {
+		return v
+	}
+	return elevenVoices[gender]
+}
 
 var azureVoices = map[string]string{"female": "en-NG-EzinneNeural", "male": "en-NG-AbeoNeural"}
 
@@ -33,9 +48,12 @@ func azureReady() bool {
 	return os.Getenv("AZURE_SPEECH_KEY") != "" && os.Getenv("AZURE_SPEECH_REGION") != ""
 }
 func spitchReady() bool { return os.Getenv("SPITCH_API_KEY") != "" }
+func elevenReady() bool { return os.Getenv("ELEVENLABS_API_KEY") != "" }
 
+// The app reads "spitch" as "voice typing works" and "azure" as "English
+// voice works", so ElevenLabs switches both on.
 func (s *Server) voiceStatus(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]bool{"azure": azureReady(), "spitch": spitchReady()})
+	writeJSON(w, 200, map[string]bool{"azure": azureReady() || elevenReady(), "spitch": spitchReady() || elevenReady(), "elevenlabs": elevenReady()})
 }
 
 // speak returns MP3 audio for a short piece of text.
@@ -55,19 +73,33 @@ func (s *Server) speak(w http.ResponseWriter, r *http.Request) {
 	if in.Gender != "male" {
 		in.Gender = "female"
 	}
-	var audio []byte
-	var err error
-	switch {
-	case in.Lang == "en" && azureReady():
-		audio, err = s.azureSpeak(r, in.Text, azureVoices[in.Gender])
-	case spitchReady() && spitchVoices[in.Lang] != nil:
-		audio, err = s.spitchSpeak(r, in.Text, in.Lang, spitchVoices[in.Lang][in.Gender])
-	default:
+	// Try each voice that can read this language, best first.
+	type voice func() ([]byte, error)
+	var tries []voice
+	if in.Lang == "en" && elevenReady() {
+		tries = append(tries, func() ([]byte, error) { return s.elevenSpeak(r, in.Text, elevenVoice(in.Gender)) })
+	}
+	if in.Lang == "en" && azureReady() {
+		tries = append(tries, func() ([]byte, error) { return s.azureSpeak(r, in.Text, azureVoices[in.Gender]) })
+	}
+	if spitchReady() && spitchVoices[in.Lang] != nil {
+		tries = append(tries, func() ([]byte, error) {
+			return s.spitchSpeak(r, in.Text, in.Lang, spitchVoices[in.Lang][in.Gender])
+		})
+	}
+	if len(tries) == 0 {
 		fail(w, 503, "voice service not configured")
 		return
 	}
-	if err != nil {
+	var audio []byte
+	var err error
+	for _, try := range tries {
+		if audio, err = try(); err == nil {
+			break
+		}
 		log.Printf("speak %s: %v", in.Lang, err)
+	}
+	if err != nil {
 		fail(w, 502, "voice service is busy, try again")
 		return
 	}
@@ -84,6 +116,15 @@ func (s *Server) azureSpeak(r *http.Request, text, voice string) ([]byte, error)
 	req.Header.Set("Content-Type", "application/ssml+xml")
 	req.Header.Set("X-Microsoft-OutputFormat", "audio-24khz-48kbitrate-mono-mp3")
 	req.Header.Set("User-Agent", "nuru")
+	return s.audio(req)
+}
+
+func (s *Server) elevenSpeak(r *http.Request, text, voice string) ([]byte, error) {
+	body, _ := json.Marshal(map[string]any{"text": text, "model_id": "eleven_multilingual_v2", "language_code": "en"})
+	req, _ := http.NewRequestWithContext(r.Context(), "POST", elevenURL+"/text-to-speech/"+voice+"?output_format=mp3_44100_128", bytes.NewReader(body))
+	req.Header.Set("xi-api-key", os.Getenv("ELEVENLABS_API_KEY"))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "audio/mpeg")
 	return s.audio(req)
 }
 
@@ -112,9 +153,10 @@ func (s *Server) audio(req *http.Request) ([]byte, error) {
 	return b, nil
 }
 
-// listen turns a short recording into text with Spitch.
+// listen turns a short recording into text with Spitch, or ElevenLabs Scribe
+// when Spitch is missing or fails.
 func (s *Server) listen(w http.ResponseWriter, r *http.Request) {
-	if !spitchReady() {
+	if !spitchReady() && !elevenReady() {
 		fail(w, 503, "voice service not configured")
 		return
 	}
@@ -129,26 +171,54 @@ func (s *Server) listen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer f.Close()
+	rec, err := io.ReadAll(f)
+	if err != nil {
+		fail(w, 400, "no recording")
+		return
+	}
 	lang := r.FormValue("lang")
 	if spitchVoices[lang] == nil {
 		lang = "en"
 	}
-	var buf bytes.Buffer
-	mw := multipart.NewWriter(&buf)
-	mw.WriteField("language", lang)
-	part, _ := mw.CreateFormFile("content", hdr.Filename)
-	io.Copy(part, f)
-	mw.Close()
-	req, _ := http.NewRequestWithContext(r.Context(), "POST", spitchURL+"/transcriptions", &buf)
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("SPITCH_API_KEY"))
-	req.Header.Set("Content-Type", mw.FormDataContentType())
-	b, err := s.audio(req)
+	var text string
+	err = fmt.Errorf("no transcriber")
+	if spitchReady() {
+		if text, err = s.transcribe(r, spitchURL+"/transcriptions", "Authorization", "Bearer "+os.Getenv("SPITCH_API_KEY"),
+			map[string]string{"language": lang}, "content", hdr.Filename, rec); err != nil {
+			log.Printf("listen spitch %s: %v", lang, err)
+		}
+	}
+	if err != nil && elevenReady() {
+		if text, err = s.transcribe(r, elevenURL+"/speech-to-text", "xi-api-key", os.Getenv("ELEVENLABS_API_KEY"),
+			map[string]string{"model_id": "scribe_v1", "language_code": lang}, "file", hdr.Filename, rec); err != nil {
+			log.Printf("listen elevenlabs %s: %v", lang, err)
+		}
+	}
 	if err != nil {
-		log.Printf("listen %s: %v", lang, err)
 		fail(w, 502, "could not hear that, try again")
 		return
 	}
+	writeJSON(w, 200, map[string]string{"text": text})
+}
+
+// transcribe posts a recording as multipart form data and reads back {"text": ...}.
+func (s *Server) transcribe(r *http.Request, url, authHeader, auth string, fields map[string]string, fileField, name string, rec []byte) (string, error) {
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	for k, v := range fields {
+		mw.WriteField(k, v)
+	}
+	part, _ := mw.CreateFormFile(fileField, name)
+	part.Write(rec)
+	mw.Close()
+	req, _ := http.NewRequestWithContext(r.Context(), "POST", url, &buf)
+	req.Header.Set(authHeader, auth)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	b, err := s.audio(req)
+	if err != nil {
+		return "", err
+	}
 	var out struct{ Text string }
 	json.Unmarshal(b, &out)
-	writeJSON(w, 200, map[string]string{"text": strings.TrimSpace(out.Text)})
+	return strings.TrimSpace(out.Text), nil
 }
