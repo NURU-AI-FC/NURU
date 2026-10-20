@@ -2,7 +2,7 @@
 // Speech to text goes through POST /voice/listen (Spitch). Answers are read
 // with POST /voice/speak (Azure for English, Spitch for Yorùbá, Igbo and
 // Hausa) and fall back to the phone's own voice when the server has no keys.
-import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
+import { createAudioPlayer, RecordingPresets, setAudioModeAsync, type AudioPlayer, type AudioRecorder, type RecordingOptions } from 'expo-audio'
 import * as Speech from 'expo-speech'
 import { Platform } from 'react-native'
 import { api, BASE, token, type Lang } from './api'
@@ -98,6 +98,46 @@ export async function speak(text: string, lang: Lang, onDone?: () => void, opts:
   }
   if (!live()) return
   phoneSpeak(text, lang, live, onDone)
+}
+
+/** Recording options for asking NURU by voice. Metering gives the input level
+ * so the recording can stop by itself when the speaker goes quiet. */
+export const ASK_RECORDING: RecordingOptions = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true }
+
+/**
+ * watchSilence follows the recorder's input level (metering, in dB) and calls
+ * onSilence once the speaker has said something and then stayed quiet for
+ * silenceMs (about 1.2 s). With giveUpMs, onNothing runs if nobody speaks at
+ * all in that time. Phones that report no level never stop on their own, so
+ * the manual stop and the one minute cap still apply. Returns a stop function.
+ */
+export function watchSilence(recorder: AudioRecorder, onSilence: () => void, opts: { silenceMs?: number; giveUpMs?: number; onNothing?: () => void } = {}) {
+  const silenceMs = opts.silenceMs ?? 1200
+  const started = Date.now()
+  let last = started
+  let floor = -60 // quietest recent level: the room's background noise
+  let voiced = 0 // milliseconds that sounded like speech
+  let lastVoice = 0
+  let metered = false
+  let done = false
+  const finish = (fn?: () => void) => { if (done) return; done = true; clearInterval(id); fn?.() }
+  const id = setInterval(() => {
+    const now = Date.now()
+    const dt = now - last
+    last = now
+    let db: number | undefined
+    try { db = recorder.getStatus().metering } catch { return }
+    if (typeof db !== 'number' || !Number.isFinite(db) || db < -100) return // not metering yet, or warming up
+    metered = true
+    // the floor follows the quietest level and creeps up slowly, so a steady
+    // fan or road noise stops counting as speech after a while
+    floor = Math.min(floor + dt / 1000, db)
+    if (db > Math.max(floor + 12, -50)) { voiced += dt; lastVoice = now }
+    const heard = voiced >= 300
+    if (heard && now - lastVoice >= silenceMs) finish(onSilence)
+    else if (!heard && metered && opts.giveUpMs && now - started >= opts.giveUpMs) finish(opts.onNothing)
+  }, 100)
+  return () => finish()
 }
 
 export class VoiceError extends Error {}

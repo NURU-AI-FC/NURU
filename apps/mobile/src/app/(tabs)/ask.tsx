@@ -1,5 +1,5 @@
 import { useLocalSearchParams, router } from 'expo-router'
-import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio'
+import { requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio'
 import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, TextInput, View } from 'react-native'
 import { MenuButton } from '@/components/Drawer'
@@ -14,7 +14,7 @@ import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Button, Card, Chip, Ic, IconBtn, Logo, Mark, Row, T } from '@/ui/kit'
 import { KeyAvoid, KeyboardScroll } from '@/ui/KeyboardScroll'
 import { Sheet } from '@/ui/Sheet'
-import { readAloudOn, setReadAloud, speak, stopSpeaking, transcribe } from '@/lib/voice'
+import { ASK_RECORDING, readAloudOn, setReadAloud, speak, stopSpeaking, transcribe, watchSilence } from '@/lib/voice'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STARTERS: [IconName, string][] = [
@@ -43,8 +43,10 @@ export default function Ask() {
   const [history, setHistory] = useState<Thread[] | null>(null)
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const asked = useRef('')
-  // voice: tap the mic to record, tap again to stop and send
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
+  // voice: tap the mic to record; it sends by itself when you stop talking,
+  // or tap again to stop and send
+  const recorder = useAudioRecorder(ASK_RECORDING)
+  const unwatch = useRef<(() => void) | null>(null)
   const [rec, setRec] = useState<'idle' | 'starting' | 'recording' | 'hearing'>('idle')
   const [secs, setSecs] = useState(0)
   // which message is being read aloud (its time stamp), so a second tap on it stops it
@@ -61,7 +63,7 @@ export default function Ask() {
     loop.start()
     return () => loop.stop()
   }, [rec, pulse])
-  useEffect(() => () => { if (tick.current) clearInterval(tick.current); stopSpeaking() }, [])
+  useEffect(() => () => { if (tick.current) clearInterval(tick.current); unwatch.current?.(); stopSpeaking() }, [])
   // stop on its own after a minute so a forgotten recording does not run on
   useEffect(() => { if (rec === 'recording' && secs >= 60) stopRecording() }, [secs, rec]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -128,6 +130,8 @@ export default function Ask() {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true })
       await recorder.prepareToRecordAsync()
       recorder.record()
+      // stop and send about 1.2 s after the user finishes speaking
+      unwatch.current = watchSilence(recorder, () => stopRef.current())
       setSecs(0)
       tick.current = setInterval(() => setSecs((n) => n + 1), 1000)
       setRec('recording')
@@ -139,6 +143,7 @@ export default function Ask() {
 
   async function stopRecording(cancel = false) {
     if (rec !== 'recording') return
+    unwatch.current?.(); unwatch.current = null
     if (tick.current) { clearInterval(tick.current); tick.current = null }
     setRec(cancel ? 'idle' : 'hearing')
     try {
@@ -155,6 +160,10 @@ export default function Ask() {
       toast((e as Error).message || 'Could not hear that, try again')
     } finally { setRec('idle') }
   }
+
+  // the silence watcher started with an older render; this always calls the latest stopRecording
+  const stopRef = useRef(stopRecording)
+  stopRef.current = stopRecording
 
   function offer(a: ChatAction) {
     setMsgs((m) => [...m,
