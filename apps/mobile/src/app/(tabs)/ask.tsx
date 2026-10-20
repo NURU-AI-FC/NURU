@@ -15,6 +15,7 @@ import { Badge, Button, Card, Chip, Ic, IconBtn, Logo, Mark, Row, T } from '@/ui
 import { KeyAvoid, KeyboardScroll } from '@/ui/KeyboardScroll'
 import { Sheet } from '@/ui/Sheet'
 import { ASK_RECORDING, readAloudOn, setReadAloud, speak, stopSpeaking, transcribe, watchSilence } from '@/lib/voice'
+import { pauseWake, resumeWake } from '@/lib/wake'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STARTERS: [IconName, string][] = [
@@ -119,11 +120,13 @@ export default function Ask() {
   async function startRecording() {
     if (rec !== 'idle' || busy) return
     quiet()
+    pauseWake('ask')
     setRec('starting')
     try {
       const perm = await requestRecordingPermissionsAsync()
       if (!perm.granted) {
         setRec('idle')
+        resumeWake('ask')
         toast(perm.canAskAgain === false ? 'Turn on the microphone for NURU in your phone settings.' : 'NURU needs the microphone to hear you.')
         return
       }
@@ -137,6 +140,7 @@ export default function Ask() {
       setRec('recording')
     } catch {
       setRec('idle')
+      resumeWake('ask')
       toast('Could not start the microphone. Try again.')
     }
   }
@@ -158,7 +162,7 @@ export default function Ask() {
       await send(heard)
     } catch (e) {
       toast((e as Error).message || 'Could not hear that, try again')
-    } finally { setRec('idle') }
+    } finally { setRec('idle'); resumeWake('ask') }
   }
 
   // the silence watcher started with an older render; this always calls the latest stopRecording

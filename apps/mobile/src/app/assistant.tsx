@@ -12,6 +12,7 @@ import { api, type ChatReply, type Lang } from '@/lib/api'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { ASK_RECORDING, speak, stopSpeaking, transcribe, watchSilence } from '@/lib/voice'
+import { pauseWake, resumeWake } from '@/lib/wake'
 import { Icon } from '@/ui/Icon'
 import { Button, IconBtn, Mark, Row, T } from '@/ui/kit'
 
@@ -59,10 +60,11 @@ function Assistant() {
   // greet by voice, then start listening straight away
   useEffect(() => {
     alive.current = true
+    pauseWake('assistant') // the assistant needs the microphone to itself
     speak(`${t('assistantTitle')}. ${t('assistantAsk')}`, lang, () => { if (phase$.current === 'greet') listen() }, { force: true }).catch(() => listen())
     // if the voice never reports back, do not leave the user waiting
     const fallback = setTimeout(() => { if (phase$.current === 'greet') listen() }, 12000)
-    return () => { clearTimeout(fallback); alive.current = false; shutDown() }
+    return () => { clearTimeout(fallback); alive.current = false; shutDown(); resumeWake('assistant') }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function shutDown() {

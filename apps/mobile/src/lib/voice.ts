@@ -6,6 +6,7 @@ import { createAudioPlayer, RecordingPresets, setAudioModeAsync, type AudioPlaye
 import * as Speech from 'expo-speech'
 import { Platform } from 'react-native'
 import { api, BASE, token, type Lang } from './api'
+import { pauseWake, resumeWake } from './wake'
 
 type Status = { azure: boolean; spitch: boolean }
 let status: Promise<Status> | null = null
@@ -42,6 +43,7 @@ export function stopSpeaking() {
   if (webUrl && Platform.OS === 'web') URL.revokeObjectURL(webUrl)
   webUrl = ''
   Speech.stop().catch(() => {})
+  resumeWake('speak')
 }
 
 function phoneSpeak(text: string, lang: Lang, live: () => boolean, onDone?: () => void) {
@@ -85,6 +87,10 @@ export async function speak(text: string, lang: Lang, onDone?: () => void, opts:
   const [s, p] = await Promise.all([voiceStatus(), voicePrefs()])
   if (!live()) return
   if (!opts.force && p.read_aloud === false) { onDone?.(); return }
+  // the wake listener steps aside while NURU talks; any finish or stop hands it back
+  pauseWake('speak')
+  const caller = onDone
+  onDone = () => { if (live()) resumeWake('speak'); caller?.() }
   if ((lang === 'en' && (s.azure || s.spitch)) || (lang !== 'en' && s.spitch)) {
     try {
       const res = await fetch(BASE + '/voice/speak', {

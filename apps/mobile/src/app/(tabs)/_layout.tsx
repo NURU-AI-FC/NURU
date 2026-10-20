@@ -1,22 +1,25 @@
 import { Redirect, router } from 'expo-router'
 import Tabs from 'expo-router/js-tabs'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { View, type GestureResponderEvent } from 'react-native'
 import { DrawerProvider } from '@/components/Drawer'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
+import { startWakeWord } from '@/lib/wake'
 import { TabBar } from '@/ui/TabBar'
 
 const openAssistant = () => router.push('/assistant')
 
 export default function TabsLayout() {
-  const { user, ready } = useApp()
+  const { user, ready, toast } = useApp()
   const { c } = useTheme()
   const dbl = useDoubleTap(openAssistant)
+  // "Hey NURU" opens the assistant while the app is on screen
+  useEffect(() => (user ? startWakeWord(openAssistant, toast) : undefined), [user?.id, toast]) // eslint-disable-line react-hooks/exhaustive-deps
   if (ready && !user) return <Redirect href="/welcome" />
   // The side menu replaces the old More tab and sits over the tabs and tab bar.
   // A double tap on empty space opens the NURU voice assistant; so does
-  // VoiceOver's two-finger double tap (magic tap).
+  // VoiceOver's two-finger double tap (magic tap), and saying "Hey NURU".
   return (
     <View style={{ flex: 1 }} {...dbl} accessibilityActions={[{ name: 'magicTap', label: 'Open NURU voice' }]} onMagicTap={openAssistant}>
       <DrawerProvider>
