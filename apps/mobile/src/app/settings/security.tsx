@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
+import { FaceCam } from '@/components/FaceCam'
 import { api } from '@/lib/api'
 import { money, when } from '@/lib/format'
 import { useApp } from '@/lib/store'
@@ -12,8 +13,6 @@ import { useTheme } from '@/lib/theme'
 
 type Overview = { has_pin: boolean; face_enrolled: boolean; kyc_verified: boolean; pin_changed_at: string | null; password_changed_at: string; active_sessions: number; login_alerts: boolean; frozen_until?: string }
 type Session = { id: string; device: string; ip: string; created_at: string; last_seen_at: string; revoked_at: string | null; current: boolean }
-// Same sandbox face the web app enrols when a camera model is not available.
-const DEMO_FACE = Array.from({ length: 128 }, (_, i) => Math.round(Math.sin(i * 1.7) * 1000) / 10000)
 
 // p12 "05 Security": sign in, transfers (PIN, face check), devices, freeze.
 export default function Security() {
@@ -26,6 +25,7 @@ export default function Security() {
   const [pin, setPin] = useState('')
   const [devices, setDevices] = useState(false)
   const [freeze, setFreeze] = useState(false)
+  const [faceOpen, setFaceOpen] = useState(false)
   const live = (sessions || []).filter((s) => !s.revoked_at)
 
   function key(k: string) {
@@ -38,9 +38,13 @@ export default function Security() {
       .catch((e) => toast((e as Error).message))
       .finally(() => { setPinStep(''); setPin(''); setCur('') })
   }
-  async function face(on: boolean) {
+  function face(on: boolean) {
     if (!on) { toast('Face check stays on for transfers above ₦50,000.'); return }
-    try { await api('/me/face', { body: { descriptor: DEMO_FACE } }); toast('Face check saved'); reload() } catch (e) { toast((e as Error).message) }
+    setFaceOpen(true)
+  }
+  async function enrol(d: number[]) {
+    try { await api('/me/face', { body: { descriptor: d } }); toast('Face check saved'); reload() } catch (e) { toast((e as Error).message) }
+    setFaceOpen(false)
   }
   async function alerts(v: boolean) { await api('/me/prefs', { method: 'PATCH', body: { login_alerts: v } }).catch(() => {}); reload() }
   async function drop(id: string) { try { await api('/me/sessions/' + id, { method: 'DELETE' }); toast('Device signed out'); reloadSessions(); reload() } catch (e) { toast((e as Error).message) } }
@@ -93,6 +97,12 @@ export default function Security() {
           </Row>
         ))}
         {!live.length && <T v="s" tone="t2">No devices.</T>}
+      </Sheet>
+
+      <Sheet open={faceOpen} onClose={() => setFaceOpen(false)} scroll>
+        <T v="h3" center>{o?.face_enrolled ? 'Update your face check' : 'Set up your face check'}</T>
+        {faceOpen && <FaceCam mode="enrol" onFace={enrol} />}
+        <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</T>
       </Sheet>
 
       <Sheet open={freeze} onClose={() => setFreeze(false)}>
