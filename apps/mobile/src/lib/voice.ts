@@ -30,8 +30,13 @@ export async function setReadAloud(on: boolean) {
 
 let player: AudioPlayer | null = null
 let webUrl = ''
+// Every speak() takes a number from this counter. stopSpeaking() and each new
+// speak() move it on, so an older call still waiting on the network sees it is
+// out of date and stays quiet instead of playing over the new one.
+let gen = 0
 
 export function stopSpeaking() {
+  gen++
   try { player?.remove() } catch { /* already released */ }
   player = null
   if (webUrl && Platform.OS === 'web') URL.revokeObjectURL(webUrl)
@@ -39,22 +44,30 @@ export function stopSpeaking() {
   Speech.stop().catch(() => {})
 }
 
-function phoneSpeak(text: string, lang: Lang, onDone?: () => void) {
-  Speech.speak(text.replace(/₦/g, 'naira '), { language: phoneLang[lang], onDone, onStopped: onDone, onError: onDone })
+function phoneSpeak(text: string, lang: Lang, live: () => boolean, onDone?: () => void) {
+  // a stopped or replaced utterance does not report back, so its caller's
+  // "done" never lands on top of the newer one
+  const done = () => { if (live()) onDone?.() }
+  Speech.speak(text.replace(/₦/g, 'naira '), { language: phoneLang[lang], onDone: done, onStopped: done, onError: done })
 }
 
-async function play(res: Response, onDone?: () => void) {
+async function play(res: Response, live: () => boolean, onDone?: () => void) {
   let uri: string
   if (Platform.OS === 'web') {
-    webUrl = URL.createObjectURL(await res.blob())
+    const blob = await res.blob()
+    if (!live()) return
+    webUrl = URL.createObjectURL(blob)
     uri = webUrl
   } else {
     const { File, Paths } = await import('expo-file-system')
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    if (!live()) return
     const f = new File(Paths.cache, `nuru-voice-${Date.now()}.mp3`)
-    await f.write(new Uint8Array(await res.arrayBuffer()))
+    await f.write(bytes)
     uri = f.uri
   }
   await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false }).catch(() => {})
+  if (!live()) return
   const p = createAudioPlayer({ uri })
   player = p
   const sub = p.addListener('playbackStatusUpdate', (s) => {
@@ -63,10 +76,14 @@ async function play(res: Response, onDone?: () => void) {
   p.play()
 }
 
-/** speak reads text aloud in the user's language, preferring the natural server voice. */
+/** speak reads text aloud in the user's language, preferring the natural server voice.
+ * Calling it again, or calling stopSpeaking(), cancels the one before. */
 export async function speak(text: string, lang: Lang, onDone?: () => void, opts: { force?: boolean } = {}) {
   stopSpeaking()
+  const mine = gen
+  const live = () => mine === gen
   const [s, p] = await Promise.all([voiceStatus(), voicePrefs()])
+  if (!live()) return
   if (!opts.force && p.read_aloud === false) { onDone?.(); return }
   if ((lang === 'en' && (s.azure || s.spitch)) || (lang !== 'en' && s.spitch)) {
     try {
@@ -75,10 +92,12 @@ export async function speak(text: string, lang: Lang, onDone?: () => void, opts:
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
         body: JSON.stringify({ text, lang, gender: p.voice === 'male' ? 'male' : 'female' }),
       })
-      if (res.ok) { await play(res, onDone); return }
+      if (!live()) return
+      if (res.ok) { await play(res, live, onDone); return }
     } catch { /* fall back to the phone voice */ }
   }
-  phoneSpeak(text, lang, onDone)
+  if (!live()) return
+  phoneSpeak(text, lang, live, onDone)
 }
 
 export class VoiceError extends Error {}

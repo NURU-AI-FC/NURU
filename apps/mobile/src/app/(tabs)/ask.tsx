@@ -47,7 +47,8 @@ export default function Ask() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
   const [rec, setRec] = useState<'idle' | 'starting' | 'recording' | 'hearing'>('idle')
   const [secs, setSecs] = useState(0)
-  const [speaking, setSpeaking] = useState(false)
+  // which message is being read aloud (its time stamp), so a second tap on it stops it
+  const [speaking, setSpeaking] = useState<string | null>(null)
   // speaker switch: when on, NURU speaks every answer in the language it answered in
   const [talk, setTalk] = useState(true)
   useEffect(() => { readAloudOn().then(setTalk).catch(() => {}) }, [])
@@ -91,18 +92,20 @@ export default function Ask() {
       if (r.thread) setThread(r.thread)
       // the API answers in the language the question was written or spoken in
       const l = r.lang || lang
-      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang: l, at: now(), chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
-      if (talk && r.answer) readAloud(r.answer, l)
+      const at = now()
+      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang: l, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      if (talk && r.answer) readAloud(r.answer, l, at)
     } catch (e) {
       say((e as Error).message)
     } finally { setBusy(false) }
   }
 
-  function readAloud(s: string, l: Lang = lang) {
-    setSpeaking(true)
-    speak(s, l, () => setSpeaking(false), { force: true }).catch(() => setSpeaking(false))
+  function readAloud(s: string, l: Lang, key: string) {
+    setSpeaking(key)
+    const done = () => setSpeaking((k) => (k === key ? null : k))
+    speak(s, l, done, { force: true }).catch(done)
   }
-  function quiet() { stopSpeaking(); setSpeaking(false) }
+  function quiet() { stopSpeaking(); setSpeaking(null) }
   function toggleTalk() {
     const on = !talk
     setTalk(on)
@@ -232,8 +235,8 @@ export default function Ask() {
               {m.actions?.filter((a) => a.kind === 'reminder').map((a, j) => <ReminderCard key={j} action={a} onSet={(s) => say(s)} />)}
               {!!m.sources?.length && (
                 <Row gap={6} style={{ marginLeft: 36 }}>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Read aloud" hitSlop={8} onPress={() => (speaking ? quiet() : readAloud(m.content, m.lang))}>
-                    <Icon name={speaking ? 'stop' : 'volume'} size={16} color={speaking ? c.red : c.muted} />
+                  <Pressable accessibilityRole="button" accessibilityLabel={speaking === m.at ? "Stop reading" : "Read aloud"} hitSlop={8} onPress={() => (speaking === m.at ? quiet() : readAloud(m.content, m.lang, m.at))}>
+                    <Icon name={speaking === m.at ? 'stop' : 'volume'} size={16} color={speaking === m.at ? c.red : c.muted} />
                   </Pressable>
                   <Pressable onPress={() => setSources(m.sources!)} style={{ flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                     <Icon name="copy" size={16} color={c.muted} /><Icon name="thumbup" size={16} color={c.muted} />
@@ -267,7 +270,7 @@ export default function Ask() {
           {msgs.length > 0 && <Row gap={6} style={{ marginLeft: 36 }}><Icon name="shieldcheck" size={14} color={c.muted} /><T v="xs" tone="mu">NURU never sends money without your PIN and face check</T></Row>}
         </KeyboardScroll>
 
-        {speaking && (
+        {!!speaking && (
           <Row center style={{ paddingBottom: 8 }}>
             <Chip icon="volume" label="Reading aloud · Stop" onPress={quiet} />
           </Row>
