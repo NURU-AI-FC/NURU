@@ -12,6 +12,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.nuru.mobile",
       "infoPlist": {
+        "NSCameraUsageDescription": "NURU uses the front camera to check it is you before money moves. We keep a face template, never a photo.",
         "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves.",
         "NSMicrophoneUsageDescription": "NURU uses the microphone so you can ask questions about your money by voice.",
         "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you."
@@ -29,7 +30,8 @@
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
       ],
       "versionCode": 1
     },
