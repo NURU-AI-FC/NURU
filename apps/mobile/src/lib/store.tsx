@@ -5,7 +5,7 @@ import { Animated, StyleSheet, Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { translate, type Key } from '../i18n'
 import { tabLabels } from '../i18n/tabs'
-import { api, loadToken, onSessionExpired, setToken, type Lang, type ThemePref, type User } from './api'
+import { api, ApiError, loadToken, onSessionExpired, setToken, type Lang, type ThemePref, type User } from './api'
 import { money as fmt } from './format'
 import { getItem, setItem } from './storage'
 import { font, useTheme } from './theme'
@@ -25,6 +25,7 @@ type Ctx = {
 }
 
 const AppCtx = createContext<Ctx>(null as unknown as Ctx)
+const USER_KEY = 'nuru.user'
 export const useApp = () => useContext(AppCtx)
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -36,10 +37,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [msg, setMsg] = useState('')
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // The last /me reply is kept on the device, so a returning customer goes
+  // straight to Home while it is checked again in the background. A 401 still
+  // signs them out (api() clears the token and onSessionExpired fires).
   const refresh = useCallback(async () => {
     const tok = await loadToken()
     if (!tok) { setReady(true); return }
-    try { setUser(await api<User>('/me')) } catch { await setToken('') } finally { setReady(true) }
+    let saved: User | null = null
+    try { saved = JSON.parse((await getItem(USER_KEY)) || 'null') } catch { /* ignore */ }
+    if (saved?.id) { setUser(saved); setReady(true) }
+    try {
+      setUser(await api<User>('/me'))
+    } catch (e) {
+      // Offline with a saved profile: keep showing it. Otherwise sign out as before.
+      if (!saved?.id || (e instanceof ApiError && e.status !== 0)) { await setToken(''); setUser(null) }
+    } finally { setReady(true) }
   }, [])
 
   useEffect(() => {
@@ -48,6 +60,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refresh()
     api<{ rates: Record<string, number> }>('/fx').then((r) => setRates(r.rates)).catch(() => {})
   }, [refresh])
+
+  // Keep the saved profile in step with the signed in user, and drop it on sign out.
+  useEffect(() => { if (ready) setItem(USER_KEY, user ? JSON.stringify(user) : null) }, [user, ready])
 
   // The server keeps the user's theme. A local override wins until it changes.
   useEffect(() => { if (user?.theme) setPref(user.theme) }, [user?.theme, setPref])
