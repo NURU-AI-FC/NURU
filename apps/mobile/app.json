@@ -15,9 +15,10 @@
         "NSCameraUsageDescription": "NURU uses the front camera to check it is you before money moves. We keep a face template, never a photo.",
         "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves.",
         "NSMicrophoneUsageDescription": "NURU uses the microphone so you can ask questions about your money by voice.",
-        "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you."
+        "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you.",
+        "NSSpeechRecognitionUsageDescription": "NURU listens for \"Hey NURU\" while the app is open so you can talk to it hands-free."
       },
-      "buildNumber": "1"
+      "buildNumber": "2"
     },
     "android": {
       "package": "app.nuru.mobile",
@@ -33,7 +34,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA"
       ],
-      "versionCode": 1
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -68,6 +69,17 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "NURU uses the microphone so you can ask questions about your money by voice and say \"Hey NURU\".",
+          "speechRecognitionPermission": "NURU listens for \"Hey NURU\" while the app is open so you can talk to it hands-free.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
         }
       ]
     ],
