@@ -1,82 +1,105 @@
-import { StrictMode, type ReactNode } from 'react'
+import { lazy, StrictMode, Suspense, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import Accounts, { AccountDetail } from './pages/Accounts'
-import Ask from './pages/Ask'
-import Auth from './pages/Auth'
-import Branches from './pages/Branches'
-import Business from './pages/Business'
-import Decide from './pages/business/Decide'
-import Expenses from './pages/business/Expenses'
-import Investor from './pages/business/Investor'
-import Invoices from './pages/business/Invoices'
-import Payroll from './pages/business/Payroll'
-import Payslip from './pages/business/Payslip'
-import Plan from './pages/business/Plan'
-import Setup from './pages/business/Setup'
-import Vendors from './pages/business/Vendors'
-import Verdict from './pages/business/Verdict'
-import Console from './pages/Console'
-import History, { TxDetail } from './pages/History'
-import Campaigns from './pages/console/Campaigns'
-import Customers, { CustomerDetail } from './pages/console/Customers'
-import ConsoleData from './pages/console/Data'
-import Risk from './pages/console/Risk'
-import Segments from './pages/console/Segments'
-import Home from './pages/Home'
-import Insights from './pages/Insights'
-import Landing from './pages/Landing'
-import Money from './pages/Money'
-import Notifications, { AlertDetail, NotifySettings } from './pages/Notifications'
-import Borrow from './pages/money/Borrow'
-import Claim from './pages/money/Claim'
-import Deposit from './pages/money/Deposit'
-import Insurance from './pages/money/Insurance'
-import LoanDetail from './pages/money/LoanDetail'
-import Pension from './pages/money/Pension'
-import Refunds from './pages/money/Refunds'
-import Vaults from './pages/money/Vaults'
-import Pay from './pages/Pay'
-import Planner from './pages/Planner'
-import Profile from './pages/Profile'
-import Search from './pages/Search'
-import Settings from './pages/Settings'
-import InsightAlert from './pages/insights/Alert'
-import InsightBills from './pages/insights/Bills'
-import InsightBudgets from './pages/insights/Budgets'
-import InsightCategory from './pages/insights/Category'
-import InsightGoals from './pages/insights/Goals'
-import InsightHealth from './pages/insights/Health'
-import InsightMerchants from './pages/insights/Merchants'
-import InsightReport from './pages/insights/Report'
-import PlanBudget from './pages/planner/Budget'
-import PlanCalendar from './pages/planner/Calendar'
-import PlanGoal from './pages/planner/Goal'
-import PlanMonth from './pages/planner/Plan'
-import PlanRecap from './pages/planner/Recap'
-import Welcome from './pages/Welcome'
-import Verify from './pages/Verify'
-import LinkAccount from './pages/Link'
-import Help from './pages/Help'
-import Learn from './pages/Learn'
-import Security from './pages/settings/Security'
-import Devices from './pages/settings/Devices'
-import Language from './pages/settings/Language'
-import Privacy from './pages/settings/Privacy'
-import LinkedAccounts from './pages/settings/Accounts'
-import Support from './pages/settings/Support'
 import { AppProvider, useApp } from './store'
 import { homeFor } from './access'
-import ConsoleLogin from './pages/console/Login'
-import ConsoleTeam from './pages/console/Team'
-import HQOverview from './pages/hq/Overview'
-import HQHealth from './pages/hq/Health'
-import HQSupport from './pages/hq/Support'
-import HQEmails from './pages/hq/Emails'
-import HQTeam from './pages/hq/Team'
+// Page styles stay in the first stylesheet, in the order they always had
+// before styles.css, so lazy pages render exactly as before (about 9 kB
+// gzipped). Their scripts load on demand below.
+import './pages/Home.css'
+import './pages/pay/Pay.css'
+import './pages/Ask.css'
+import './pages/branches.css'
+import './pages/Business.css'
+import './pages/money/kit.css'
+import './pages/console/console.css'
+import './pages/Insights.css'
+import './pages/landing.css'
+import './pages/settings/kit.css'
+import './pages/hq/hq.css'
 import './styles.css'
 import { initSentry, reportError } from './sentry'
 import { AssistantHost } from './Assistant'
+
+// Every page is its own chunk, so the first screen only downloads what it
+// draws. Navigations run in a transition, so the current page stays up while
+// the next one loads.
+const Accounts = lazy(() => import('./pages/Accounts'))
+const AccountDetail = lazy(() => import('./pages/Accounts').then((m) => ({ default: m.AccountDetail })))
+const Ask = lazy(() => import('./pages/Ask'))
+const Auth = lazy(() => import('./pages/Auth'))
+const Branches = lazy(() => import('./pages/Branches'))
+const Business = lazy(() => import('./pages/Business'))
+const Decide = lazy(() => import('./pages/business/Decide'))
+const Expenses = lazy(() => import('./pages/business/Expenses'))
+const Investor = lazy(() => import('./pages/business/Investor'))
+const Invoices = lazy(() => import('./pages/business/Invoices'))
+const Payroll = lazy(() => import('./pages/business/Payroll'))
+const Payslip = lazy(() => import('./pages/business/Payslip'))
+const Plan = lazy(() => import('./pages/business/Plan'))
+const Setup = lazy(() => import('./pages/business/Setup'))
+const Vendors = lazy(() => import('./pages/business/Vendors'))
+const Verdict = lazy(() => import('./pages/business/Verdict'))
+const Console = lazy(() => import('./pages/Console'))
+const History = lazy(() => import('./pages/History'))
+const TxDetail = lazy(() => import('./pages/History').then((m) => ({ default: m.TxDetail })))
+const Campaigns = lazy(() => import('./pages/console/Campaigns'))
+const Customers = lazy(() => import('./pages/console/Customers'))
+const CustomerDetail = lazy(() => import('./pages/console/Customers').then((m) => ({ default: m.CustomerDetail })))
+const ConsoleData = lazy(() => import('./pages/console/Data'))
+const Risk = lazy(() => import('./pages/console/Risk'))
+const Segments = lazy(() => import('./pages/console/Segments'))
+const Home = lazy(() => import('./pages/Home'))
+const Insights = lazy(() => import('./pages/Insights'))
+const Landing = lazy(() => import('./pages/Landing'))
+const Money = lazy(() => import('./pages/Money'))
+const Notifications = lazy(() => import('./pages/Notifications'))
+const AlertDetail = lazy(() => import('./pages/Notifications').then((m) => ({ default: m.AlertDetail })))
+const NotifySettings = lazy(() => import('./pages/Notifications').then((m) => ({ default: m.NotifySettings })))
+const Borrow = lazy(() => import('./pages/money/Borrow'))
+const Claim = lazy(() => import('./pages/money/Claim'))
+const Deposit = lazy(() => import('./pages/money/Deposit'))
+const Insurance = lazy(() => import('./pages/money/Insurance'))
+const LoanDetail = lazy(() => import('./pages/money/LoanDetail'))
+const Pension = lazy(() => import('./pages/money/Pension'))
+const Refunds = lazy(() => import('./pages/money/Refunds'))
+const Vaults = lazy(() => import('./pages/money/Vaults'))
+const Pay = lazy(() => import('./pages/Pay'))
+const Planner = lazy(() => import('./pages/Planner'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Search = lazy(() => import('./pages/Search'))
+const Settings = lazy(() => import('./pages/Settings'))
+const InsightAlert = lazy(() => import('./pages/insights/Alert'))
+const InsightBills = lazy(() => import('./pages/insights/Bills'))
+const InsightBudgets = lazy(() => import('./pages/insights/Budgets'))
+const InsightCategory = lazy(() => import('./pages/insights/Category'))
+const InsightGoals = lazy(() => import('./pages/insights/Goals'))
+const InsightHealth = lazy(() => import('./pages/insights/Health'))
+const InsightMerchants = lazy(() => import('./pages/insights/Merchants'))
+const InsightReport = lazy(() => import('./pages/insights/Report'))
+const PlanBudget = lazy(() => import('./pages/planner/Budget'))
+const PlanCalendar = lazy(() => import('./pages/planner/Calendar'))
+const PlanGoal = lazy(() => import('./pages/planner/Goal'))
+const PlanMonth = lazy(() => import('./pages/planner/Plan'))
+const PlanRecap = lazy(() => import('./pages/planner/Recap'))
+const Welcome = lazy(() => import('./pages/Welcome'))
+const Verify = lazy(() => import('./pages/Verify'))
+const LinkAccount = lazy(() => import('./pages/Link'))
+const Help = lazy(() => import('./pages/Help'))
+const Learn = lazy(() => import('./pages/Learn'))
+const Security = lazy(() => import('./pages/settings/Security'))
+const Devices = lazy(() => import('./pages/settings/Devices'))
+const Language = lazy(() => import('./pages/settings/Language'))
+const Privacy = lazy(() => import('./pages/settings/Privacy'))
+const LinkedAccounts = lazy(() => import('./pages/settings/Accounts'))
+const Support = lazy(() => import('./pages/settings/Support'))
+const ConsoleLogin = lazy(() => import('./pages/console/Login'))
+const ConsoleTeam = lazy(() => import('./pages/console/Team'))
+const HQOverview = lazy(() => import('./pages/hq/Overview'))
+const HQHealth = lazy(() => import('./pages/hq/Health'))
+const HQSupport = lazy(() => import('./pages/hq/Support'))
+const HQEmails = lazy(() => import('./pages/hq/Emails'))
+const HQTeam = lazy(() => import('./pages/hq/Team'))
 
 initSentry()
 
@@ -104,6 +127,7 @@ createRoot(document.getElementById('root')!, { onUncaughtError: reportError, onC
     <AppProvider>
       <BrowserRouter>
         <AssistantHost />
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Root />} />
           <Route path="/login" element={<Auth mode="login" />} />
@@ -187,6 +211,7 @@ createRoot(document.getElementById('root')!, { onUncaughtError: reportError, onC
           <Route path="/hq/team" element={<Private hq><HQTeam /></Private>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </AppProvider>
   </StrictMode>,
