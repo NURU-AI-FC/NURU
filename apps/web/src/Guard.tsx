@@ -49,7 +49,8 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
   const [sec, setSec] = useState<Sec | null>(null)
   const [risk, setRisk] = useState<Risk | null>(null)
   const [failKind, setFailKind] = useState<'face' | 'pin'>('face')
-  const lastPin = useRef('')
+  // set when the customer confirms the scam warning; they still prove it is them again
+  const confirmed = useRef(false)
 
   useEffect(() => {
     api<Sec>('/me/security').then((s) => {
@@ -70,8 +71,8 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
     try { await api('/me/face', { body: { descriptor: d } }); setFace(d); setStep('pin') } catch (e) { setMsg((e as Error).message) }
   }
 
-  async function send(pin: string, confirmRisk = false) {
-    lastPin.current = pin
+  async function send(pin: string) {
+    const confirmRisk = confirmed.current
     setStep('sending')
     try {
       const r = await api<Receipt>(path, { body: { ...draft, pin, face, confirmRisk } })
@@ -91,6 +92,7 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
     }
   }
 
+  const confirmAgain = () => { confirmed.current = true; setMsg(''); setFace(null); setStep('verify') }
   const retry = () => { setMsg(''); setFace(null); setStep('verify') }
 
   const summary = <span className="t2 s">Sending {money(draft.amount)} to {draft.toName}{draft.toBank ? `, ${draft.toBank}` : ''}</span>
@@ -173,7 +175,7 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
           </div>
           <div className="soft row g10 start" style={{ alignSelf: 'stretch', textAlign: 'left' }}><Icon name="info" size={18} color="var(--muted)" /><span className="xs t2 grow">Zenith staff will never ask you to move money to a "safe account".</span></div>
           <button className="btn pri block" onClick={onClose}>Cancel transfer</button>
-          <button className="btn ghost block" onClick={() => send(lastPin.current, true)}>I know this person, continue</button>
+          <button className="btn ghost block" onClick={confirmAgain}>I know this person. Confirm with my face and PIN</button>
         </>}
       </div>
     </Modal>
