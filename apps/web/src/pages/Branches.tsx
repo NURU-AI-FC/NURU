@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT, HEAD_OFFICE, appleDirections, areaName, directions, geocode, nearby, services, status, type Branch } from '../branches'
-import { MapView } from '../MapView'
+import { MapView } from '../LazyMap'
 import { Shell } from '../Shell'
 import { useApp } from '../store'
 import { ThemePicker } from '../ThemePicker'
