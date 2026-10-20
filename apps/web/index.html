@@ -7,7 +7,10 @@
     <meta name="theme-color" content="#E30613" />
     <meta name="description" content="NURU turns your bank data into plain answers, in English, Yorùbá, Igbo and Hausa." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- the font stylesheet loads without blocking first paint; text swaps to Inter when it arrives -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
     <title>NURU, your financial copilot</title>
     <script>
       // apply the saved theme before first paint so there is no flash
