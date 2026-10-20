@@ -76,6 +76,7 @@ import HQEmails from './pages/hq/Emails'
 import HQTeam from './pages/hq/Team'
 import './styles.css'
 import { initSentry, reportError } from './sentry'
+import { AssistantHost } from './Assistant'
 
 initSentry()
 
@@ -102,6 +103,7 @@ createRoot(document.getElementById('root')!, { onUncaughtError: reportError, onC
   <StrictMode>
     <AppProvider>
       <BrowserRouter>
+        <AssistantHost />
         <Routes>
           <Route path="/" element={<Root />} />
           <Route path="/login" element={<Auth mode="login" />} />
@@ -128,6 +130,7 @@ createRoot(document.getElementById('root')!, { onUncaughtError: reportError, onC
           <Route path="/insights/alert" element={<Private><InsightAlert /></Private>} />
           <Route path="/insights/report" element={<Private><InsightReport /></Private>} />
           <Route path="/ask" element={<Private><Ask /></Private>} />
+          <Route path="/assistant" element={<Private><Home /></Private>} />
           <Route path="/pay/*" element={<Private><Pay /></Private>} />
           <Route path="/money" element={<Private><Money /></Private>} />
           <Route path="/money/loans/:id" element={<Private><LoanDetail /></Private>} />

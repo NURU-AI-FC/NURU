@@ -36,6 +36,9 @@ const en = {
   languageVoice: 'Language and voice', privacy: 'Privacy and data', linkedAccounts: 'Linked accounts', devices: 'Trusted devices',
   securityCentre: 'Security centre', learn: 'Learn', help: 'Help and support', supportChat: 'Customer service',
   forgot: 'Forgot password?', logoutAsk: 'Log out of NURU?', verifyIdentity: 'Verify identity', linkAccount: 'Link an account',
+  // NURU voice assistant (double tap, nuru://assistant, Alt+N on the web)
+  assistantTitle: 'NURU is at your service', assistantAsk: 'What would you like to know about your money?',
+  assistantThinking: 'Thinking…', assistantSpeaking: 'Speaking…', assistantPaused: 'Tap the circle to ask', assistantHint: 'Stops by itself when you pause',
 }
 export default en
 export type Dict = typeof en

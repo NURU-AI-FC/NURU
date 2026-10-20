@@ -54,6 +54,6 @@ export type PendingTx = { id: string; direction: 'credit' | 'debit'; amount: num
 export type Pending = { items: PendingTx[]; count: number }
 export type Payee = { id: string; name: string; bank: string; account: string; tag?: string; starred?: boolean; times?: number }
 export type Source = { type: string; label: string; detail: string }
-export type ChatReply = { answer: string; blocked: string; chart: Chart | null; actions: ChatAction[]; sources?: Source[]; thread?: string }
+export type ChatReply = { answer: string; blocked: string; chart: Chart | null; actions: ChatAction[]; sources?: Source[]; thread?: string; lang?: Lang }
 export type ChatMsg = { role: 'user' | 'assistant'; content: string; lang: Lang; at: string; chart?: Chart | null; actions?: ChatAction[]; blocked?: string; sources?: Source[]; thread?: string }
 export type Thread = { id: string; title: string; lang: Lang; started_at: string; at: string; messages: number; blocked: number }

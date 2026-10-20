@@ -13,6 +13,7 @@ const yo: Partial<Dict> = {
   enterPin: 'Tẹ PIN rẹ', confirm: 'Jẹ́rìí', loans: 'Gbèsè', reminders: 'Ìránnilétí', appearance: 'Ìrísí', language: 'Èdè',
   light: 'Ìmọ́lẹ̀', dark: 'Òkùnkùn', system: 'Ẹ̀rọ', security: 'Ààbò', save: 'Fipamọ́', login: 'Wọlé', signup: 'Ṣí àkáǹtì',
   email: 'Ímeèlì', password: 'Ọ̀rọ̀ aṣínà', verify: 'Jẹ́rìí', otpTitle: 'Tẹ kóòdù náà',
+  assistantTitle: 'NURU wà ní ìkáwọ́ rẹ', assistantAsk: 'Kí ni o fẹ́ mọ̀ nípa owó rẹ?',
 }
 export default yo
 

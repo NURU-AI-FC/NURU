@@ -13,6 +13,7 @@ const ig: Partial<Dict> = {
   enterPin: 'Tinye PIN gị', confirm: 'Kwado', loans: 'Mbinye ego', reminders: 'Ncheta', appearance: 'Ọdịdị', language: 'Asụsụ',
   light: 'Ìhè', dark: 'Ọchịchịrị', system: 'Sistemụ', security: 'Nchekwa', save: 'Chekwaa', login: 'Banye', signup: 'Mepee akaụntụ',
   email: 'Email', password: 'Okwuntughe', verify: 'Nyochaa', otpTitle: 'Tinye koodu',
+  assistantTitle: 'NURU nọ ebe a ijere gị ozi', assistantAsk: 'Gịnị ka ị chọrọ ịma gbasara ego gị?',
 }
 export default ig
 

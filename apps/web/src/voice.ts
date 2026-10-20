@@ -80,7 +80,7 @@ export async function speak(text: string, lang: Lang, voiceURI?: string, onDone?
 
 type Rec = { lang: string; interimResults: boolean; start: () => void; stop: () => void; onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void; onend: () => void; onerror: () => void }
 
-type ListenOpts = { silenceMs?: number; giveUpMs?: number }
+type ListenOpts = { silenceMs?: number; giveUpMs?: number; onStopped?: () => void }
 
 /**
  * watchLevel follows the microphone level with a Web Audio analyser and calls
@@ -160,6 +160,7 @@ export class Listener {
         this.unwatch = null
         stream.getTracks().forEach((t) => t.stop())
         if (this.cancelled) { onEnd(''); return }
+        opts.onStopped?.()
         const blob = new Blob(this.chunks, { type: m.mimeType || 'audio/webm' })
         if (blob.size < 1200) { onEnd('Hold the mic a little longer'); return }
         const fd = new FormData()

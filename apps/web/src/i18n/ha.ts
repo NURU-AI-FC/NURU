@@ -13,6 +13,7 @@ const ha: Partial<Dict> = {
   enterPin: 'Shigar da PIN ɗinka', confirm: 'Tabbatar', loans: 'Bashi', reminders: 'Tunatarwa', appearance: 'Kamanni', language: 'Harshe',
   light: 'Haske', dark: 'Duhu', system: 'Na\'ura', security: 'Tsaro', save: 'Ajiye', login: 'Shiga', signup: 'Buɗe asusu',
   email: 'Imel', password: 'Kalmar sirri', verify: 'Tabbatar', otpTitle: 'Shigar da lambar',
+  assistantTitle: 'NURU yana nan don yi maka hidima', assistantAsk: 'Me kake so ka sani game da kuɗinka?',
 }
 export default ha
 
