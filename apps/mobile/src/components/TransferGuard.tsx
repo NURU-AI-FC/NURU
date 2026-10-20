@@ -2,16 +2,16 @@
 // the customer creates a 4 digit PIN and enrols their face; after that each
 // transfer needs a face match and the PIN, checked on the server.
 //
-// The face step is a placeholder on mobile: it sends the same sandbox face
-// template the web app uses when no camera is available. A store build would
-// swap it for a native face SDK (or a liveness vendor) without changing the API.
+// The face step uses the front camera through FaceCam, which runs the same
+// face model as the web app, so templates enrolled on either one match.
 import { useEffect, useRef, useState } from 'react'
-import { Animated, Easing, Linking, View } from 'react-native'
+import { Linking, View } from 'react-native'
+import { FaceCam } from '@/components/FaceCam'
 import { api, ApiError, type Receipt, type Security } from '@/lib/api'
 import { useApp, useMoney } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
-import { Button, Card, Chip, Divider, KV, Row, Soft, T } from '@/ui/kit'
+import { Button, Card, Divider, KV, Row, Soft, T } from '@/ui/kit'
 import { applyKey, Keypad, PinBoxes } from '@/ui/PinPad'
 import { Sheet } from '@/ui/Sheet'
 
@@ -20,7 +20,6 @@ type Step = 'load' | 'create' | 'confirm' | 'enrol' | 'verify' | 'pin' | 'sendin
 type Risk = { risk: string[]; to: string; bank?: string; amount: number }
 
 export const SUPPORT_TEL = 'tel:+23412787000'
-const DEMO_FACE = Array.from({ length: 128 }, (_, i) => Math.round(Math.sin(i * 1.7) * 1000) / 10000)
 
 function Steps({ n }: { n: number }) {
   const { c } = useTheme()
@@ -50,10 +49,12 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
   const [failKind, setFailKind] = useState<'face' | 'pin'>('face')
   // set when the customer confirms the scam warning; they still prove it is them again
   const confirmed = useRef(false)
+  // the descriptor from the latest face step, sent with the PIN
+  const face = useRef<number[] | null>(null)
 
   useEffect(() => {
     if (!open) return
-    setStep('load'); setPin(''); setPin1(''); setMsg(''); confirmed.current = false
+    setStep('load'); setPin(''); setPin1(''); setMsg(''); confirmed.current = false; face.current = null
     api<Security>('/me/security').then((s) => {
       setSec(s)
       if (s.locked_until && new Date(s.locked_until) > new Date()) return setStep('locked')
@@ -82,15 +83,17 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
     try { await api('/me/pin', { body: { pin: p } }); refresh(); setMsg(''); setStep(sec?.face_enrolled ? 'verify' : 'enrol') } catch (e) { setMsg((e as Error).message); setStep('create') }
   }
 
-  async function enrolled() {
-    try { await api('/me/face', { body: { descriptor: DEMO_FACE } }); setStep('pin') } catch (e) { setMsg((e as Error).message); setStep('error') }
+  async function enrolled(d: number[]) {
+    face.current = d
+    try { await api('/me/face', { body: { descriptor: d } }); setStep('pin') } catch (e) { setMsg((e as Error).message); setStep('error') }
   }
 
   async function send(p: string) {
     const confirmRisk = confirmed.current
+    if (!face.current) { setStep('verify'); return }
     setStep('sending')
     try {
-      const r = await api<Receipt>('/transfers', { body: { ...draft, pin: p, face: DEMO_FACE, confirmRisk } })
+      const r = await api<Receipt>('/transfers', { body: { ...draft, pin: p, face: face.current, confirmRisk } })
       onDone(r)
     } catch (e) {
       const err = e as ApiError
@@ -107,8 +110,8 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
     }
   }
 
-  const confirmAgain = () => { confirmed.current = true; setMsg(''); setStep('verify') }
-  const retry = () => { setMsg(''); setStep('verify') }
+  const confirmAgain = () => { confirmed.current = true; face.current = null; setMsg(''); setStep('verify') }
+  const retry = () => { face.current = null; setMsg(''); setStep('verify') }
   const summary = `Sending ${money(draft.amount)} to ${draft.toName}${draft.toBank ? `, ${draft.toBank}` : ''}`
   const pad = <Keypad boxed onKey={(k) => setPin((x) => applyKey(x, k, 4))} />
 
@@ -139,7 +142,12 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
 
       {(step === 'enrol' || step === 'verify') && <>
         {(first || step === 'enrol') && <Steps n={2} />}
-        <FaceCheck mode={step} summary={step === 'verify' ? summary : undefined} onDone={step === 'enrol' ? enrolled : () => setStep('pin')} />
+        <View style={{ gap: 6 }}>
+          <T v="h3" center>{step === 'enrol' ? 'Set up your face check' : 'Face check'}</T>
+          {step === 'verify' ? <T v="s" tone="t2" center>{summary}</T> : null}
+        </View>
+        <FaceCam key={step} mode={step} onFace={step === 'enrol' ? enrolled : (d) => { face.current = d; setMsg(''); setStep('pin') }} />
+        {step === 'enrol' && <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</T>}
         {!!msg && <T v="xs" tone="rd" center>{msg}</T>}
       </>}
 
@@ -204,43 +212,5 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
         <Button label="I know this person. Confirm with my face and PIN" variant="ghost" onPress={confirmAgain} />
       </>}
     </Sheet>
-  )
-}
-
-/** Placeholder face check: an oval frame with a scanning line (p08 "06 Face step-up", p16 "04 Enrol face"). */
-function FaceCheck({ mode, summary, onDone }: { mode: 'enrol' | 'verify'; summary?: string; onDone: () => void }) {
-  const { c } = useTheme()
-  const y = useRef(new Animated.Value(0)).current
-  const [stage, setStage] = useState(0)
-  const [done, setDone] = useState(false)
-  useEffect(() => {
-    const loop = Animated.loop(Animated.sequence([
-      Animated.timing(y, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: false }),
-      Animated.timing(y, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: false }),
-    ]))
-    loop.start()
-    const steps = mode === 'enrol' ? 3 : 1
-    const timers = Array.from({ length: steps }, (_, i) => setTimeout(() => setStage(i + 1), 900 * (i + 1)))
-    const end = setTimeout(() => { setDone(true); loop.stop() }, 900 * steps + 300)
-    const fire = setTimeout(onDone, 900 * steps + 900)
-    return () => { loop.stop(); timers.forEach(clearTimeout); clearTimeout(end); clearTimeout(fire) }
-  }, [mode]) // eslint-disable-line react-hooks/exhaustive-deps
-  const top = y.interpolate({ inputRange: [0, 1], outputRange: [40, 200] })
-  return (
-    <View style={{ alignItems: 'center', gap: 14 }}>
-      <T v="h3" center>{mode === 'enrol' ? 'Hold still and look at the camera' : 'Look at the camera'}</T>
-      {summary ? <T v="s" tone="t2" center>{summary}</T> : null}
-      <View style={{ width: 200, height: 250, borderRadius: 100, borderWidth: 4, borderColor: done ? c.green : c.red, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-        <Icon name="scanface" size={80} color={done ? c.green : c.muted} stroke={1.4} />
-        {!done && <Animated.View style={{ position: 'absolute', left: 18, right: 18, top, height: 3, borderRadius: 2, backgroundColor: c.red }} />}
-      </View>
-      {mode === 'enrol' ? (
-        <Row gap={8}>{['Look ahead', 'Turn left', 'Blink'].map((t, i) => <Chip key={t} label={t} on={stage > i} icon={stage > i ? 'check' : undefined} />)}</Row>
-      ) : (
-        <Row gap={8}><Chip label={done ? 'Face captured' : 'Checking face…'} on={done} icon={done ? 'check' : undefined} /></Row>
-      )}
-      <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</T>
-      <Row gap={6}><Icon name="info" size={12} color={c.muted} /><T v="xs" tone="mu">Sandbox face check: a native face SDK replaces this in the store build.</T></Row>
-    </View>
   )
 }
