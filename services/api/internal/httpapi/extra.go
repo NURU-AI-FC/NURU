@@ -130,6 +130,21 @@ func (s *Server) transferRisk(r *http.Request, account string, amount float64) [
 	return out
 }
 
+// transferGate decides whether a payment may go ahead. The PIN and face are
+// always checked first, on every attempt, so a wrong PIN never reaches the
+// scam warning and confirming that warning needs the PIN and face again.
+// It returns the risk reasons when a verified payment still needs the
+// customer to confirm it.
+func transferGate(verify func() bool, risk func() []string, confirmed bool) (bool, []string) {
+	if !verify() {
+		return false, nil
+	}
+	if r := risk(); len(r) > 0 && !confirmed {
+		return false, r
+	}
+	return true, nil
+}
+
 // transfer moves money between a user's account and a payee. It needs the
 // transaction PIN and a face match against the enrolled template. A risky
 // payment to someone new is paused until the customer confirms it.
@@ -153,12 +168,15 @@ func (s *Server) transfer(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, "check the amount and the 10 digit account number")
 		return
 	}
-	if risk := s.transferRisk(r, in.ToAccount, in.Amount); len(risk) > 0 && !in.ConfirmRisk {
-		s.event(r.Context(), uid(r), "transfer_paused", naira(in.Amount)+" to "+in.ToName)
+	what := naira(in.Amount) + " to " + in.ToName
+	ok, risk := transferGate(func() bool { return s.stepUp(w, r, in.PIN, in.Face, what) },
+		func() []string { return s.transferRisk(r, in.ToAccount, in.Amount) }, in.ConfirmRisk)
+	if len(risk) > 0 {
+		s.event(r.Context(), uid(r), "transfer_paused", what)
 		writeJSON(w, 409, map[string]any{"error": "we paused this transfer", "risk": risk, "to": in.ToName, "bank": in.ToBank, "amount": in.Amount})
 		return
 	}
-	if !s.stepUp(w, r, in.PIN, in.Face, naira(in.Amount)+" to "+in.ToName) {
+	if !ok {
 		return
 	}
 	id, at, ok := s.debit(w, r, in.From, in.Amount, "Transfer", in.ToName+", "+in.ToBank, strings.TrimSpace(in.Note)+" ••••"+in.ToAccount[6:])
