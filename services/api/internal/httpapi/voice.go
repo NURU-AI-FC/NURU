@@ -120,8 +120,8 @@ func (s *Server) azureSpeak(r *http.Request, text, voice string) ([]byte, error)
 }
 
 func (s *Server) elevenSpeak(r *http.Request, text, voice string) ([]byte, error) {
-	body, _ := json.Marshal(map[string]any{"text": text, "model_id": "eleven_multilingual_v2", "language_code": "en"})
-	req, _ := http.NewRequestWithContext(r.Context(), "POST", elevenURL+"/text-to-speech/"+voice+"?output_format=mp3_44100_128", bytes.NewReader(body))
+	body, _ := json.Marshal(map[string]any{"text": text, "model_id": "eleven_flash_v2_5", "language_code": "en"})
+	req, _ := http.NewRequestWithContext(r.Context(), "POST", elevenURL+"/text-to-speech/"+voice+"?output_format=mp3_22050_32", bytes.NewReader(body))
 	req.Header.Set("xi-api-key", os.Getenv("ELEVENLABS_API_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "audio/mpeg")
