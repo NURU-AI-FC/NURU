@@ -49,6 +49,9 @@ func (s *Server) Routes() http.Handler {
 		MaxAge:           600,
 	}))
 	r.Use(securityHeaders, s.metrics.record)
+	// gzip JSON replies for clients that accept it. The mobile app calls the
+	// API directly, and lists such as transactions shrink to a fraction.
+	r.Use(middleware.Compress(5, "application/json"))
 
 	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]string{"status": "ok"}) })
 	r.Get("/fx", s.fxRates)
