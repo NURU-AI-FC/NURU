@@ -154,8 +154,11 @@ export async function transcribe(uri: string, lang: Lang): Promise<string> {
   } else {
     const ext = (uri.split('.').pop() || 'm4a').toLowerCase()
     const type = ext === 'm4a' || ext === 'mp4' ? 'audio/mp4' : ext === '3gp' ? 'audio/3gpp' : ext === 'caf' ? 'audio/x-caf' : 'audio/' + ext
-    // React Native's FormData uploads a local file from { uri, name, type }.
-    fd.append('audio', { uri, name: 'speech.' + ext, type } as unknown as Blob)
+    // Expo's fetch (the app's global fetch since SDK 52) cannot upload React
+    // Native's { uri, name, type } parts, so hand it the file's bytes instead.
+    const { File } = await import('expo-file-system')
+    const file = new File(uri)
+    fd.append('audio', { name: 'speech.' + ext, type, bytes: () => file.bytes() } as unknown as Blob)
   }
   fd.append('lang', lang)
   let res: Response
