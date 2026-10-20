@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { langNames } from '@/i18n'
 import type { Lang } from '@/lib/api'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
+import { readAloudOn, setReadAloud } from '@/lib/voice'
+import { setWakeOn, wakeOn, wakeSupported } from '@/lib/wake'
 import { Icon } from '@/ui/Icon'
 import { Card, Label, Radio, Row, Screen, Soft, T, Toggle, TopBar } from '@/ui/kit'
 
@@ -21,6 +23,19 @@ export default function Language() {
   const { t, lang, update, user, toast } = useApp()
   const [aloud, setAloud] = useState(true)
   const [hold, setHold] = useState(true)
+  const [wake, setWake] = useState(false)
+  useEffect(() => {
+    readAloudOn().then(setAloud).catch(() => {})
+    wakeOn().then((on) => setWake(on && wakeSupported())).catch(() => {})
+  }, [])
+  const flipAloud = (on: boolean) => { setAloud(on); setReadAloud(on) }
+  const flipWake = async (on: boolean) => {
+    if (on && !wakeSupported()) { toast('"Hey NURU" needs the newest NURU app, not Expo Go.'); return }
+    setWake(on)
+    const now = await setWakeOn(on)
+    if (now !== on) { setWake(now); toast('Allow the microphone and speech recognition so NURU can hear "Hey NURU".') }
+    else toast(on ? 'Say "Hey NURU" any time NURU is open' : '"Hey NURU" is off')
+  }
   const pick = async (l: Lang) => { try { if (user) await update({ language: l }) } catch (e) { toast((e as Error).message) } }
 
   return (
@@ -37,7 +52,11 @@ export default function Language() {
       <Card style={{ gap: 12 }}>
         <Row gap={12}><T v="s" style={{ flex: 1 }}>Voice</T><T v="xs" tone="t2">Female · Ayọ̀</T><Icon name="chevr" size={18} color={c.muted} /></Row>
         <Row gap={12}><T v="s" style={{ flex: 1 }}>Speaking speed</T><T v="xs" tone="t2">Normal</T><Icon name="chevr" size={18} color={c.muted} /></Row>
-        <Row gap={12}><T v="s" style={{ flex: 1 }}>Read answers aloud</T><Toggle on={aloud} onChange={setAloud} label="Read answers aloud" /></Row>
+        <Row gap={12}><T v="s" style={{ flex: 1 }}>Read answers aloud</T><Toggle on={aloud} onChange={flipAloud} label="Read answers aloud" /></Row>
+        <Row gap={12}>
+          <View style={{ flex: 1, gap: 2 }}><T v="s">Listen for "Hey NURU"</T><T v="xs" tone="mu">While NURU is open on screen. Your phone's speech service hears the phrase.</T></View>
+          <Toggle on={wake} onChange={flipWake} label='Listen for "Hey NURU"' />
+        </Row>
         <Row gap={12}><T v="s" style={{ flex: 1 }}>Hold to talk</T><Toggle on={hold} onChange={setHold} label="Hold to talk" /></Row>
       </Card>
       <Soft>
