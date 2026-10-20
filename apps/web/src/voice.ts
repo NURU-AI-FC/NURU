@@ -10,8 +10,13 @@ let status: Promise<{ azure: boolean; spitch: boolean }> | null = null
 const ready = () => (status ??= api<{ azure: boolean; spitch: boolean }>('/voice/status').catch(() => ({ azure: false, spitch: false })))
 
 let playing: HTMLAudioElement | null = null
+// Every speak() takes a number from this counter. stopSpeaking() and each new
+// speak() move it on, so an older call still waiting on the network sees it is
+// out of date and stays quiet instead of playing over the new one.
+let gen = 0
 
 export function stopSpeaking() {
+  gen++
   playing?.pause()
   playing = null
   if ('speechSynthesis' in window) speechSynthesis.cancel()
@@ -25,10 +30,12 @@ function gender(): 'male' | 'female' {
   return /\b(male|abeo|segun|obinna|aliyu|john|david|mark|guy|daniel)\b/.test(v) && !/female/.test(v) ? 'male' : 'female'
 }
 
-function browserSpeak(text: string, lang: Lang, voiceURI?: string) {
+function browserSpeak(text: string, lang: Lang, voiceURI: string | undefined, done: () => void) {
   if (!('speechSynthesis' in window)) return false
   speechSynthesis.cancel()
   const u = new SpeechSynthesisUtterance(text)
+  u.onend = done
+  u.onerror = done
   u.lang = speechLang[lang]
   const all = speechSynthesis.getVoices()
   const v = all.find((x) => x.voiceURI === voiceURI && x.lang.toLowerCase().startsWith(lang)) || all.find((x) => x.lang.toLowerCase().startsWith(lang)) || all.find((x) => x.lang === 'en-NG')
@@ -37,10 +44,16 @@ function browserSpeak(text: string, lang: Lang, voiceURI?: string) {
   return true
 }
 
-// speak reads text aloud, preferring the natural server voice.
-export async function speak(text: string, lang: Lang, voiceURI?: string): Promise<boolean> {
+// speak reads text aloud, preferring the natural server voice. It resolves
+// false when nothing can speak. onDone runs once the voice finishes, but not
+// when it was stopped or replaced by a newer speak().
+export async function speak(text: string, lang: Lang, voiceURI?: string, onDone?: () => void): Promise<boolean> {
   stopSpeaking()
+  const mine = gen
+  const live = () => mine === gen
+  const done = () => { if (live()) { playing = null; onDone?.() } }
   const s = await ready()
+  if (!live()) return true
   if ((lang === 'en' && (s.azure || s.spitch)) || (lang !== 'en' && s.spitch)) {
     try {
       const res = await fetch(BASE + '/voice/speak', {
@@ -48,17 +61,21 @@ export async function speak(text: string, lang: Lang, voiceURI?: string): Promis
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
         body: JSON.stringify({ text, lang, gender: gender() }),
       })
+      if (!live()) return true
       if (res.ok) {
-        const url = URL.createObjectURL(await res.blob())
+        const blob = await res.blob()
+        if (!live()) return true
+        const url = URL.createObjectURL(blob)
         const a = new Audio(url)
-        a.onended = () => URL.revokeObjectURL(url)
+        a.onended = () => { URL.revokeObjectURL(url); done() }
         playing = a
         await a.play()
         return true
       }
     } catch { /* fall back */ }
   }
-  return browserSpeak(text, lang, voiceURI)
+  if (!live()) return true
+  return browserSpeak(text, lang, voiceURI, done)
 }
 
 type Rec = { lang: string; interimResults: boolean; start: () => void; stop: () => void; onresult: (e: { results: { 0: { 0: { transcript: string } } } }) => void; onend: () => void; onerror: () => void }

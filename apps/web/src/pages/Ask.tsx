@@ -7,7 +7,7 @@ import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { ChartView, Icon, Modal, useGreeting, useLoad } from '../ui'
 import { askLine, DescribeCard, type Described } from '../Describe'
-import { Listener, speak as speakAloud } from '../voice'
+import { Listener, speak as speakAloud, stopSpeaking } from '../voice'
 import { BANKS } from './pay/common'
 import './Ask.css'
 
@@ -59,6 +59,8 @@ export default function Ask() {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
+  // what is being read aloud, so a second tap on the same speaker stops it
+  const [speaking, setSpeaking] = useState<string | null>(null)
   const end = useRef<HTMLDivElement>(null)
   const rec = useRef<Listener | null>(null)
   const asked = useRef('')
@@ -141,8 +143,9 @@ export default function Ask() {
     try {
       const r = await api<ChatReply>('/chat', { body: { message: q, lang, thread } })
       if (r.thread) setThread(r.thread)
-      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang, at: new Date().toISOString(), chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
-      if (auto) speak(r.answer)
+      const at = new Date().toISOString()
+      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      if (auto) speak(r.answer, lang, at)
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, lang, at: new Date().toISOString() }])
     } finally { setBusy(false) }
@@ -156,9 +159,14 @@ export default function Ask() {
     l.start(lang, (said) => { setText(said); send(said) }, (err) => { setListening(false); rec.current = null; if (err) toast(err) })
   }
 
-  function speak(s: string, l: Lang = lang) {
-    speakAloud(s, l, voice).then((ok) => { if (!ok) toast('Reading aloud is not supported in this browser') })
+  // speak reads s aloud; tapping the same speaker again while it talks stops it
+  function speak(s: string, l: Lang = lang, key = s) {
+    if (speaking === key) { stopSpeaking(); setSpeaking(null); return }
+    setSpeaking(key)
+    const done = () => setSpeaking((k) => (k === key ? null : k))
+    speakAloud(s, l, voice, done).then((ok) => { if (!ok) { done(); toast('Reading aloud is not supported in this browser') } })
   }
+  useEffect(() => () => stopSpeaking(), [])
 
   async function copy(s: string) { try { await navigator.clipboard.writeText(s); toast('Copied') } catch { toast('Could not copy') } }
 
@@ -264,7 +272,7 @@ export default function Ask() {
                 {m.actions?.filter((a) => !['transfer', 'reminder', 'offer'].includes(a.kind)).map((a) => (
                   <button key={a.label} className="btn sm" onClick={() => a.kind === 'describe' ? (setFocus(true), setLater(false)) : nav(a.kind === 'save' ? `/pay/send?save=${a.amount}` : a.to || '/')}>{a.label}</button>
                 ))}
-                <button className="btn sm ghost" onClick={() => speak(m.content, m.lang)} aria-label="Read aloud" title="Read aloud"><Icon name="volume" size={16} /></button>
+                <button className="btn sm ghost" onClick={() => speak(m.content, m.lang, m.at)} aria-label={speaking === m.at ? 'Stop reading' : 'Read aloud'} title={speaking === m.at ? 'Stop reading' : 'Read aloud'}><Icon name={speaking === m.at ? 'stop' : 'volume'} size={16} color={speaking === m.at ? 'var(--red)' : undefined} /></button>
                 <button className="btn sm ghost" onClick={() => copy(m.content)} aria-label="Copy" title="Copy"><Icon name="copy" size={16} /></button>
               </div>
             </div>
