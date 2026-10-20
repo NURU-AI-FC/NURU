@@ -48,11 +48,12 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
   const [sec, setSec] = useState<Security | null>(null)
   const [risk, setRisk] = useState<Risk | null>(null)
   const [failKind, setFailKind] = useState<'face' | 'pin'>('face')
-  const lastPin = useRef('')
+  // set when the customer confirms the scam warning; they still prove it is them again
+  const confirmed = useRef(false)
 
   useEffect(() => {
     if (!open) return
-    setStep('load'); setPin(''); setPin1(''); setMsg('')
+    setStep('load'); setPin(''); setPin1(''); setMsg(''); confirmed.current = false
     api<Security>('/me/security').then((s) => {
       setSec(s)
       if (s.locked_until && new Date(s.locked_until) > new Date()) return setStep('locked')
@@ -85,8 +86,8 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
     try { await api('/me/face', { body: { descriptor: DEMO_FACE } }); setStep('pin') } catch (e) { setMsg((e as Error).message); setStep('error') }
   }
 
-  async function send(p: string, confirmRisk = false) {
-    lastPin.current = p
+  async function send(p: string) {
+    const confirmRisk = confirmed.current
     setStep('sending')
     try {
       const r = await api<Receipt>('/transfers', { body: { ...draft, pin: p, face: DEMO_FACE, confirmRisk } })
@@ -106,6 +107,7 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
     }
   }
 
+  const confirmAgain = () => { confirmed.current = true; setMsg(''); setStep('verify') }
   const retry = () => { setMsg(''); setStep('verify') }
   const summary = `Sending ${money(draft.amount)} to ${draft.toName}${draft.toBank ? `, ${draft.toBank}` : ''}`
   const pad = <Keypad boxed onKey={(k) => setPin((x) => applyKey(x, k, 4))} />
@@ -199,7 +201,7 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
         </Card>
         <Soft><Row gap={10}><Icon name="info" size={18} color={c.muted} /><T v="xs" tone="t2" style={{ flex: 1 }}>Zenith staff will never ask you to move money to a &quot;safe account&quot;.</T></Row></Soft>
         <Button label="Cancel transfer" onPress={onClose} />
-        <Button label="I know this person, continue" variant="ghost" onPress={() => send(lastPin.current, true)} />
+        <Button label="I know this person. Confirm with my face and PIN" variant="ghost" onPress={confirmAgain} />
       </>}
     </Sheet>
   )
