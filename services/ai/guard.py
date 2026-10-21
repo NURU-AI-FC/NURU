@@ -56,7 +56,12 @@ FINANCE = [
     "wetin", "chop", "spend am", "how far",
 ]
 
-SMALL_TALK = re.compile(r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|thanks?|thank you|ẹ ?kú|bawo|ndewo|sannu|kedu)\b", re.I)
+SMALL_TALK = re.compile(r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|thanks?|thank you|e ?(ku|kaa+ro|kaa+san|kurole)|bawo|ndewo|sannu|kedu)\b", re.I)
+
+
+def plain(text: str) -> str:
+    """Drop tone marks and dots (ẹ káàárọ̀ -> e kaaro) so greetings match however they are typed."""
+    return "".join(ch for ch in unicodedata.normalize("NFD", text) if not unicodedata.combining(ch))
 
 
 def normalise(text: str) -> str:
@@ -70,7 +75,7 @@ def classify(message: str) -> str:
     text = normalise(message)
     if any(re.search(p, text) for p in INJECTION):
         return "injection"
-    if SMALL_TALK.match(text) and len(text) < 40:
+    if SMALL_TALK.match(plain(text)) and len(text) < 40:
         return ""
     if any(w in text for w in FINANCE):
         return ""

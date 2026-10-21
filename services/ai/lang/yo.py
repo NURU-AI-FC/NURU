@@ -16,6 +16,7 @@ T = {
     "upcoming": "Ohun tó ń bọ̀: {items}.",
     "business": "{biz} gba {bin}, ó sì ná {bout} lóṣù yìí. Ṣí Business fún owó-oṣù òṣìṣẹ́, owó-orí àti ìgbà tí owó yóò fi tó.",
     "transfer": "Èyí ni owó {amt} tí o fẹ́ fi ránṣẹ́ sí {payee}. Lẹ́yìn rẹ̀, {left} yóò kù nínú àkáǹtì rẹ. Wo àlàyé ní ìsàlẹ̀; màá béèrè PIN rẹ àti ojú rẹ kí n tó fi ránṣẹ́.",
+    "reminder": "Mo lè rán ọ létí nípa {title}{amt} ní {date}. Wo àlàyé ní ìsàlẹ̀ kí o sì jẹ́rìí, yóò sì wọ inú Ètò rẹ.",
     "no_payee": "Sọ ẹni tí kí n sanwó fún. Kọ báǹkì wọn àti nọ́mbà àkáǹtì oní-nọ́mbà mẹ́wàá sí ìsàlẹ̀, kí o sì sọ ohun tí owó náà wà fún. Àwọn tí o ti fipamọ́: {list}.",
     "invest": "Mo lè fi bí ìdókòwò rẹ ṣe ń dàgbà hàn ọ́ ní ojú-ìwé Loans and savings. Fún ìpinnu ńlá, bá olùtọ́jú Zenith sọ̀rọ̀.",
 }

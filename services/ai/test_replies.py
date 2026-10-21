@@ -54,3 +54,8 @@ def test_advice_offers_to_send():
 def test_new_payee_is_collected_in_chat():
     acts = replies.actions("transfer", {"payees": ["Tunde Bakare"]}, "send ₦75,000 to my landlord for rent")
     assert acts[0]["kind"] == "transfer" and acts[0]["new"] and acts[0]["amount"] == 75000 and acts[0]["note"] == "rent"
+
+
+def test_yoruba_greetings_get_a_greeting():
+    for msg in ["Ẹ káàárọ̀ NURU", "Báwo ni?", "Ẹ kú àárọ̀", "e kaasan"]:
+        assert replies.intent(msg) == "greeting", msg
