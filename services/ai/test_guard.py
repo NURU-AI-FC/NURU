@@ -30,3 +30,8 @@ def test_unsupported_amounts():
     assert guard.unsupported_amounts("You spent ₦284,700, mostly ₦69,550 on family.", ctx) == []
     assert guard.unsupported_amounts("About ₦285k so far.", ctx) == []
     assert guard.unsupported_amounts("You have ₦9,000,000 saved.", ctx) == [9000000]
+
+
+def test_yoruba_greetings_are_small_talk():
+    for msg in ["Ẹ káàárọ̀ NURU", "E kaaro", "Ẹ káàsán", "Ẹ kúrọ̀lẹ́", "Báwo ni?", "bawo", "Ẹ kú àárọ̀"]:
+        assert guard.classify(msg) == "", msg
