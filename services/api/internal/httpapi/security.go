@@ -5,6 +5,8 @@ import (
 	"math"
 	"net/http"
 	"time"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 )
 
 // Face templates are 128 number descriptors computed in the browser by
@@ -25,13 +27,39 @@ func validFace(d []float64) bool {
 }
 
 func (s *Server) enrolFace(w http.ResponseWriter, r *http.Request) {
-	var in struct{ Descriptor []float64 }
+	var in struct {
+		Descriptor []float64
+		PIN        string `json:"pin"`
+	}
 	if !decode(w, r, &in) {
 		return
 	}
 	if !validFace(in.Descriptor) {
 		fail(w, 400, "we could not read a face, try again in good light")
 		return
+	}
+	// Replacing a face that is already enrolled needs the transaction PIN, so
+	// someone holding an unlocked phone cannot swap in their own face. Wrong
+	// PINs count towards the same 30 minute pause as transfers.
+	var pinHash string
+	var enrolled bool
+	var locked *time.Time
+	var fails int
+	s.db.QueryRow(r.Context(), `select pin_hash, face_template is not null, transfer_locked_until, transfer_fails from users where id=$1`, uid(r)).Scan(&pinHash, &enrolled, &locked, &fails)
+	if enrolled {
+		if locked != nil && locked.After(time.Now()) {
+			fail(w, 423, "transfers are paused until "+locked.Format("3:04 pm")+" after 3 failed checks")
+			return
+		}
+		if in.PIN == "" {
+			fail(w, 428, "enter your transaction PIN to replace your face check")
+			return
+		}
+		if ok, _ := auth.Verify(in.PIN, pinHash); !ok || pinHash == "" {
+			s.checkFailed(w, r, fails, "pin_failed", "wrong PIN", "face_reset")
+			return
+		}
+		s.db.Exec(r.Context(), `update users set transfer_fails=0 where id=$1`, uid(r))
 	}
 	raw, _ := json.Marshal(in.Descriptor)
 	nonce, ct, err := s.box.Seal(uid(r)+":face", string(raw))
