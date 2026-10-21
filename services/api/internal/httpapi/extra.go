@@ -33,21 +33,7 @@ func (s *Server) stepUp(w http.ResponseWriter, r *http.Request, pin string, face
 		fail(w, 428, "create a PIN and enrol your face first")
 		return false
 	}
-	failed := func(kind, msg string) bool {
-		fails++
-		if fails >= 3 {
-			s.db.Exec(r.Context(), `update users set transfer_fails=0, transfer_locked_until=now()+interval '30 minutes' where id=$1`, uid(r))
-			s.event(r.Context(), uid(r), "transfers_locked", kind)
-			msg += ". Transfers are paused for 30 minutes"
-		} else {
-			s.db.Exec(r.Context(), `update users set transfer_fails=$1 where id=$2`, fails, uid(r))
-			left := 3 - fails
-			msg += ". " + strconv.Itoa(left) + map[bool]string{true: " try left", false: " tries left"}[left == 1]
-		}
-		s.event(r.Context(), uid(r), kind, what)
-		fail(w, 403, msg)
-		return false
-	}
+	failed := func(kind, msg string) bool { return s.checkFailed(w, r, fails, kind, msg, what) }
 	if ok, _ := auth.Verify(pin, pinHash); !ok {
 		return failed("pin_failed", "wrong PIN")
 	}
@@ -56,6 +42,24 @@ func (s *Server) stepUp(w http.ResponseWriter, r *http.Request, pin string, face
 	}
 	s.db.Exec(r.Context(), `update users set transfer_fails=0 where id=$1`, uid(r))
 	return true
+}
+
+// checkFailed counts a failed PIN or face check (fails is the count before
+// this one), pauses transfers for 30 minutes on the third and writes the 403.
+func (s *Server) checkFailed(w http.ResponseWriter, r *http.Request, fails int, kind, msg, what string) bool {
+	fails++
+	if fails >= 3 {
+		s.db.Exec(r.Context(), `update users set transfer_fails=0, transfer_locked_until=now()+interval '30 minutes' where id=$1`, uid(r))
+		s.event(r.Context(), uid(r), "transfers_locked", kind)
+		msg += ". Transfers are paused for 30 minutes"
+	} else {
+		s.db.Exec(r.Context(), `update users set transfer_fails=$1 where id=$2`, fails, uid(r))
+		left := 3 - fails
+		msg += ". " + strconv.Itoa(left) + map[bool]string{true: " try left", false: " tries left"}[left == 1]
+	}
+	s.event(r.Context(), uid(r), kind, what)
+	fail(w, 403, msg)
+	return false
 }
 
 // debit takes money from one of the user's accounts and records it in one
