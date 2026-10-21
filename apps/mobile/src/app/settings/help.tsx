@@ -10,7 +10,7 @@ import { Card, Ic, Input, Label, ListRow, Row, Screen, T, TopBar } from '@/ui/ki
 const FAQ: [string, string][] = [
   ['A transfer failed but I was debited', 'Most failed transfers reverse within 24 hours. If it has not, tap Chat with us and share the reference on your receipt.'],
   ['How do I reset my transaction PIN?', 'Go to More, then Security, then Change PIN. You will need your current PIN. If you forgot it, call 0201 278 7000.'],
-  ['Why was my transfer held for a face check?', 'Transfers above ₦50,000, or ones that look unusual, need a quick face check so only you can move money.'],
+  ['Why was my transfer held for a face check?', 'Every transfer needs your PIN and a face match against the face you set up. After three failed tries transfers pause for 30 minutes to protect you. Check you are in good light and try again.'],
   ['How does NURU keep my chats private?', 'Chats are stored encrypted under your account. You can turn off chat history or delete it in Privacy and data.'],
   ['How do I link another bank account?', 'Open Connected accounts from More. On the sandbox you can link the demo bank in one tap.'],
 ]
