@@ -30,7 +30,8 @@ export default function Security() {
   const [passkey, setPasskey] = useState(hasPasskey)
   const [pinStep, setPinStep] = useState<'' | 'current' | 'new'>('')
   const [current, setCurrent] = useState('')
-  const [face, setFace] = useState(false)
+  const [face, setFace] = useState<'' | 'pin' | 'cam'>('')
+  const [facePin, setFacePin] = useState('') // replacing an enrolled face needs the PIN
   const [freeze, setFreeze] = useState(false)
   if (!user) return null
 
@@ -72,7 +73,7 @@ export default function Security() {
           <Item icon="lock" title="Transaction PIN" sub={o?.has_pin ? (o.pin_changed_at ? 'Changed ' + ago(o.pin_changed_at) : 'Needed for every transfer') : 'Not set yet'} tone={o?.has_pin ? 'green' : ''}
             onClick={() => setPinStep(o?.has_pin ? 'current' : 'new')} right={o?.has_pin ? <span className="chip green">On</span> : <span className="chip amber">Set up</span>} />
           <Item icon="scanface" title="Face check for transfers" sub={o?.face_enrolled ? 'Checked on every transfer' : 'Not set up yet'} tone={o?.face_enrolled ? 'green' : ''}
-            onClick={() => setFace(true)} right={o?.face_enrolled ? <span className="chip green">On</span> : <span className="chip amber">Set up</span>} />
+            onClick={() => { setFacePin(''); setFace(o?.face_enrolled ? 'pin' : 'cam') }} right={o?.face_enrolled ? <span className="chip green">On</span> : <span className="chip amber">Set up</span>} />
           <Item icon="phone" title={t('devices')} sub={o ? o.active_sessions + (o.active_sessions === 1 ? ' active session' : ' active sessions') : ' '} to="/settings/devices" />
           <Item icon="bell" title="Login alerts" sub="Email when a new device signs in" right={o && <Toggle on={o.login_alerts} onChange={alerts} label="Login alerts" />} />
           <Item icon="key" title="Change password" sub={o ? 'Last changed ' + ago(o.password_changed_at) : ' '} to="/forgot" />
@@ -82,11 +83,20 @@ export default function Security() {
         <button className="btn block" style={{ color: 'var(--red)', borderColor: 'var(--red)' }} onClick={() => setFreeze(true)}><Icon name="alert" color="var(--red)" /> Freeze my account</button>
       </div>
 
-      {face && (
-        <Modal onClose={() => setFace(false)}>
+      {face === 'pin' && (
+        <Modal onClose={() => setFace('')}>
+          <div className="col g16 center" style={{ textAlign: 'center' }}>
+            <span className="h3">Enter your transaction PIN</span>
+            <span className="s t2">You need your PIN to replace your face check.</span>
+            <PinInput key="facepin" onDone={(p) => { setFacePin(p); setFace('cam') }} />
+          </div>
+        </Modal>
+      )}
+      {face === 'cam' && (
+        <Modal onClose={() => setFace('')}>
           <div className="col g12 center" style={{ textAlign: 'center' }}>
             <span className="h3">Face check</span>
-            <FaceCam mode="enrol" onFace={async (d) => { try { await api('/me/face', { body: { descriptor: d } }); toast('Face check saved'); reload() } catch (e) { toast((e as Error).message) } setFace(false) }} />
+            <FaceCam mode="enrol" onFace={async (d) => { try { await api('/me/face', { body: facePin ? { descriptor: d, pin: facePin } : { descriptor: d } }); toast('Face check saved'); reload() } catch (e) { toast((e as Error).message) } setFace(''); setFacePin('') }} />
           </div>
         </Modal>
       )}
