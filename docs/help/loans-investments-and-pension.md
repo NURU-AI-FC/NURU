@@ -1,26 +1,32 @@
-# Loans, investments and pension
+# Loans, investments and pension on the Money page
 
-This article guides you through checking loan options, managing investments, and tracking your pension on the Money page.
+The Money page shows what you owe, what you have put away, and your pension. It is on the web app. Open **Loans and savings** from the menu.
 
-The Money tab brings together your loans, savings vaults, investments, and retirement account in one place.
+## Your loans
 
-## How to check what you can borrow
+Each loan card shows the lender, amount, rate and term. It also shows how much you have paid, your **Balance left**, your **Next payment** and the total **Interest**.
 
-1. Open the **Money** page.
-2. Tap **Borrow** or **Check what I can borrow**.
-3. Enter the amount you need and select a repayment term (such as 3, 6, or 12 months).
-4. Review your estimated monthly repayment, interest rate, and affordability percentage based on your salary history.
-5. Tap **Continue with NURU** to ask the assistant any questions.
+Tap a loan to see its repayment schedule. From there you can tap **Set reminder**, or **Pay early?** to ask NURU if paying early makes sense.
 
-## Managing loans and investments
+## Check what you can borrow
 
-- **Active loans**: View your lender details, principal amount, balance left, paid instalments, and next payment due date.
-- **Investments**: View your investment summary donut chart, total value, monthly contributions, and growth rate across products like fixed deposits (up to 19%).
+1. Tap **Borrow**.
+2. See how much you can borrow, based on your salary.
+3. Enter **How much do you need?** and pick how long to pay it back.
+4. Read the monthly payment, the interest rate and the total you repay.
+5. Tap **Continue with NURU** to talk it through.
 
-## Checking your pension
+This is an estimate from your transactions. No loan is created and nothing is checked with a credit bureau.
 
-1. On the Money page, tap **Pension**.
-2. View your Retirement Savings Account (RSA) total balance, fund provider, and PIN.
-3. Check employer (10%) and employee (8%) monthly contribution history.
-4. Review your projected balance at retirement age.
-5. If an employer contribution is missed, NURU displays an alert and can draft a letter to HR.
+## Investments and pension
+
+The **Investments and pension** section shows your total and each holding, with what you have put in and how much it has grown.
+
+Tap **Pension** at the top to see:
+
+1. Your retirement savings account balance and provider.
+2. Monthly contributions from your employer and from you.
+3. A warning if your employer skipped a month, with **Draft letter** to write to HR.
+4. What you could have when you retire, in today's money.
+
+The page also has **Savings vaults**, **Fixed deposit**, **Insurance** and **Refunds**.
