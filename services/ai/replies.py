@@ -8,12 +8,13 @@ Translations are reviewed by the language owners listed in docs/TEAM.md.
 import re
 from datetime import date, timedelta
 
+from guard import plain
 from lang import LANGS
 
 INTENTS = [
     ("reminder", r"\bremind( me)?\b|\bset (a |up a )?reminder\b|\bdon'?t let me forget\b"),
     ("transfer", r"(?=.*(\b(send|transfer|pay|give|ziga|zipu|kwụọ|kwuo|aika|tura|biya)\b|ránṣẹ́|ranse|sanwó))(?=.*(₦|\d+\s?k\b|\d{3,}))"),
-    ("injectionless_greeting", r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|bawo|ndewo|sannu|kedu)\b"),
+    ("injectionless_greeting", r"^\s*(hi|hello|hey|good (morning|afternoon|evening)|e ?(kaa+ro|kaa+san|kurole|ku (aa+ro|osan|irole))|bawo|ndewo|sannu|kedu)\b"),
     ("business", r"business|sales|profit|payroll|staff|salar(y|ies) for|runway|kemi|vendor|advert|investor"),
     ("loan", r"loan|debt|repay|interest|gbèsè|gbese|ụgwọ|ugwo|bashi"),
     ("subscriptions", r"subscription|netflix|dstv|spotify|showmax|recurring"),
@@ -30,8 +31,9 @@ INTENTS = [
 
 def intent(message: str) -> str:
     text = message.lower()
+    bare = plain(text)  # greetings are matched without tone marks
     for name, pattern in INTENTS:
-        if re.search(pattern, text):
+        if re.search(pattern, bare if name == "injectionless_greeting" else text):
             return "greeting" if name == "injectionless_greeting" else name
     return "general"
 
