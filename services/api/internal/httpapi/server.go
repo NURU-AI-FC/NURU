@@ -170,6 +170,7 @@ func (s *Server) Routes() http.Handler {
 		r.Get("/business/investor", s.investor)
 
 		r.With(httprate.LimitByIP(30, time.Minute)).Post("/chat", s.chat)
+		r.With(httprate.LimitByIP(30, time.Minute)).Post("/chat/stream", s.chatStream)
 		r.Get("/chat", s.chatHistory)
 		r.Get("/chat/threads", s.chatThreads)
 		r.Delete("/chat", s.clearChat)

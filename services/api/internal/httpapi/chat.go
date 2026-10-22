@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -100,15 +101,31 @@ func (s *Server) snapshot(ctx context.Context, user string) map[string]any {
 
 var uuidRe = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
-func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
-	var in struct{ Message, Lang, Thread string }
-	if !decode(w, r, &in) {
-		return
+type chatIn struct{ Message, Lang, Thread string }
+
+// chatAnswer is what the AI service returns for one question.
+type chatAnswer struct {
+	Answer   string           `json:"answer"`
+	Blocked  string           `json:"blocked"`
+	Chart    json.RawMessage  `json:"chart"`
+	Actions  []map[string]any `json:"actions"`
+	Sources  json.RawMessage  `json:"sources"`
+	Thread   string           `json:"thread"`
+	Engine   string           `json:"engine"`
+	Lang     string           `json:"lang"`
+	Replaced bool             `json:"replaced,omitempty"`
+}
+
+// chatRequest checks the question and builds the AI service request for it.
+func (s *Server) chatRequest(w http.ResponseWriter, r *http.Request, path string) (*chatIn, *http.Request, bool) {
+	in := &chatIn{}
+	if !decode(w, r, in) {
+		return nil, nil, false
 	}
 	in.Message = strings.TrimSpace(in.Message)
 	if in.Message == "" || len(in.Message) > 2000 {
 		fail(w, 400, "ask a question up to 2000 characters")
-		return
+		return nil, nil, false
 	}
 	if in.Lang == "" {
 		in.Lang = "en"
@@ -127,18 +144,17 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		hist = append(hist, map[string]string{"role": h.Role, "content": h.Content})
 	}
 	body, _ := json.Marshal(map[string]any{"message": mask(in.Message), "lang": in.Lang, "context": s.snapshot(r.Context(), user), "history": hist})
-	req, _ := http.NewRequestWithContext(r.Context(), "POST", s.cfg.AIURL+"/answer", bytes.NewReader(body))
+	req, _ := http.NewRequestWithContext(r.Context(), "POST", s.cfg.AIURL+path, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-	var out struct {
-		Answer  string           `json:"answer"`
-		Blocked string           `json:"blocked"`
-		Chart   json.RawMessage  `json:"chart"`
-		Actions []map[string]any `json:"actions"`
-		Sources json.RawMessage  `json:"sources"`
-		Thread  string           `json:"thread"`
-		Engine  string           `json:"engine"`
-		Lang    string           `json:"lang"`
+	return in, req, true
+}
+
+func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
+	in, req, ok := s.chatRequest(w, r, "/answer")
+	if !ok {
+		return
 	}
+	var out chatAnswer
 	start := time.Now()
 	resp, err := s.http.Do(req)
 	if err != nil {
@@ -150,7 +166,65 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		fail(w, 502, "NURU could not answer, try again")
 		return
 	}
-	took := int(time.Since(start).Milliseconds())
+	s.recordChat(r.Context(), uid(r), in, &out, int(time.Since(start).Milliseconds()))
+	writeJSON(w, 200, out)
+}
+
+// chatStream answers like chat, but sends the answer as Claude writes it:
+// one JSON object per line, {"delta": text} pieces, then {"done": answer}.
+// When the AI service's checks reject the streamed text, done.replaced is
+// true and done.answer is what to show instead.
+func (s *Server) chatStream(w http.ResponseWriter, r *http.Request) {
+	in, req, ok := s.chatRequest(w, r, "/answer/stream")
+	if !ok {
+		return
+	}
+	start := time.Now()
+	// long answers can take longer than the shared client's timeout
+	resp, err := (&http.Client{Transport: s.http.Transport, Timeout: 2 * time.Minute}).Do(req)
+	if err != nil {
+		fail(w, 502, "NURU is busy, try again in a moment")
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		fail(w, 502, "NURU could not answer, try again")
+		return
+	}
+	w.Header().Set("Content-Type", "application/x-ndjson")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(200)
+	flush := http.NewResponseController(w)
+	sc := bufio.NewScanner(resp.Body)
+	sc.Buffer(make([]byte, 64*1024), 1<<20)
+	for sc.Scan() {
+		var line struct {
+			Delta string      `json:"delta"`
+			Done  *chatAnswer `json:"done"`
+		}
+		if json.Unmarshal(sc.Bytes(), &line) != nil {
+			continue
+		}
+		if line.Done != nil {
+			s.recordChat(r.Context(), uid(r), in, line.Done, int(time.Since(start).Milliseconds()))
+			json.NewEncoder(w).Encode(map[string]any{"done": line.Done})
+			flush.Flush()
+			return
+		}
+		if line.Delta != "" {
+			json.NewEncoder(w).Encode(map[string]string{"delta": line.Delta})
+			flush.Flush()
+		}
+	}
+	// the AI service stopped without a final answer
+	json.NewEncoder(w).Encode(map[string]string{"error": "NURU could not answer, try again"})
+	flush.Flush()
+}
+
+// recordChat fills in the answer's thread and language, logs blocked
+// questions and saves both sides of the exchange.
+func (s *Server) recordChat(ctx context.Context, user string, in *chatIn, out *chatAnswer, took int) {
 	if out.Engine == "" && out.Blocked != "" {
 		out.Engine = "guard"
 	}
@@ -159,16 +233,15 @@ func (s *Server) chat(w http.ResponseWriter, r *http.Request) {
 		if len(snippet) > 80 {
 			snippet = snippet[:80] + "…"
 		}
-		s.event(r.Context(), user, "ai_"+out.Blocked, snippet)
+		s.event(ctx, user, "ai_"+out.Blocked, snippet)
 	}
 	if len(out.Sources) == 0 || string(out.Sources) == "null" {
 		out.Sources = json.RawMessage("[]")
 	}
 	out.Thread = in.Thread
 	out.Lang = in.Lang
-	s.saveChat(r.Context(), user, in.Thread, "user", in.Lang, in.Message, "", nil, "", 0)
-	s.saveChat(r.Context(), user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources, out.Engine, took)
-	writeJSON(w, 200, out)
+	s.saveChat(ctx, user, in.Thread, "user", in.Lang, in.Message, "", nil, "", 0)
+	s.saveChat(ctx, user, in.Thread, "assistant", in.Lang, out.Answer, out.Blocked, out.Sources, out.Engine, took)
 }
 
 // saveChat stores one message. For answers, engine says how it was made
