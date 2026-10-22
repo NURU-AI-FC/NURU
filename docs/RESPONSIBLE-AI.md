@@ -68,6 +68,7 @@ NURU is a financial copilot for Zenith Bank customers. It uses AI to explain a c
 - NURU gives guidance, not regulated investment advice, and suggests a Zenith relationship manager for big decisions.
 - Answers can be wrong or incomplete. The figure check catches invented amounts, but not every reasoning mistake.
 - Speech recognition is less accurate with noise and strong accents, and is still improving for Yorùbá, Igbo and Hausa. The text box is always available.
+- The face check matches a face but is not a certified liveness check, so a good photo could fool it. In production it would sit alongside the bank's own device binding and liveness checks.
 - The demo uses seeded sandbox data, not real customer accounts.
 
 ## How AI was used to build NURU
