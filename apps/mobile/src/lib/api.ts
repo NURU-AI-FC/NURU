@@ -51,6 +51,62 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
   return data as T
 }
 
+/**
+ * chat asks NURU a question and calls onText with the answer so far while it
+ * is being written. Resolves with the full reply, which may differ from the
+ * streamed text when the answer checks replaced it.
+ */
+export async function chat(body: { message: string; lang: Lang; thread?: string }, onText: (soFar: string) => void): Promise<ChatReply> {
+  let res: Response
+  try {
+    res = await fetch(BASE + '/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(current ? { Authorization: 'Bearer ' + current } : {}) },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new ApiError(0, 'Could not reach NURU. Check your connection and try again.')
+  }
+  // a server without streaming yet answers the plain way
+  if (res.status === 404 || res.status === 405) return api<ChatReply>('/chat', { body })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    if (res.status === 401 && current) { await setToken(''); onExpired?.() }
+    throw new ApiError(res.status, (data as { error?: string }).error || 'Something went wrong', data as Record<string, unknown>)
+  }
+  let soFar = ''
+  let reply: ChatReply | null = null
+  const take = (line: string) => {
+    if (!line.trim() || reply) return
+    let msg: { delta?: string; done?: ChatReply; error?: string }
+    try { msg = JSON.parse(line) } catch { return }
+    if (msg.error) throw new ApiError(502, msg.error)
+    if (msg.done) reply = msg.done
+    else if (msg.delta) { soFar += msg.delta; onText(soFar) }
+  }
+  const reader = typeof TextDecoder !== 'undefined' ? res.body?.getReader() : undefined
+  if (!reader) {
+    // no streaming here: read the whole answer at once
+    ;(await res.text()).split('\n').forEach(take)
+  } else {
+    const dec = new TextDecoder()
+    let buf = ''
+    while (!reply) {
+      const { done, value } = await reader.read()
+      if (value) buf += dec.decode(value, { stream: true })
+      let nl
+      while (!reply && (nl = buf.indexOf('\n')) >= 0) {
+        take(buf.slice(0, nl))
+        buf = buf.slice(nl + 1)
+      }
+      if (done) { take(buf); break }
+    }
+    reader.cancel().catch(() => {})
+  }
+  if (!reply) throw new ApiError(502, 'NURU could not answer, try again')
+  return reply
+}
+
 export type Lang = 'en' | 'yo' | 'ig' | 'ha'
 export type ThemePref = 'light' | 'dark' | 'system'
 export type User = {

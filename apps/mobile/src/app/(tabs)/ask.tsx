@@ -5,7 +5,7 @@ import { ActivityIndicator, Animated, Easing, Platform, Pressable, ScrollView, T
 import { MenuButton } from '@/components/Drawer'
 import { askLine, DescribeCard, ReminderCard, TransferCard, type Described } from '@/components/ChatCards'
 import { suggestions } from '@/i18n'
-import { api, type ChatAction, type ChatMsg, type ChatReply, type Lang, type Pending, type Source, type Thread } from '@/lib/api'
+import { api, chat, type ChatAction, type ChatMsg, type Lang, type Pending, type Source, type Thread } from '@/lib/api'
 import { greeting, when } from '@/lib/format'
 import { useApp, useMoney } from '@/lib/store'
 import { font, useTheme } from '@/lib/theme'
@@ -91,12 +91,15 @@ export default function Ask() {
     setMsgs((m) => [...m, { role: 'user', content: q, lang, at: now() }])
     setBusy(true)
     try {
-      const r = await api<ChatReply>('/chat', { body: { message: q, lang, thread } })
+      const at = now()
+      let shown = false
+      // the answer appears as NURU writes it, then the full reply replaces it
+      const put = (m: ChatMsg) => { const swap = shown; shown = true; setMsgs((ms) => (swap ? [...ms.slice(0, -1), m] : [...ms, m])) }
+      const r = await chat({ message: q, lang, thread }, (soFar) => put({ role: 'assistant', content: soFar, lang, at }))
       if (r.thread) setThread(r.thread)
       // the API answers in the language the question was written or spoken in
       const l = r.lang || lang
-      const at = now()
-      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang: l, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      put({ role: 'assistant', content: r.answer, lang: l, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources })
       if (talk && r.answer) readAloud(r.answer, l, at)
     } catch (e) {
       say((e as Error).message)
@@ -279,7 +282,7 @@ export default function Ask() {
             </View>
           )}
 
-          {busy && <AiBubble>…</AiBubble>}
+          {busy && msgs[msgs.length - 1]?.role === 'user' && <AiBubble>…</AiBubble>}
           {msgs.length > 0 && <Row gap={6} style={{ marginLeft: 36 }}><Icon name="shieldcheck" size={14} color={c.muted} /><T v="xs" tone="mu">NURU never sends money without your PIN and face check</T></Row>}
         </KeyboardScroll>
 
