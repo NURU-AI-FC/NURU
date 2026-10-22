@@ -7,4 +7,4 @@ COPY lang ./lang
 RUN useradd -r nuru
 USER nuru
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn main:app --host :: --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn main:app --host ${HOST:-::} --port ${PORT:-8000}"]

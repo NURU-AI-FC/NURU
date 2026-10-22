@@ -17,6 +17,7 @@ services:
     build: ./services/ai
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      HOST: 0.0.0.0 # the compose network is IPv4; Railway's private network keeps the IPv6 default
 
   api:
     build: ./services/api
