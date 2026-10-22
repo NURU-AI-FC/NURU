@@ -13,6 +13,7 @@ import os
 
 import anthropic
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 import guard
@@ -97,20 +98,55 @@ def health():
 
 @app.post("/answer")
 def answer(q: Question):
+    lang, early, plan = prepare(q)
+    if early:
+        return early
+    text = ask_claude(q, lang, plan["found"]) if plan["use_claude"] else None
+    return finish(q, lang, plan, text)
+
+
+@app.post("/answer/stream")
+def answer_stream(q: Question):
+    """Same answer as /answer, sent as one JSON object per line: {"delta": text}
+    while Claude writes, then {"done": answer}. When the checks reject the
+    streamed text, done carries "replaced": true and the answer to show instead."""
+    def lines():
+        lang, early, plan = prepare(q)
+        if early or not plan["use_claude"]:
+            yield json.dumps({"done": early or finish(q, lang, plan, None)}, ensure_ascii=False) + "\n"
+            return
+        text, sent = None, False
+        for kind, piece in stream_claude(q, lang, plan["found"]):
+            if kind == "delta":
+                sent = True
+                yield json.dumps({"delta": piece}, ensure_ascii=False) + "\n"
+            else:
+                text = piece
+        out = finish(q, lang, plan, text)
+        out["replaced"] = sent and out["answer"] != text
+        yield json.dumps({"done": out}, ensure_ascii=False) + "\n"
+    return StreamingResponse(lines(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+def prepare(q: Question):
+    """Checks the question and works out what kind of answer it needs. Returns
+    the language, a finished reply when the guard blocked it, and the plan."""
     lang = q.lang if q.lang in LANGS else "en"
     blocked = guard.classify(q.message)
     if blocked:
-        return {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": [], "sources": [], "engine": "guard"}
-
+        return lang, {"answer": replies.refusal(blocked, lang), "blocked": blocked, "chart": None, "actions": [], "sources": [], "engine": "guard"}, None
     intent = replies.intent(q.message)
-    chart = replies.chart(intent, q.context)
-    actions = replies.actions(intent, q.context, q.message)
-
     # Transfers and reminders always use the template so the confirmation quotes exactly
     # the payee, amount and date the app will use.
-    use_claude = client and intent not in ("transfer", "reminder")
+    use_claude = bool(client) and intent not in ("transfer", "reminder")
     found = retriever.search(q.message) if use_claude else []
-    text = ask_claude(q, lang, found) if use_claude else None
+    return lang, None, {"intent": intent, "use_claude": use_claude, "found": found}
+
+
+def finish(q: Question, lang: str, plan: dict, text: str | None):
+    intent, found = plan["intent"], plan["found"]
+    chart = replies.chart(intent, q.context)
+    actions = replies.actions(intent, q.context, q.message)
     # figures quoted from a guide (a fee, a rate) are traceable too
     checked = {**q.context, "_knowledge": [guard.amounts(c["content"]) for c in found]} if found else q.context
     if text and guard.unsupported_amounts(text, checked):
@@ -141,7 +177,8 @@ def is_quick(message: str, intent: str) -> bool:
     return intent in QUICK_INTENTS and len(text.split()) <= 14
 
 
-def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str | None:
+def build_request(q: Question, lang: str, found: list[dict] | None):
+    """Returns whether the fast path applies and the shared request fields."""
     messages = []
     for t in q.history[-6:]:
         if t.role in ("user", "assistant") and t.content:
@@ -157,8 +194,7 @@ def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str |
         "role": "user",
         "content": f"{guides}<financial_data>\n{data}\n</financial_data>\n\nCustomer's question:\n{q.message}",
     })
-    quick = is_quick(q.message, replies.intent(q.message))
-    call = dict(
+    return is_quick(q.message, replies.intent(q.message)), dict(
         system=SYSTEM.replace("{language}", LANGS[lang]),
         messages=messages,
         # If a safety classifier declines, the API retries on Anthropic's
@@ -166,16 +202,24 @@ def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str |
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
     )
+
+
+FAST = dict(model=FAST_MODEL, max_tokens=1200, output_config={"effort": "low"})
+DEEP = dict(model=MODEL, max_tokens=3000, output_config={"effort": "medium"})
+
+
+def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str | None:
+    quick, call = build_request(q, lang, found)
     try:
         if quick:
             try:
-                resp = client.beta.messages.create(model=FAST_MODEL, max_tokens=1200, output_config={"effort": "low"}, **call)
+                resp = client.beta.messages.create(**FAST, **call)
             except anthropic.BadRequestError as e:
                 # a fast model that is not available here should never cost the answer
                 log.warning("fast model refused the request (%s), using %s", e.status_code, MODEL)
                 quick = False
         if not quick:
-            resp = client.beta.messages.create(model=MODEL, max_tokens=3000, output_config={"effort": "medium"}, **call)
+            resp = client.beta.messages.create(**DEEP, **call)
     except anthropic.APIStatusError as e:
         log.error("claude returned %s", e.status_code)
         return None
@@ -186,3 +230,36 @@ def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str |
         return replies.refusal("off_topic", lang)
     text = "".join(b.text for b in resp.content if b.type == "text").strip()
     return text or None
+
+
+def stream_claude(q: Question, lang: str, found: list[dict] | None = None):
+    """Yields ("delta", text) while Claude writes, then ("end", full text or None)."""
+    quick, call = build_request(q, lang, found)
+    try:
+        stream = None
+        if quick:
+            try:
+                stream = client.beta.messages.stream(**FAST, **call).__enter__()
+            except anthropic.BadRequestError as e:
+                log.warning("fast model refused the request (%s), using %s", e.status_code, MODEL)
+        if stream is None:
+            stream = client.beta.messages.stream(**DEEP, **call).__enter__()
+        try:
+            for piece in stream.text_stream:
+                yield "delta", piece
+            resp = stream.get_final_message()
+        finally:
+            stream.close()
+    except anthropic.APIStatusError as e:
+        log.error("claude returned %s", e.status_code)
+        yield "end", None
+        return
+    except anthropic.APIConnectionError:
+        log.error("could not reach claude")
+        yield "end", None
+        return
+    if resp.stop_reason == "refusal":
+        yield "end", replies.refusal("off_topic", lang)
+        return
+    text = "".join(b.text for b in resp.content if b.type == "text").strip()
+    yield "end", text or None
