@@ -23,7 +23,7 @@ import replies
 log = logging.getLogger("nuru-ai")
 logging.basicConfig(level=logging.INFO)
 
-MODEL = os.getenv("NURU_MODEL", "claude-opus-5-5")
+MODEL = os.getenv("NURU_MODEL", "claude-sonnet-5-5")
 # short, simple questions (a greeting, a balance, this week) go to a faster model
 FAST_MODEL = os.getenv("NURU_FAST_MODEL", "claude-sonnet-5-5")
 LANGS = {"en": "English", "yo": "Yorùbá", "ig": "Igbo", "ha": "Hausa"}
@@ -205,8 +205,8 @@ def build_request(q: Question, lang: str, found: list[dict] | None):
 
 
 FAST = dict(model=FAST_MODEL, max_tokens=1200, output_config={"effort": "low"})
-# "low" starts writing within a few seconds; "medium" thinks longer before the first word
-DEEP = dict(model=MODEL, max_tokens=3000, output_config={"effort": os.getenv("NURU_EFFORT", "low")})
+# Sonnet at medium effort writes a full answer in about 8 to 18 seconds; Opus at low took 16 to 20
+DEEP = dict(model=MODEL, max_tokens=3000, output_config={"effort": os.getenv("NURU_EFFORT", "medium")})
 
 
 def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str | None:
