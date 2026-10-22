@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api, type Account, type ChatAction, type ChatMsg, type ChatReply, type Lang, type Payee, type Pending, type Source, type Thread } from '../api'
+import { api, chat, type Account, type ChatAction, type ChatMsg, type Lang, type Payee, type Pending, type Source, type Thread } from '../api'
 import { TransferGuard, type Draft } from '../Guard'
 import { langNames, suggestions } from '../i18n'
 import { Shell } from '../Shell'
@@ -141,10 +141,13 @@ export default function Ask() {
     setMsgs((m) => [...m, { role: 'user', content: q, lang, at: new Date().toISOString() }])
     setBusy(true)
     try {
-      const r = await api<ChatReply>('/chat', { body: { message: q, lang, thread } })
-      if (r.thread) setThread(r.thread)
       const at = new Date().toISOString()
-      setMsgs((m) => [...m, { role: 'assistant', content: r.answer, lang, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources }])
+      let shown = false
+      // the answer appears as NURU writes it, then the full reply replaces it
+      const put = (m: ChatMsg) => { const swap = shown; shown = true; setMsgs((ms) => (swap ? [...ms.slice(0, -1), m] : [...ms, m])) }
+      const r = await chat({ message: q, lang, thread }, (soFar) => put({ role: 'assistant', content: soFar, lang, at }))
+      if (r.thread) setThread(r.thread)
+      put({ role: 'assistant', content: r.answer, lang, at, chart: r.chart, actions: r.actions, blocked: r.blocked, sources: r.sources })
       if (auto) speak(r.answer, lang, at)
     } catch (e) {
       setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, lang, at: new Date().toISOString() }])
@@ -287,7 +290,7 @@ export default function Ask() {
               </div>
             )
           })()}
-          {busy && <div className="row g8"><span className="mark askmark">N</span><div className="bubble ai mu">Thinking…</div></div>}
+          {busy && msgs[msgs.length - 1]?.role === 'user' && <div className="row g8"><span className="mark askmark">N</span><div className="bubble ai mu">Thinking…</div></div>}
           <div ref={end} />
         </div>
 

@@ -34,6 +34,46 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
   return data as T
 }
 
+/**
+ * chat asks NURU a question and calls onText with the answer so far while it
+ * is being written. Resolves with the full reply, which may differ from the
+ * streamed text when the answer checks replaced it.
+ */
+export async function chat(body: { message: string; lang: Lang; thread?: string }, onText: (soFar: string) => void): Promise<ChatReply> {
+  const res = await fetch(BASE + '/chat/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}) },
+    body: JSON.stringify(body),
+  })
+  // a server without streaming yet answers the plain way
+  if (res.status === 404 || res.status === 405 || !res.body) return api<ChatReply>('/chat', { body })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    if (res.status === 401 && token()) { setToken(''); location.assign('/login') }
+    throw new ApiError(res.status, (data as { error?: string }).error || 'Something went wrong', data as Record<string, unknown>)
+  }
+  const reader = res.body.getReader()
+  const dec = new TextDecoder()
+  let buf = ''
+  let soFar = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (value) buf += dec.decode(value, { stream: true })
+    let nl
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim()
+      buf = buf.slice(nl + 1)
+      if (!line) continue
+      let msg: { delta?: string; done?: ChatReply; error?: string }
+      try { msg = JSON.parse(line) } catch { continue }
+      if (msg.done) return msg.done
+      if (msg.error) throw new ApiError(502, msg.error, {})
+      if (msg.delta) { soFar += msg.delta; onText(soFar) }
+    }
+    if (done) throw new ApiError(502, 'NURU could not answer, try again', {})
+  }
+}
+
 export type User = {
   id: string; name: string; email: string; phone: string; role: 'customer' | 'staff' | 'hq'
   language: Lang; theme: 'light' | 'dark' | 'system'; currency: string
