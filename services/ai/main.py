@@ -205,7 +205,8 @@ def build_request(q: Question, lang: str, found: list[dict] | None):
 
 
 FAST = dict(model=FAST_MODEL, max_tokens=1200, output_config={"effort": "low"})
-DEEP = dict(model=MODEL, max_tokens=3000, output_config={"effort": "medium"})
+# "low" starts writing within a few seconds; "medium" thinks longer before the first word
+DEEP = dict(model=MODEL, max_tokens=3000, output_config={"effort": os.getenv("NURU_EFFORT", "low")})
 
 
 def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str | None:
