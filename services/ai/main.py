@@ -23,6 +23,8 @@ log = logging.getLogger("nuru-ai")
 logging.basicConfig(level=logging.INFO)
 
 MODEL = os.getenv("NURU_MODEL", "claude-opus-5-5")
+# short, simple questions (a greeting, a balance, this week) go to a faster model
+FAST_MODEL = os.getenv("NURU_FAST_MODEL", "claude-sonnet-5-5")
 LANGS = {"en": "English", "yo": "Yorùbá", "ig": "Igbo", "ha": "Hausa"}
 
 SYSTEM = """You are NURU, the financial copilot inside a Nigerian banking app built for Zenith Bank customers.
@@ -126,6 +128,19 @@ def answer(q: Question):
     return {"answer": text, "blocked": "", "chart": chart, "actions": actions, "sources": sources, "engine": engine}
 
 
+QUICK_INTENTS = {"greeting", "balance", "week", "spend", "upcoming", "subscriptions"}
+DEEP_WORDS = ("how can", "how do i", "should i", "plan", "advice", "advise", "help me", "why", "strategy", "explain", "compare", "budget", "save for", "invest")
+
+
+def is_quick(message: str, intent: str) -> bool:
+    """A short question about a simple fact gets a fast, brief answer; anything
+    asking for advice or a plan keeps the deeper, slower model."""
+    text = message.lower()
+    if any(w in text for w in DEEP_WORDS):
+        return False
+    return intent in QUICK_INTENTS and len(text.split()) <= 14
+
+
 def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str | None:
     messages = []
     for t in q.history[-6:]:
@@ -142,18 +157,25 @@ def ask_claude(q: Question, lang: str, found: list[dict] | None = None) -> str |
         "role": "user",
         "content": f"{guides}<financial_data>\n{data}\n</financial_data>\n\nCustomer's question:\n{q.message}",
     })
+    quick = is_quick(q.message, replies.intent(q.message))
+    call = dict(
+        system=SYSTEM.replace("{language}", LANGS[lang]),
+        messages=messages,
+        # If a safety classifier declines, the API retries on Anthropic's
+        # recommended fallback model inside the same call.
+        betas=["server-side-fallback-2026-07-01"],
+        fallbacks="default",
+    )
     try:
-        resp = client.beta.messages.create(
-            model=MODEL,
-            max_tokens=3000,
-            system=SYSTEM.replace("{language}", LANGS[lang]),
-            messages=messages,
-            output_config={"effort": "medium"},
-            # If a safety classifier declines, the API retries on Anthropic's
-            # recommended fallback model inside the same call.
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-        )
+        if quick:
+            try:
+                resp = client.beta.messages.create(model=FAST_MODEL, max_tokens=1200, output_config={"effort": "low"}, **call)
+            except anthropic.BadRequestError as e:
+                # a fast model that is not available here should never cost the answer
+                log.warning("fast model refused the request (%s), using %s", e.status_code, MODEL)
+                quick = False
+        if not quick:
+            resp = client.beta.messages.create(model=MODEL, max_tokens=3000, output_config={"effort": "medium"}, **call)
     except anthropic.APIStatusError as e:
         log.error("claude returned %s", e.status_code)
         return None
