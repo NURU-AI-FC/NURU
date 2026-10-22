@@ -29,6 +29,11 @@ services:
       AI_URL: http://ai:8000
       WEB_ORIGINS: http://localhost:3000
       DEMO_MODE: "true"
+      # voices: put the keys in .env next to this file (never commit it)
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
+      AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-}
+      SPITCH_API_KEY: ${SPITCH_API_KEY:-}
     ports: ["8080:8080"]
 
   web:

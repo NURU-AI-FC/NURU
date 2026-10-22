@@ -50,8 +50,9 @@ service answers from templates, so the demo always works.
 docker compose up --build
 ```
 
-Open http://localhost:3000. To use Claude, put `ANTHROPIC_API_KEY=...` in a `.env` file next to
-`docker-compose.yml` first.
+Open http://localhost:3000. To use Claude and the natural voices, copy `.env.example` to `.env` next to
+`docker-compose.yml` and fill in the keys first. Without keys NURU answers from templates and reads
+answers with the browser's own voice.
 
 Without Docker: run Postgres, then
 
