@@ -51,6 +51,10 @@ func (s *Server) enrolFace(w http.ResponseWriter, r *http.Request) {
 			fail(w, 423, "transfers are paused until "+locked.Format("3:04 pm")+" after 3 failed checks")
 			return
 		}
+		if pinHash == "" {
+			fail(w, 428, "set your transaction PIN first, then you can replace your face check")
+			return
+		}
 		if in.PIN == "" {
 			fail(w, 428, "enter your transaction PIN to replace your face check")
 			return
