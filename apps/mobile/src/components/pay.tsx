@@ -1,12 +1,13 @@
 import { Share, View } from 'react-native'
 import type { Account, Receipt } from '@/lib/api'
+import { BANK } from '@/lib/bank'
 import { clock, shortDate } from '@/lib/format'
 import { useMoney } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
 import { Badge, Button, Card, Chip, KV, Row, T } from '@/ui/kit'
 
-export const BANKS = ['Zenith Bank', 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'OPay', 'Kuda', 'Moniepoint', 'PalmPay', 'Wema Bank']
+export const BANKS = [BANK.name, 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'OPay', 'Kuda', 'Moniepoint', 'PalmPay', 'Wema Bank']
 
 export function AccountPicker({ accts, value, onChange }: { accts: Account[]; value: string; onChange: (id: string) => void }) {
   const money = useMoney()

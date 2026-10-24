@@ -8,7 +8,7 @@ export const setFlow = (f: Flow) => { flow = f }
 export const getFlow = () => flow
 export const clearFlow = () => { flow = null }
 
-export const DEMO = { email: 'judge@nuru.app', password: 'Zecathon-2026', code: '000000' }
+export const DEMO = { email: 'demo@nuru.app', password: 'Nuru-Demo-2026', code: '000000' }
 
 export const PASSWORD_RULES: [string, (p: string) => boolean][] = [
   ['At least 12 characters', (p) => p.length >= 12],

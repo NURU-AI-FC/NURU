@@ -15,7 +15,7 @@
         "NSCameraUsageDescription": "NURU uses the front camera to check it is you before money moves. We keep a face template, never a photo.",
         "NSFaceIDUsageDescription": "NURU uses Face ID to confirm it is you before money moves.",
         "NSMicrophoneUsageDescription": "NURU uses the microphone so you can ask questions about your money by voice.",
-        "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you.",
+        "NSLocationWhenInUseUsageDescription": "NURU uses your location to show the bank branches and ATMs nearest to you.",
         "NSSpeechRecognitionUsageDescription": "NURU listens for \"Hey NURU\" while the app is open so you can talk to it hands-free."
       },
       "buildNumber": "2"
@@ -68,7 +68,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "NURU uses your location to show the Zenith Bank branches and ATMs nearest to you."
+          "locationWhenInUsePermission": "NURU uses your location to show the bank branches and ATMs nearest to you."
         }
       ],
       [

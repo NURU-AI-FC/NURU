@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Text, View } from 'react-native'
 import { useApp } from '@/lib/store'
+import { BANK } from '@/lib/bank'
 import { font } from '@/lib/theme'
 
 // Splash (p03 "01 Splash") while the stored session is checked, then route.
@@ -19,10 +20,12 @@ export function Splash() {
       </View>
       <Text style={{ fontFamily: font[800], fontSize: 40, letterSpacing: -1, color: '#FFFFFF' }}>NURU</Text>
       <Text style={{ fontFamily: font[400], fontSize: 15, color: 'rgba(255,255,255,0.85)' }}>Understand your money. In your language.</Text>
-      <View style={{ position: 'absolute', bottom: 56, alignItems: 'center', gap: 8 }}>
-        <Text style={{ fontFamily: font[400], fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>In partnership with</Text>
-        <Text style={{ fontFamily: font[600], fontSize: 15, color: '#FFFFFF', letterSpacing: 2 }}>ZENITH BANK · ZECATHON 6.0</Text>
-      </View>
+      {BANK.partner ? (
+        <View style={{ position: 'absolute', bottom: 56, alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontFamily: font[400], fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>In partnership with</Text>
+          <Text style={{ fontFamily: font[600], fontSize: 15, color: '#FFFFFF', letterSpacing: 2 }}>{BANK.partner.toUpperCase()}</Text>
+        </View>
+      ) : null}
     </LinearGradient>
   )
 }

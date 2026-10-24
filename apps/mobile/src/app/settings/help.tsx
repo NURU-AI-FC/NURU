@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import { useState } from 'react'
-import { Linking, Pressable, View } from 'react-native'
-import { SUPPORT_TEL } from '@/components/TransferGuard'
+import { Pressable, View } from 'react-native'
+import { callSupport } from '@/lib/bank'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
@@ -27,7 +27,7 @@ export default function Help() {
     <Screen gap={12} top={<TopBar title={t('help')} />}>
       <Input icon="search" value={q} onChangeText={setQ} placeholder="Search help" round height={46} />
       <Row gap={12}>
-        {([['message', 'Chat with us', 'Replies in minutes', () => router.push({ pathname: '/ask', params: { q: 'I need help from customer service' } })], ['phone', 'Call Zenith', '24 hours', () => Linking.openURL(SUPPORT_TEL)]] as const).map(([ic, title, sub, fn]) => (
+        {([['message', 'Chat with us', 'Replies in minutes', () => router.push({ pathname: '/ask', params: { q: 'I need help from customer service' } })], ['phone', 'Call your bank', 'Customer support', callSupport]] as const).map(([ic, title, sub, fn]) => (
           <Card key={title} pad={14} onPress={fn} style={{ flex: 1, gap: 8 }}>
             <Ic name={ic} tone="red" size={36} r={11} iconSize={17} />
             <T v="s" w={600}>{title}</T><T v="xs" tone="mu">{sub}</T>

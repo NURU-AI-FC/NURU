@@ -5,13 +5,14 @@ import { useEffect, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { BankTile } from '@/components/BankTile'
 import { api, ApiError } from '@/lib/api'
+import { BANK } from '@/lib/bank'
 import { useApp, useMoney } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon, type IconName } from '@/ui/Icon'
 import { Badge, Button, Card, Divider, ErrorNote, Field, Ic, Input, Label, Note, Progress, Row, T, Toggle } from '@/ui/kit'
 import { Sheet } from '@/ui/Sheet'
 
-export const LINKABLE = ['Zenith Bank', 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'Kuda', 'OPay', 'Moniepoint']
+export const LINKABLE = [BANK.name, 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'Kuda', 'OPay', 'Moniepoint']
 const DEMO = 'Demo Bank'
 
 type Linked = { id: string; bank: string; name: string; number: string; kind: string; balance: number; imported: number }
@@ -64,7 +65,7 @@ export function LinkBank({ open, have, onClose, onLinked }: { open: boolean; hav
     }
   }
 
-  const tile = (b: string, size = 40) => <BankTile bank={b === DEMO ? 'Zenith Bank' : b} size={size} />
+  const tile = (b: string, size = 40) => <BankTile bank={b} size={size} />
   const back = (to: Step) => (
     <Pressable onPress={() => { setErr(''); setStep(to) }} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' }}>
       <Icon name="chevl" size={18} color={c.text2} /><T v="s" tone="t2">Back</T>

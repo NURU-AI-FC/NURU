@@ -32,7 +32,7 @@ export default function Privacy() {
 
   return (
     <Screen gap={12} top={<TopBar title={t('privacy')} />}>
-      <Soft tint={c.green50}><Row gap={10}><Icon name="lock" size={18} color={c.green} /><T v="xs" tone="t2" style={{ flex: 1 }}>Your chats with NURU are encrypted and only you can read them. Zenith staff cannot see them.</T></Row></Soft>
+      <Soft tint={c.green50}><Row gap={10}><Icon name="lock" size={18} color={c.green} /><T v="xs" tone="t2" style={{ flex: 1 }}>Your chats with NURU are encrypted and only you can read them. Bank staff cannot see them.</T></Row></Soft>
       <Label>NURU AI</Label>
       <Card style={{ gap: 12 }}>
         {!p ? <Skeleton h={130} /> : ([

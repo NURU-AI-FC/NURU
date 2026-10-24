@@ -27,7 +27,7 @@ export default function BusinessScreen() {
       {!b ? <Skeleton h={300} /> : <>
         <Row gap={10}>
           <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: c.blue, alignItems: 'center', justifyContent: 'center' }}><T color="#FFFFFF" w={800}>{b.name[0]}</T></View>
-          <View><T v="h4">{b.name}</T><T v="xs" tone="mu">Business · Zenith {b.account}</T></View>
+          <View><T v="h4">{b.name}</T><T v="xs" tone="mu">Business · {b.account}</T></View>
         </Row>
         <Card style={{ gap: 10 }}>
           <Row between style={{ alignItems: 'flex-start' }}>

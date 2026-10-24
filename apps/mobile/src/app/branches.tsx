@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Linking, Platform, View } from 'react-native'
 import * as Location from 'expo-location'
 import { LiveMap } from '@/components/LiveMap'
+import { BANK, callSupport } from '@/lib/bank'
 import { useApp } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
@@ -11,23 +12,22 @@ type Branch = { id: string; name: string; address: string; lat: number; lon: num
 
 // Same fallback list as the web branch finder (apps/web/src/branches.ts). Coordinates are approximate.
 const LIST: Branch[] = [
-  { id: 'ho', name: 'Zenith Bank Head Office', address: 'Plot 84 Ajose Adeogun St, Victoria Island, Lagos', lat: 6.4317, lon: 3.4229, kind: 'branch' },
-  { id: 'adeola', name: 'Zenith Bank Adeola Odeku', address: 'Adeola Odeku St, Victoria Island, Lagos', lat: 6.4296, lon: 3.4158, kind: 'branch' },
-  { id: 'awolowo', name: 'Zenith Bank Awolowo Road', address: 'Awolowo Rd, Ikoyi, Lagos', lat: 6.4466, lon: 3.4268, kind: 'branch' },
-  { id: 'lekki', name: 'Zenith Bank Lekki Phase 1', address: 'Admiralty Way, Lekki Phase 1, Lagos', lat: 6.4474, lon: 3.4723, kind: 'branch' },
-  { id: 'yaba', name: 'Zenith Bank Yaba', address: 'Herbert Macaulay Way, Yaba, Lagos', lat: 6.508, lon: 3.378, kind: 'branch' },
-  { id: 'surulere', name: 'Zenith Bank Surulere', address: 'Adeniran Ogunsanya St, Surulere, Lagos', lat: 6.4952, lon: 3.3555, kind: 'branch' },
-  { id: 'allen', name: 'Zenith Bank Allen Avenue', address: 'Allen Avenue, Ikeja, Lagos', lat: 6.601, lon: 3.353, kind: 'branch' },
-  { id: 'abuja', name: 'Zenith Bank Central Business District', address: 'Ahmadu Bello Way, Central Area, Abuja', lat: 9.0575, lon: 7.4951, kind: 'branch' },
-  { id: 'wuse', name: 'Zenith Bank Wuse II', address: 'Aminu Kano Crescent, Wuse II, Abuja', lat: 9.079, lon: 7.47, kind: 'branch' },
-  { id: 'ph', name: 'Zenith Bank Trans Amadi', address: 'Trans Amadi Rd, Port Harcourt', lat: 4.8156, lon: 7.0498, kind: 'branch' },
-  { id: 'ibadan', name: 'Zenith Bank Ring Road', address: 'Ring Road, Ibadan', lat: 7.3577, lon: 3.878, kind: 'branch' },
-  { id: 'kano', name: 'Zenith Bank Bank Road', address: 'Bank Road, Kano', lat: 12.0, lon: 8.52, kind: 'branch' },
-  { id: 'atm-vi', name: 'Zenith Bank ATM', address: 'Akin Adesola St, Victoria Island, Lagos', lat: 6.4335, lon: 3.4195, kind: 'atm' },
-  { id: 'atm-lekki', name: 'Zenith Bank ATM', address: 'Freedom Way, Lekki Phase 1, Lagos', lat: 6.4447, lon: 3.4655, kind: 'atm' },
+  { id: 'ho', name: BANK.name + ' Victoria Island', address: 'Ajose Adeogun St, Victoria Island, Lagos', lat: 6.4317, lon: 3.4229, kind: 'branch' },
+  { id: 'adeola', name: BANK.name + ' Adeola Odeku', address: 'Adeola Odeku St, Victoria Island, Lagos', lat: 6.4296, lon: 3.4158, kind: 'branch' },
+  { id: 'awolowo', name: BANK.name + ' Awolowo Road', address: 'Awolowo Rd, Ikoyi, Lagos', lat: 6.4466, lon: 3.4268, kind: 'branch' },
+  { id: 'lekki', name: BANK.name + ' Lekki Phase 1', address: 'Admiralty Way, Lekki Phase 1, Lagos', lat: 6.4474, lon: 3.4723, kind: 'branch' },
+  { id: 'yaba', name: BANK.name + ' Yaba', address: 'Herbert Macaulay Way, Yaba, Lagos', lat: 6.508, lon: 3.378, kind: 'branch' },
+  { id: 'surulere', name: BANK.name + ' Surulere', address: 'Adeniran Ogunsanya St, Surulere, Lagos', lat: 6.4952, lon: 3.3555, kind: 'branch' },
+  { id: 'allen', name: BANK.name + ' Allen Avenue', address: 'Allen Avenue, Ikeja, Lagos', lat: 6.601, lon: 3.353, kind: 'branch' },
+  { id: 'abuja', name: BANK.name + ' Central Business District', address: 'Ahmadu Bello Way, Central Area, Abuja', lat: 9.0575, lon: 7.4951, kind: 'branch' },
+  { id: 'wuse', name: BANK.name + ' Wuse II', address: 'Aminu Kano Crescent, Wuse II, Abuja', lat: 9.079, lon: 7.47, kind: 'branch' },
+  { id: 'ph', name: BANK.name + ' Trans Amadi', address: 'Trans Amadi Rd, Port Harcourt', lat: 4.8156, lon: 7.0498, kind: 'branch' },
+  { id: 'ibadan', name: BANK.name + ' Ring Road', address: 'Ring Road, Ibadan', lat: 7.3577, lon: 3.878, kind: 'branch' },
+  { id: 'kano', name: BANK.name + ' Bank Road', address: 'Bank Road, Kano', lat: 12.0, lon: 8.52, kind: 'branch' },
+  { id: 'atm-vi', name: BANK.name + ' ATM', address: 'Akin Adesola St, Victoria Island, Lagos', lat: 6.4335, lon: 3.4195, kind: 'atm' },
+  { id: 'atm-lekki', name: BANK.name + ' ATM', address: 'Freedom Way, Lekki Phase 1, Lagos', lat: 6.4447, lon: 3.4655, kind: 'atm' },
 ]
 const HOME: [number, number] = [6.4317, 3.4229]
-const CONTACT = '+23412787000'
 
 function km(a: [number, number], b: [number, number]) {
   const r = Math.PI / 180, dLat = (b[0] - a[0]) * r, dLon = (b[1] - a[1]) * r
@@ -87,7 +87,7 @@ export default function Branches() {
           <Row gap={8}><Badge tone={status(pick).open ? 'green' : 'gray'} label={status(pick).label} /><T v="xs" tone="t2">{pick.km.toFixed(1)} km away</T></Row>
           <Row gap={10}>
             <Button grow sm label="Directions" icon="navigation" onPress={() => Linking.openURL(directions(pick))} />
-            <Button grow sm variant="sec" label="Call" icon="phone" onPress={() => Linking.openURL('tel:' + CONTACT)} />
+            <Button grow sm variant="sec" label="Call" icon="phone" onPress={callSupport} />
           </Row>
         </Card>
       )}

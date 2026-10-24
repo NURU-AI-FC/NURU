@@ -1,6 +1,6 @@
 # NURU mobile
 
-The NURU app for iOS and Android, built with React Native, Expo SDK 58, expo-router and TypeScript. The screens follow the design modules in `design/src` (p03 to p18): Zenith red `#E30613`, Inter, and light and dark themes.
+The NURU app for iOS and Android, built with React Native, Expo SDK 58, expo-router and TypeScript. The screens follow the design modules in `design/src` (p03 to p18): NURU red `#E30613`, Inter, and light and dark themes.
 
 ## Run it
 
@@ -14,7 +14,7 @@ npx expo start
 - **Simulator:** press `i` for the iOS simulator (needs Xcode) or `a` for an Android emulator (needs Android Studio).
 - **Browser:** press `w`, or run `npm run web`.
 
-Demo login: `judge@nuru.app` / `Zecathon-2026`, then code `000000`.
+Demo login: `demo@nuru.app` / `Nuru-Demo-2026`, then code `000000`.
 
 ## API
 

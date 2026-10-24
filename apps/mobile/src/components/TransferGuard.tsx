@@ -5,9 +5,10 @@
 // The face step uses the front camera through FaceCam, which runs the same
 // face model as the web app, so templates enrolled on either one match.
 import { useEffect, useRef, useState } from 'react'
-import { Linking, View } from 'react-native'
+import { View } from 'react-native'
 import { FaceCam } from '@/components/FaceCam'
 import { api, ApiError, type Receipt, type Security } from '@/lib/api'
+import { callSupport } from '@/lib/bank'
 import { useApp, useMoney } from '@/lib/store'
 import { useTheme } from '@/lib/theme'
 import { Icon } from '@/ui/Icon'
@@ -19,7 +20,6 @@ export type Draft = { from: string; payeeId?: string; toName: string; toBank?: s
 type Step = 'load' | 'create' | 'confirm' | 'enrol' | 'verify' | 'pin' | 'sending' | 'locked' | 'error' | 'risk' | 'stopped'
 type Risk = { risk: string[]; to: string; bank?: string; amount: number }
 
-export const SUPPORT_TEL = 'tel:+23412787000'
 
 function Steps({ n }: { n: number }) {
   const { c } = useTheme()
@@ -147,7 +147,7 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
           {step === 'verify' ? <T v="s" tone="t2" center>{summary}</T> : null}
         </View>
         <FaceCam key={step} mode={step} onFace={step === 'enrol' ? enrolled : (d) => { face.current = d; setMsg(''); setStep('pin') }} />
-        {step === 'enrol' && <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</T>}
+        {step === 'enrol' && <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on secure servers. It is only used to confirm it is you before money moves.</T>}
         {!!msg && <T v="xs" tone="rd" center>{msg}</T>}
       </>}
 
@@ -191,7 +191,7 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
         )}
         {step === 'locked' ? <Button label="Close" variant="sec" onPress={onClose} /> : <>
           <Button label="Try again" onPress={retry} />
-          {step === 'stopped' ? <Button label="Call Zenith support" variant="sec" icon="phone" onPress={() => Linking.openURL(SUPPORT_TEL)} /> : <Button label="Cancel" variant="sec" onPress={onClose} />}
+          {step === 'stopped' ? <Button label="Contact bank support" variant="sec" icon="phone" onPress={callSupport} /> : <Button label="Cancel" variant="sec" onPress={onClose} />}
         </>}
       </>}
 
@@ -207,7 +207,7 @@ export function TransferGuard({ open, draft, onDone, onClose }: { open: boolean;
           <Divider />
           {risk.risk.map((r) => <Row key={r} gap={8}><Icon name="alert" size={16} color={c.red} /><T v="s" style={{ flex: 1 }}>{r}</T></Row>)}
         </Card>
-        <Soft><Row gap={10}><Icon name="info" size={18} color={c.muted} /><T v="xs" tone="t2" style={{ flex: 1 }}>Zenith staff will never ask you to move money to a &quot;safe account&quot;.</T></Row></Soft>
+        <Soft><Row gap={10}><Icon name="info" size={18} color={c.muted} /><T v="xs" tone="t2" style={{ flex: 1 }}>Bank staff will never ask you to move money to a &quot;safe account&quot;.</T></Row></Soft>
         <Button label="Cancel transfer" onPress={onClose} />
         <Button label="I know this person. Confirm with my face and PIN" variant="ghost" onPress={confirmAgain} />
       </>}

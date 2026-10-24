@@ -4,6 +4,7 @@ import { FaceCam } from '@/components/FaceCam'
 import { api } from '@/lib/api'
 import { when } from '@/lib/format'
 import { useApp } from '@/lib/store'
+import { BANK } from '@/lib/bank'
 import { useLoad } from '@/lib/useLoad'
 import { Icon } from '@/ui/Icon'
 import { Badge, Button, Ic, Label, ListRow, Row, Screen, T, Toggle, TopBar } from '@/ui/kit'
@@ -109,7 +110,7 @@ export default function Security() {
       <Sheet open={faceOpen} onClose={() => setFaceOpen(false)} scroll>
         <T v="h3" center>{o?.face_enrolled ? 'Update your face check' : 'Set up your face check'}</T>
         {faceOpen && <FaceCam mode="enrol" onFace={enrol} />}
-        <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</T>
+        <T v="xs" tone="t2" center>We save a face template, not a photo, encrypted on secure servers. It is only used to confirm it is you before money moves.</T>
       </Sheet>
 
       <Sheet open={freeze} onClose={() => setFreeze(false)}>
@@ -120,7 +121,7 @@ export default function Security() {
         </View>
         <Button label="Freeze for 24 hours" onPress={doFreeze} />
         <Button label="Cancel" variant="sec" onPress={() => setFreeze(false)} />
-        <Row gap={6} center><Icon name="phone" size={14} color={c.muted} /><T v="xs" tone="mu">Or call Zenith on 0201 278 7000</T></Row>
+        {BANK.phone ? <Row gap={6} center><Icon name="phone" size={14} color={c.muted} /><T v="xs" tone="mu">Or call your bank on {BANK.phone}</T></Row> : null}
       </Sheet>
     </Screen>
   )

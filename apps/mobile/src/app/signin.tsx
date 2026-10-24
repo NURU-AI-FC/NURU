@@ -47,7 +47,7 @@ export default function SignIn() {
           <Row gap={10}>
             <Icon name="sparkles" size={18} color={c.red} />
             <View style={{ flex: 1 }}>
-              <T v="s" w={600}>Judges: use the demo account</T>
+              <T v="s" w={600}>Try the demo account</T>
               <T v="xs" tone="t2">{DEMO.email} · {DEMO.password} · code {DEMO.code}</T>
             </View>
           </Row>
