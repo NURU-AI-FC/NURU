@@ -475,7 +475,7 @@ func (s *Server) reviewUnusual(w http.ResponseWriter, r *http.Request) {
 	s.db.Exec(r.Context(), `insert into alert_reviews(user_id,transaction_id,answer) values($1,$2,$3) on conflict (user_id,transaction_id) do update set answer=excluded.answer`, uid(r), id, in.Answer)
 	if in.Answer == "freeze" {
 		s.event(r.Context(), uid(r), "card_freeze_requested", naira(amount)+" at "+merchant)
-		writeJSON(w, 200, map[string]any{"ok": true, "message": "Your card is frozen in the sandbox. Zenith will call you about " + naira(amount) + " at " + merchant + "."})
+		writeJSON(w, 200, map[string]any{"ok": true, "message": "Your card is frozen in the sandbox. Your bank will call you about " + naira(amount) + " at " + merchant + "."})
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "message": "Thanks. We will remember payments like this."})

@@ -1,6 +1,10 @@
 package httpapi
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
+)
 
 func TestSandboxIdentity(t *testing.T) {
 	a, d1 := sandboxIdentity("Adaeze Okafor")
@@ -34,7 +38,7 @@ func TestDeviceName(t *testing.T) {
 }
 
 func TestCanLink(t *testing.T) {
-	seeded := []string{"Zenith Bank", "OPay", "Kuda"}
+	seeded := []string{seed.BankName, "OPay", "Kuda"}
 	// a seeded user can add every other sandbox bank, one after another
 	have := append([]string{}, seeded...)
 	for _, b := range []string{"GTBank", "Access Bank", "First Bank", "UBA", "Moniepoint", "Demo Bank"} {

@@ -13,6 +13,7 @@ import (
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 )
 
 // slip is one month of pay for a staff member: PAYE estimated at 6.33%,
@@ -95,8 +96,8 @@ func (s *Server) updateBusiness(w http.ResponseWriter, r *http.Request) {
 	}
 	tag, _ := s.db.Exec(ctx, `update accounts set name=$1 where user_id=$2 and kind='business'`, in.Name, uid(r))
 	if tag.RowsAffected() == 0 {
-		s.db.Exec(ctx, `insert into accounts(user_id,bank,name,number_masked,kind,linked_via,balance) values($1,'Zenith Bank',$2,$3,'business','sandbox',0)`,
-			uid(r), in.Name, fmt.Sprintf("•••• %04d", time.Now().UnixNano()%10000))
+		s.db.Exec(ctx, `insert into accounts(user_id,bank,name,number_masked,kind,linked_via,balance) values($1,$4,$2,$3,'business','sandbox',0)`,
+			uid(r), in.Name, fmt.Sprintf("•••• %04d", time.Now().UnixNano()%10000), seed.BankName)
 	}
 	s.business(w, r)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // Templates follow design/src/p16-emails.mjs: one shell (logo, white card,
-// button, safety footer) in Zenith red and white. Everything is inline CSS
+// button, safety footer) in NURU red and white. Everything is inline CSS
 // and tables so it renders the same in Gmail, Outlook and Apple Mail.
 
 const (
@@ -42,6 +42,9 @@ func AppURL() string {
 	}
 	return "https://web-production-fd530.up.railway.app"
 }
+
+// BankName is the partner bank named in the email header, set from BANK_NAME.
+var BankName = "Partner Bank"
 
 var lagos = func() *time.Location {
 	if l, err := time.LoadLocation("Africa/Lagos"); err == nil {
@@ -181,16 +184,15 @@ func shell(tpl, subject, preview string, body []string, lines []string, promo bo
 		`<tr><td style="padding:20px 32px;border-bottom:1px solid ` + border + `"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>` +
 		`<td style="font-family:` + font + `"><span style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:10px;background:` + red + `;color:#FFFFFF;text-align:center;font-size:18px;font-weight:800;vertical-align:middle">N</span>` +
 		`<span style="padding-left:10px;font-size:18px;font-weight:800;letter-spacing:1px;color:` + text + `;vertical-align:middle">NURU</span></td>` +
-		`<td align="right" style="font-family:` + font + `;font-size:12px;color:` + muted + `">with Zenith Bank</td></tr></table></td></tr>` +
+		`<td align="right" style="font-family:` + font + `;font-size:12px;color:` + muted + `">with ` + BankName + `</td></tr></table></td></tr>` +
 		// body
 		`<tr><td style="padding:32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">` + strings.Join(body, "") + `</table></td></tr>` +
 		// safety footer
 		`<tr><td style="padding:24px 32px;background:` + surf + `;font-family:` + font + `;font-size:12px;line-height:18px;color:` + text2 + `">` +
 		`NURU will never ask for your PIN, password, OTP or BVN by email, call or chat.` +
-		`<div style="padding-top:8px;color:` + muted + `">Zenith Bank Plc, Plot 84 Ajose Adeogun Street, Victoria Island, Lagos · 0201 278 7000</div>` +
 		`<div style="padding-top:8px;color:` + muted + `">` + footer + `</div></td></tr>` +
 		`</table></td></tr></table></body></html>`
-	plain := strings.Join(lines, "\n\n") + "\n\n--\nNURU will never ask for your PIN, password, OTP or BVN by email, call or chat.\nZenith Bank Plc, Plot 84 Ajose Adeogun Street, Victoria Island, Lagos. 0201 278 7000\nEmail settings: " + settings + "\n"
+	plain := strings.Join(lines, "\n\n") + "\n\n--\nNURU will never ask for your PIN, password, OTP or BVN by email, call or chat.\nEmail settings: " + settings + "\n"
 	return Message{Template: tpl, Subject: subject, Preview: preview, HTML: doc, Text: plain}
 }
 
@@ -225,9 +227,9 @@ func SignInCode(code, device string, at time.Time) Message {
 	}
 	return shell("signin_code", "Your NURU sign-in code is "+spaced(code), "Requested from "+device+", "+When(at)+".",
 		[]string{h("Your sign-in code"), codeBox(code), kv([][2]string{{"Device", device}, {"Time", When(at)}}),
-			note("Not you? Do not share this code. Change your password and call Zenith on 0201 278 7000.", true)},
+			note("Not you? Do not share this code. Change your password and contact your bank right away.", true)},
 		[]string{"Your NURU sign-in code is " + code + ".", "Device: " + device + "\nTime: " + When(at),
-			"Not you? Do not share this code. Change your password and call Zenith on 0201 278 7000."}, false)
+			"Not you? Do not share this code. Change your password and contact your bank right away."}, false)
 }
 
 // PasswordReset carries the code for the reset screen.

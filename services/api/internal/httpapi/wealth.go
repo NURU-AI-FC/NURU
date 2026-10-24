@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 )
@@ -38,10 +39,10 @@ func book(ctx context.Context, tx pgx.Tx, user, acct, dir string, amt float64, c
 	return err
 }
 
-// mainAccount is the personal account money moves through, Zenith first.
+// mainAccount is the personal account money moves through, the partner bank first.
 func (s *Server) mainAccount(ctx context.Context, user string) (string, error) {
 	var id string
-	err := s.db.QueryRow(ctx, `select id from accounts where user_id=$1 and kind<>'business' order by bank<>'Zenith Bank', kind<>'savings' limit 1`, user).Scan(&id)
+	err := s.db.QueryRow(ctx, `select id from accounts where user_id=$1 and kind<>'business' order by bank<>$2, kind<>'savings' limit 1`, user, seed.BankName).Scan(&id)
 	return id, err
 }
 
@@ -343,7 +344,7 @@ func (s *Server) addDeposit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(r.Context())
-	if err := book(r.Context(), tx, uid(r), acct, "debit", in.Amount, "Savings", "Zenith fixed deposit", strconv.Itoa(in.Days)+" day deposit"); err != nil {
+	if err := book(r.Context(), tx, uid(r), acct, "debit", in.Amount, "Savings", "Fixed deposit", strconv.Itoa(in.Days)+" day deposit"); err != nil {
 		moveFail(w, err)
 		return
 	}
@@ -383,7 +384,7 @@ func (s *Server) withdrawDeposit(w http.ResponseWriter, r *http.Request) {
 		interest *= 0.7
 	}
 	payout := math.Round(p + interest*0.9)
-	if err := book(ctx, tx, uid(r), acct, "credit", payout, "Savings", "Zenith fixed deposit", "Deposit withdrawn"); err != nil {
+	if err := book(ctx, tx, uid(r), acct, "credit", payout, "Savings", "Fixed deposit", "Deposit withdrawn"); err != nil {
 		moveFail(w, err)
 		return
 	}

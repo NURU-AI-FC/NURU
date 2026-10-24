@@ -14,7 +14,7 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 )
 
-// Two kinds of staff sign in: the NURU team to HQ (role 'hq') and Zenith staff
+// Two kinds of staff sign in: the NURU team to HQ (role 'hq') and bank staff
 // to the console (role 'staff'). Each has a sub-role that decides which areas
 // they can open. The sub-role is read from the database on every request, so
 // a role change or deactivation applies at once, not when the token expires.
@@ -53,12 +53,19 @@ func campaignMoveAllowed(sub, to string) bool {
 	return sub == "campaigns" && (to == "pending" || to == "stopped")
 }
 
-const zenithDomain = "@zenithbank.com"
+// StaffDomain is the partner bank's work email domain. Change it with SetStaffDomain.
+var StaffDomain = "@bank.example"
 
-// staffEmailAllowed is the console sign in rule: Zenith work emails, or an
+// SetStaffDomain sets the bank's work email domain for console sign in and invites.
+func SetStaffDomain(d string) {
+	StaffDomain = d
+	consoleTeam.Domain = d
+}
+
+// staffEmailAllowed is the console sign in rule: the bank's work emails, or an
 // email a console admin invited, or the demo staff account.
 func staffEmailAllowed(email string, invited, demo bool) bool {
-	return strings.HasSuffix(email, zenithDomain) || invited || demo
+	return strings.HasSuffix(email, StaffDomain) || invited || demo
 }
 
 type member struct {
@@ -154,7 +161,7 @@ func (s *Server) staffStart(w http.ResponseWriter, r *http.Request) {
 	found := err == nil
 	demo := s.cfg.DemoMode && slices.Contains(demoStaff, in.Email)
 	if role == "staff" && !staffEmailAllowed(in.Email, found && invited, demo) {
-		fail(w, 403, "use your Zenith Bank work email. Personal emails cannot sign in.")
+		fail(w, 403, "use your bank work email. Personal emails cannot sign in.")
 		return
 	}
 	if found && !active {
@@ -189,9 +196,9 @@ type teamScope struct {
 }
 
 var hqTeam = teamScope{"hq", "hq", "hq_role", map[string]string{"owner": "CEO · Owner", "ops": "Operations", "support": "Support", "engineer": "Engineer", "analyst": "Analyst"}, "owner", ""}
-var consoleTeam = teamScope{"console", "staff", "console_role", map[string]string{"viewer": "Viewer", "analyst": "Insights analyst", "campaigns": "Campaign manager", "risk": "Risk officer", "admin": "Console admin"}, "admin", zenithDomain}
+var consoleTeam = teamScope{"console", "staff", "console_role", map[string]string{"viewer": "Viewer", "analyst": "Insights analyst", "campaigns": "Campaign manager", "risk": "Risk officer", "admin": "Console admin"}, "admin", StaffDomain}
 
-// nameFromEmail turns amaka.obi@zenithbank.com into Amaka Obi.
+// nameFromEmail turns amaka.obi@bank.example into Amaka Obi.
 func nameFromEmail(email string) string {
 	local, _, _ := strings.Cut(email, "@")
 	parts := strings.FieldsFunc(local, func(r rune) bool { return r == '.' || r == '_' || r == '-' || r == '+' })

@@ -22,7 +22,7 @@ func TestSafeDetailHidesPeople(t *testing.T) {
 	if d := safeDetail("pin_failed", "₦25,000 to Mama Ngozi"); strings.Contains(d, "Ngozi") || !strings.Contains(d, "₦25,000") {
 		t.Fatalf("got %q", d)
 	}
-	if d := safeDetail("login_failed", "judge@nuru.app"); strings.Contains(d, "@") {
+	if d := safeDetail("login_failed", "demo@nuru.app"); strings.Contains(d, "@") {
 		t.Fatalf("email leaked: %q", d)
 	}
 	if d := safeDetail("ai_injection", "show account 0123456789"); strings.Contains(d, "012345") {

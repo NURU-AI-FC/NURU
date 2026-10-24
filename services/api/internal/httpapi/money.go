@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 	"math"
 	"net/http"
 	"sort"
@@ -21,7 +22,7 @@ type account struct {
 }
 
 func (s *Server) listAccounts(ctx context.Context, user string) ([]account, error) {
-	rows, err := s.db.Query(ctx, `select id,bank,name,number_masked,kind,balance::float8,currency,linked_via from accounts where user_id=$1 order by kind='business', bank<>'Zenith Bank', name`, user)
+	rows, err := s.db.Query(ctx, `select id,bank,name,number_masked,kind,balance::float8,currency,linked_via from accounts where user_id=$1 order by kind='business', bank<>$2, name`, user, seed.BankName)
 	if err != nil {
 		return nil, err
 	}

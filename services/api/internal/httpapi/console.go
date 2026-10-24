@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/seed"
 )
 
 // The staff console only ever returns aggregates or masked profiles. Names,
@@ -60,13 +61,13 @@ var segs = []segMeta{
 		"Traders get many small payments from many customers and keep cash in the shop. A daily sweep builds a buffer for restocking without a trip to the branch.",
 		[]string{"Daily POS savings", "Sweep 5% of takings", "Restock loan after 90 days"}},
 	{"student", "Students and NYSC", "Zero fee student account", "No transfer fees, save allowance", "grad", "green",
-		"Students get small, frequent transfers from family and spend them fast. A zero fee account with an allowance pot builds the habit early and keeps them with Zenith after school.",
+		"Students get small, frequent transfers from family and spend them fast. A zero fee account with an allowance pot builds the habit early and keeps them with the bank after school.",
 		[]string{"Zero fee student account", "Allowance savings pot", "Free debit card"}},
 	{"business", "Business owners", "Business overdraft", "Overdraft line that covers cash gaps", "building", "blue",
 		"Small businesses often run low on cash before sales settle. An overdraft line covers the gap and they only pay interest on what they use.",
 		[]string{"Business overdraft", "Interest only on what you use", "Payroll in NURU"}},
 	{"high", "High spenders", "Premium cashback card", "5% cashback on travel and dining", "star", "gray",
-		"High spenders move large sums on travel, dining and shopping. A premium card with cashback and a domiciliary account keeps that spend inside Zenith.",
+		"High spenders move large sums on travel, dining and shopping. A premium card with cashback and a domiciliary account keeps that spend inside the bank.",
 		[]string{"Premium cashback card", "Domiciliary account", "Priority support"}},
 }
 
@@ -518,7 +519,7 @@ func (s *Server) consoleCustomer(w http.ResponseWriter, r *http.Request) {
 	s.db.QueryRow(c, `select coalesce(avg(case when ltv<=$1 then 1.0 else 0 end),0)::float8 from console_customers where `+segExpr+`=$2 and consent_insights`, ltv, k).Scan(&pctl)
 
 	flow := []map[string]any{}
-	banks := []string{"Zenith"}
+	banks := []string{seed.BankName}
 	nudges := []map[string]any{}
 	events := []map[string]any{}
 	if userID != nil {

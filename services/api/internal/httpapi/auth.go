@@ -234,7 +234,7 @@ func (s *Server) demoCode() string {
 }
 
 // sendOTP stores a hashed one time code and emails it. In demo mode the code
-// is always 000000 so judges can sign in without an inbox; otherwise it is
+// is always 000000 so visitors can sign in without an inbox; otherwise it is
 // random. The email goes out in the background (see sendEmail).
 func (s *Server) sendOTP(r *http.Request, to, purpose string) {
 	ctx := r.Context()

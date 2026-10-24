@@ -18,8 +18,8 @@ func all() []Message {
 		SignInCode("731052", "Mac · Chrome", at),
 		PasswordReset("905118"),
 		NewDevice("iPhone · Safari", "102.89.xx.xx", at),
-		TransferSent(Transfer{Amount: 25000, Name: "Tunde Bakare", Bank: "GTBank", Account: "6621", Note: "Generator repair", From: "Zenith Savings", Reference: "NURU-8F2A91C0", At: at}),
-		TransferReceived(Transfer{Amount: 150000, Name: "OPay wallet", From: "Zenith Current", At: at}),
+		TransferSent(Transfer{Amount: 25000, Name: "Tunde Bakare", Bank: "GTBank", Account: "6621", Note: "Generator repair", From: "Savings account", Reference: "NURU-8F2A91C0", At: at}),
+		TransferReceived(Transfer{Amount: 150000, Name: "OPay wallet", From: "Current account", At: at}),
 		WeeklyRecap(Week{Name: "Adaeze Okafor", In: 150000, Out: 61200, PrevOut: 79600, Saved: 20000, Top: "Food", TopAmount: 22000, Tip: "Friday was your biggest day."}),
 		BudgetAlert(Budget{Category: "Food", Spent: 68000, Limit: 80000, DaysLeft: 9}),
 		StaffInvite("Amaka Obi", "Bolaji Jimoh", "Support", "hq"),
@@ -87,7 +87,7 @@ func TestNaira(t *testing.T) {
 }
 
 func TestDemo(t *testing.T) {
-	if !Demo("Judge@NURU.app") || Demo("ada@gmail.com") {
+	if !Demo("Demo@NURU.app") || Demo("ada@gmail.com") {
 		t.Fatal("demo detection is wrong")
 	}
 }

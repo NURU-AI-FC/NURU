@@ -63,7 +63,7 @@ const activity = `
 	  union all select user_id, created_at from transactions where category='Transfer' and direction='debit' and created_at>=$1 and created_at<=now()
 	) select a.user_id, a.at from a join users u on u.id=a.user_id and u.role='customer'`
 
-// pilotTargets are the Zenith pilot goals, kept here until they move to settings.
+// pilotTargets are the bank pilot goals, kept here until they move to settings.
 var pilotTargets = struct {
 	WeeklyActive float64
 	ActedPct     float64

@@ -72,10 +72,10 @@ func TestCampaignMoves(t *testing.T) {
 }
 
 func TestStaffEmailRule(t *testing.T) {
-	if !staffEmailAllowed("amaka.obi@zenithbank.com", false, false) {
-		t.Error("Zenith work email refused")
+	if !staffEmailAllowed("amaka.obi@bank.example", false, false) {
+		t.Error("bank work email refused")
 	}
-	if staffEmailAllowed("amaka@gmail.com", false, false) || staffEmailAllowed("x@zenithbank.com.evil.ng", false, false) {
+	if staffEmailAllowed("amaka@gmail.com", false, false) || staffEmailAllowed("x@bank.example.evil.ng", false, false) {
 		t.Error("personal email allowed")
 	}
 	if !staffEmailAllowed("staff@nuru.app", false, true) || !staffEmailAllowed("guest@partner.ng", true, false) {
@@ -91,7 +91,7 @@ func TestVisibleSegments(t *testing.T) {
 }
 
 func TestNameFromEmail(t *testing.T) {
-	if got := nameFromEmail("amaka.obi@zenithbank.com"); got != "Amaka Obi" {
+	if got := nameFromEmail("amaka.obi@bank.example"); got != "Amaka Obi" {
 		t.Fatalf("got %q", got)
 	}
 }
