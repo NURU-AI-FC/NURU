@@ -17,5 +17,5 @@ T = {
     "business": "{biz} nwetara {bin} ma mefuo {bout} n'ọnwa a. Mepee Business maka ụgwọ ndị ọrụ, ụtụ isi na oge ego ga-adị.",
     "transfer": "Nke a bụ ego {amt} ị ga-eziga {payee}. Mgbe nke ahụ gasịrị, {left} ga-afọ n'akaụntụ gị. Lelee nkọwa n'okpuru; m ga-ajụ PIN gị na ihu gị tupu m ezipụ.",
     "no_payee": "Gwa m onye m ga-akwụ. Tinye ụlọ akụ ha na nọmba akaụntụ nwere ọnụọgụ iri n'okpuru, ma kọwaa ihe ego ahụ bụ maka. Ndị echekwara: {list}.",
-    "invest": "Enwere m ike igosi otu itinye ego gị si eto na peeji Loans and savings. Maka mkpebi buru ibu, kpọtụrụ onye njikwa Zenith.",
+    "invest": "Enwere m ike igosi otu itinye ego gị si eto na peeji Loans and savings. Maka mkpebi buru ibu, kpọtụrụ onye njikwa ụlọ akụ gị.",
 }

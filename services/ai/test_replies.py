@@ -4,8 +4,8 @@ import replies
 
 TODAY = date(2026, 10, 18)  # a Sunday
 CTX = {
-    "accounts": [{"name": "Zenith Savings", "number": "•••• 4417", "balance": 500000}],
-    "upcoming": [{"title": "Loan repayment, Zenith", "amount": 140400, "due": "27 Oct"}, {"title": "DStv renewal", "amount": 25000, "due": "20 Oct"}],
+    "accounts": [{"name": "Savings account", "number": "•••• 4417", "balance": 500000}],
+    "upcoming": [{"title": "Loan repayment", "amount": 140400, "due": "27 Oct"}, {"title": "DStv renewal", "amount": 25000, "due": "20 Oct"}],
     "payees": ["Tunde Bakare"],
 }
 
@@ -41,7 +41,7 @@ def test_reminder_action_and_template():
 
 def test_sources():
     s = replies.sources("balance", CTX)
-    assert s[0]["type"] == "accounts" and "Zenith Savings •••• 4417" in s[0]["detail"]
+    assert s[0]["type"] == "accounts" and "Savings account •••• 4417" in s[0]["detail"]
     assert [x["type"] for x in replies.sources("spend", CTX)] == ["transactions", "accounts"]
     assert replies.sources("greeting", CTX) == []
 

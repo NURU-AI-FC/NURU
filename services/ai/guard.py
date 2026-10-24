@@ -44,7 +44,7 @@ FINANCE = [
     "food", "transport", "uber", "bolt", "grocer", "naira", "₦", "dollar", "usd", "gbp", "pound", "euro",
     "fx", "exchange", "rate", "convert", "price", "cheap", "expensive", "week", "month", "year", "today",
     "forecast", "plan", "goal", "target", "refund", "vendor", "invoice", "advert", "ads", "marketing",
-    "runway", "credit", "debit", "card", "opay", "kuda", "zenith", "bank", "wallet", "reminder", "due",
+    "runway", "credit", "debit", "card", "opay", "kuda", "bank", "wallet", "reminder", "due",
     "overspend", "category", "compare", "trend", "insight", "how much", "where did",
     # Yorùbá
     "owó", "owo", "ná", "ìnáwó", "inawo", "fipamọ́", "ifowopamo", "gbèsè", "gbese", "oṣù", "osu", "ọ̀sẹ̀",

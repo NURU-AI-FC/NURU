@@ -18,5 +18,5 @@ T = {
     "transfer": "Here is the transfer of {amt} to {payee}. After it you will still have {left} across your personal accounts. Check the details below; I will ask for your PIN and a face check before anything is sent.",
     "reminder": "I can remind you about {title}{amt} on {date}. Check the details below and confirm, and it goes into your planner.",
     "no_payee": "Tell me who to pay. Give me their bank and 10 digit account number below and say what the payment is for. Your saved payees are: {list}.",
-    "invest": "I can show how your investments are growing on the Loans and savings page. For a big investment decision, a Zenith relationship manager can advise you properly.",
+    "invest": "I can show how your investments are growing on the Loans and savings page. For a big investment decision, a relationship manager at your bank can advise you properly.",
 }

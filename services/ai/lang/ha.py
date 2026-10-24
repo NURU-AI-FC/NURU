@@ -17,5 +17,5 @@ T = {
     "business": "{biz} ta samu {bin} ta kashe {bout} a wannan wata. Buɗe Business don albashi, haraji da tsawon lokacin kuɗi.",
     "transfer": "Ga kuɗin {amt} da za ka aika wa {payee}. Bayan haka, {left} zai rage a asusunka. Duba bayani a ƙasa; zan nemi PIN ɗinka da duba fuskarka kafin a aika.",
     "no_payee": "Faɗa mini wanda zan biya. Rubuta bankinsa da lambar asusu mai lamba goma a ƙasa, ka faɗi abin da kuɗin yake domin sa. Waɗanda ka ajiye: {list}.",
-    "invest": "Zan iya nuna yadda jarinka ke girma a shafin Loans and savings. Don babban yanke shawara, ka tuntuɓi manajan Zenith.",
+    "invest": "Zan iya nuna yadda jarinka ke girma a shafin Loans and savings. Don babban yanke shawara, ka tuntuɓi manajan bankinka.",
 }
