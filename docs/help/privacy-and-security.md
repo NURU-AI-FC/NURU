@@ -9,7 +9,7 @@ The code works once and runs out after 10 minutes. After 5 wrong tries, ask for 
 
 ## What is encrypted
 
-- **Chats.** Your chats with NURU are encrypted with a key unique to you. Only you can read them. Zenith staff cannot see them.
+- **Chats.** Your chats with NURU are encrypted with a key unique to you. Only you can read them. Bank staff cannot see them.
 - **Face check.** NURU keeps a face template, not a photo, and it is encrypted.
 - **PIN.** Your transaction PIN is stored hashed, never as the digits.
 

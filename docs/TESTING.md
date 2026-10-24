@@ -2,11 +2,11 @@
 
 Run this on the live site (https://web-production-fd530.up.railway.app) in a desktop browser, and in the app on at least one Android phone (newest APK) and one iPhone. Tick each line, and write the phone model and the time next to anything that fails so the server logs can be checked.
 
-Demo login: `judge@nuru.app` / `Zecathon-2026`, code `000000`. The judge account has no PIN yet: the first transfer creates the PIN and sets up the face check.
+Demo login: `demo@nuru.app` / `Nuru-Demo-2026`, code `000000`. The demo account has no PIN yet: the first transfer creates the PIN and sets up the face check.
 
 ## Sign up and sign in
 - [ ] Sign up with a new email: the code screen appears and `000000` works in demo mode
-- [ ] Sign in with the judge account and code
+- [ ] Sign in with the demo account and code
 - [ ] Wrong password shows an error, not a blank screen
 - [ ] Forgot password: the reset flow opens and returns to sign in
 - [ ] Sign out, then sign back in

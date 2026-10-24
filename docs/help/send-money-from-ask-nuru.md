@@ -28,4 +28,4 @@ The first time, NURU sets up both checks with you:
 
 A large payment to someone you have never paid can look like a scam. NURU pauses it and your money stays put. Tap **Cancel transfer**, or confirm with your face and PIN again if you know the person.
 
-Zenith staff will never ask you to move money to a "safe account".
+Bank staff will never ask you to move money to a "safe account".

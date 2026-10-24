@@ -10,7 +10,7 @@ Short guides to using NURU. Each one covers a single task.
 | [Reading your insights and the 3 month comparison](read-your-insights.md) | Money in and out, categories and the week by week 3 month chart |
 | [Loans, investments and pension on the Money page](loans-investments-and-pension.md) | Your loans, what you can borrow, investments and pension |
 | [Business tools](business-tools.md) | Setting up your business, payroll, invoices and the other tools |
-| [Finding a Zenith branch near you](finding-a-zenith-branch.md) | The branch and ATM map, filters, directions, calling and sharing |
+| [Finding a branch near you](finding-a-branch.md) | The branch and ATM map, filters, directions, calling and sharing |
 | [Talking to NURU by voice](talk-to-nuru-by-voice.md) | The microphone, read aloud, the voice assistant, "Hey NURU" and Back Tap |
 | [Your privacy and security](privacy-and-security.md) | Sign in codes, encryption and what NURU can and cannot see |
 

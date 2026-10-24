@@ -1,6 +1,6 @@
 # Responsible AI in NURU
 
-NURU is a financial copilot for Zenith Bank customers. It uses AI to explain a customer's own money in plain words, in English, Yorùbá, Igbo and Hausa, by text or by voice. This document covers the AI providers NURU uses, the role each one plays and the safeguards around them. It is written for the technical team to read before testing or debugging.
+NURU is an AI financial copilot that banks embed in their own apps. It uses AI to explain a customer's own money in plain words, in English, Yorùbá, Igbo and Hausa, by text or by voice. This document covers the AI providers NURU uses, the role each one plays and the safeguards around them. It is written for the technical team to read before testing or debugging.
 
 ## Principles
 
@@ -9,7 +9,7 @@ NURU is a financial copilot for Zenith Bank customers. It uses AI to explain a c
 3. **Least data out.** Account numbers and long digit runs are masked before any text leaves the API. Only first names are sent.
 4. **Check the answer, not just the question.** Every naira figure in an answer is traced back to the customer's data before it is shown.
 5. **Always a working fallback.** If a provider is down or a key is missing, NURU falls back to a template or another provider, so the demo never depends on a single service.
-6. **People stay in control.** Customers can turn voice, read-aloud and "Hey NURU" on or off. They can read and clear their chat history, and they are pointed to a Zenith relationship manager for big investment or loan decisions.
+6. **People stay in control.** Customers can turn voice, read-aloud and "Hey NURU" on or off. They can read and clear their chat history, and they are pointed to a relationship manager at their bank for big investment or loan decisions.
 
 ## AI providers and their roles
 
@@ -21,7 +21,7 @@ NURU is a financial copilot for Zenith Bank customers. It uses AI to explain a c
 | **Spitch** | Reads answers aloud in Yorùbá, Igbo and Hausa, and turns spoken questions in all four languages into text | NURU API calling Spitch | Answer text, or a short voice recording |
 | **face-api** (open source, on device) | Face check before transfers: turns a camera frame into 128 numbers that are compared with the enrolled face | In the customer's browser or phone. No face data goes to a third party | Camera frames stay on the device. Only the 128-number template is sent to NURU, encrypted |
 | **Phone and browser speech recognition** | Listens for the "Hey NURU" wake phrase while the app is open | The phone's or browser's built-in recogniser (Apple, Google or the browser vendor) | Microphone audio while the app is in the foreground and the switch is on |
-| **Local knowledge search** | Finds the most relevant NURU and Zenith help-guide passages for a question | Inside the NURU AI service, using a local embedding. No external AI provider | The question text |
+| **Local knowledge search** | Finds the most relevant NURU and bank help-guide passages for a question | Inside the NURU AI service, using a local embedding. No external AI provider | The question text |
 
 ### How Claude is used
 
@@ -65,7 +65,7 @@ NURU is a financial copilot for Zenith Bank customers. It uses AI to explain a c
 
 ## Limits we tell people about
 
-- NURU gives guidance, not regulated investment advice, and suggests a Zenith relationship manager for big decisions.
+- NURU gives guidance, not regulated investment advice, and suggests a relationship manager at the customer's bank for big decisions.
 - Answers can be wrong or incomplete. The figure check catches invented amounts, but not every reasoning mistake.
 - Speech recognition is less accurate with noise and strong accents, and is still improving for Yorùbá, Igbo and Hausa. The text box is always available.
 - The face check matches a face but is not a certified liveness check, so a good photo could fool it. In production it would sit alongside the bank's own device binding and liveness checks.

@@ -2,7 +2,7 @@
 
 Linking an account lets NURU read your balances and transactions to build your insights. The link is read only. NURU can never move money from a linked account.
 
-You can link Zenith Bank, GTBank, Access Bank, First Bank, UBA, Kuda, OPay or Moniepoint.
+You can link GTBank, Access Bank, First Bank, UBA, Kuda, OPay or Moniepoint.
 
 ## Link an account
 

@@ -1,22 +1,36 @@
 # NURU
 
-NURU is an AI financial copilot for Zenith Bank customers, built for Zecathon 6.0 on the track
-"Turning Customer Financial Data into Actionable Insights". It reads a customer's linked accounts and
+NURU is an AI financial copilot that banks embed in their own apps, as an SDK, an insights API or a
+white-label app. NURU never holds or moves money: the bank keeps the customer and every transaction. It reads a customer's linked accounts and
 explains where the money goes, what is coming up and how to save more, in English, Yorùbá, Igbo and Hausa.
 
 ## Try it
 
 | | |
 |---|---|
-| Customer | `judge@nuru.app` / `Zecathon-2026` |
-| Bank staff (console admin) | `staff@nuru.app` / `Zecathon-2026`, or code only at `/console/login` |
-| NURU HQ owner | `ceo@nuru.app` / `Zecathon-2026` (Bolaji Jimoh), or code only at `/hq/login` |
-| NURU HQ operations | `ops@nuru.app` / `Zecathon-2026` |
+| Customer | `demo@nuru.app` / `Nuru-Demo-2026` |
+| Bank staff (console admin) | `staff@nuru.app` / `Nuru-Demo-2026`, or code only at `/console/login` |
+| NURU HQ owner | `ceo@nuru.app` / `Nuru-Demo-2026` (Bolaji Jimoh), or code only at `/hq/login` |
+| NURU HQ operations | `ops@nuru.app` / `Nuru-Demo-2026` |
 | One time code | `000000` (demo mode) |
 | Transaction PIN | the customer creates one on their first transfer |
 
-All data is sandbox data: twelve months of seeded transactions across Zenith, OPay (Mono sandbox) and Kuda,
+All data is sandbox data: twelve months of seeded transactions across the partner bank, OPay (Mono sandbox) and Kuda,
 plus a business account for Kemi Foods Ltd. No real money moves.
+
+## Set it up for a bank
+
+NURU is white-label. Each bank sets these before building, and the defaults keep the demo neutral.
+
+| Where | Variable | What it does |
+|---|---|---|
+| API | `BANK_NAME` | The bank whose accounts NURU shows first (default `Partner Bank`) |
+| API | `BANK_STAFF_DOMAIN` | Work email domain allowed into the bank console (default `@bank.example`) |
+| Web | `VITE_BANK_NAME`, `VITE_BANK_PHONE`, `VITE_BANK_STAFF_DOMAIN` | Bank name, support phone and staff domain shown in the web app |
+| Web | `VITE_BANK_BRAND` | Name to match on OpenStreetMap for the branch finder; empty shows every bank |
+| Mobile | `EXPO_PUBLIC_BANK_NAME`, `EXPO_PUBLIC_BANK_PHONE` | Bank name and support phone in the app; a name also shows "In partnership with" on the splash |
+
+Without a phone number, "Call your bank" buttons open a support chat instead.
 
 ## What is inside
 

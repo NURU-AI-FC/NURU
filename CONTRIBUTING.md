@@ -16,4 +16,4 @@ and @Bolajiomo99 has approved it.
 docker compose up --build
 ```
 
-Open http://localhost:3000 and sign in with judge@nuru.app / Zecathon-2026, code 000000.
+Open http://localhost:3000 and sign in with demo@nuru.app / Nuru-Demo-2026, code 000000.
