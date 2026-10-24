@@ -1,6 +1,8 @@
-// Zenith Bank branch and ATM lookup for the branch finder.
+// Branch and ATM lookup for the branch finder, for the partner bank in bank.ts.
 // Live data comes from OpenStreetMap through the Overpass API. The list below is the
 // fallback when Overpass is slow or has nothing near the user; its coordinates are approximate.
+
+import { BANK } from './bank'
 
 export type Branch = {
   id: string
@@ -16,23 +18,23 @@ export type Branch = {
 }
 
 export const HEAD_OFFICE: [number, number] = [6.4317, 3.4229]
-export const CONTACT = '+23412787000'
+export const CONTACT = BANK.phone
 
 const LIST: Omit<Branch, 'source'>[] = [
-  { id: 'ho', name: 'Zenith Bank Head Office', address: 'Plot 84 Ajose Adeogun St, Victoria Island, Lagos', lat: 6.4317, lon: 3.4229, kind: 'branch' },
-  { id: 'adeola', name: 'Zenith Bank Adeola Odeku', address: 'Adeola Odeku St, Victoria Island, Lagos', lat: 6.4296, lon: 3.4158, kind: 'branch' },
-  { id: 'awolowo', name: 'Zenith Bank Awolowo Road', address: 'Awolowo Rd, Ikoyi, Lagos', lat: 6.4466, lon: 3.4268, kind: 'branch' },
-  { id: 'lekki', name: 'Zenith Bank Lekki Phase 1', address: 'Admiralty Way, Lekki Phase 1, Lagos', lat: 6.4474, lon: 3.4723, kind: 'branch' },
-  { id: 'yaba', name: 'Zenith Bank Yaba', address: 'Herbert Macaulay Way, Yaba, Lagos', lat: 6.508, lon: 3.378, kind: 'branch' },
-  { id: 'surulere', name: 'Zenith Bank Surulere', address: 'Adeniran Ogunsanya St, Surulere, Lagos', lat: 6.4952, lon: 3.3555, kind: 'branch' },
-  { id: 'allen', name: 'Zenith Bank Allen Avenue', address: 'Allen Avenue, Ikeja, Lagos', lat: 6.601, lon: 3.353, kind: 'branch' },
-  { id: 'abuja', name: 'Zenith Bank Central Business District', address: 'Ahmadu Bello Way, Central Area, Abuja', lat: 9.0575, lon: 7.4951, kind: 'branch' },
-  { id: 'wuse', name: 'Zenith Bank Wuse II', address: 'Aminu Kano Crescent, Wuse II, Abuja', lat: 9.079, lon: 7.47, kind: 'branch' },
-  { id: 'ph', name: 'Zenith Bank Trans Amadi', address: 'Trans Amadi Rd, Port Harcourt', lat: 4.8156, lon: 7.0498, kind: 'branch' },
-  { id: 'ibadan', name: 'Zenith Bank Ring Road', address: 'Ring Road, Ibadan', lat: 7.3577, lon: 3.878, kind: 'branch' },
-  { id: 'kano', name: 'Zenith Bank Bank Road', address: 'Bank Road, Kano', lat: 12.0, lon: 8.52, kind: 'branch' },
-  { id: 'atm-vi', name: 'Zenith Bank ATM', address: 'Akin Adesola St, Victoria Island, Lagos', lat: 6.4335, lon: 3.4195, kind: 'atm' },
-  { id: 'atm-lekki', name: 'Zenith Bank ATM', address: 'Freedom Way, Lekki Phase 1, Lagos', lat: 6.4447, lon: 3.4655, kind: 'atm' },
+  { id: 'ho', name: BANK.name + ' Victoria Island', address: 'Ajose Adeogun St, Victoria Island, Lagos', lat: 6.4317, lon: 3.4229, kind: 'branch' },
+  { id: 'adeola', name: BANK.name + ' Adeola Odeku', address: 'Adeola Odeku St, Victoria Island, Lagos', lat: 6.4296, lon: 3.4158, kind: 'branch' },
+  { id: 'awolowo', name: BANK.name + ' Awolowo Road', address: 'Awolowo Rd, Ikoyi, Lagos', lat: 6.4466, lon: 3.4268, kind: 'branch' },
+  { id: 'lekki', name: BANK.name + ' Lekki Phase 1', address: 'Admiralty Way, Lekki Phase 1, Lagos', lat: 6.4474, lon: 3.4723, kind: 'branch' },
+  { id: 'yaba', name: BANK.name + ' Yaba', address: 'Herbert Macaulay Way, Yaba, Lagos', lat: 6.508, lon: 3.378, kind: 'branch' },
+  { id: 'surulere', name: BANK.name + ' Surulere', address: 'Adeniran Ogunsanya St, Surulere, Lagos', lat: 6.4952, lon: 3.3555, kind: 'branch' },
+  { id: 'allen', name: BANK.name + ' Allen Avenue', address: 'Allen Avenue, Ikeja, Lagos', lat: 6.601, lon: 3.353, kind: 'branch' },
+  { id: 'abuja', name: BANK.name + ' Central Business District', address: 'Ahmadu Bello Way, Central Area, Abuja', lat: 9.0575, lon: 7.4951, kind: 'branch' },
+  { id: 'wuse', name: BANK.name + ' Wuse II', address: 'Aminu Kano Crescent, Wuse II, Abuja', lat: 9.079, lon: 7.47, kind: 'branch' },
+  { id: 'ph', name: BANK.name + ' Trans Amadi', address: 'Trans Amadi Rd, Port Harcourt', lat: 4.8156, lon: 7.0498, kind: 'branch' },
+  { id: 'ibadan', name: BANK.name + ' Ring Road', address: 'Ring Road, Ibadan', lat: 7.3577, lon: 3.878, kind: 'branch' },
+  { id: 'kano', name: BANK.name + ' Bank Road', address: 'Bank Road, Kano', lat: 12.0, lon: 8.52, kind: 'branch' },
+  { id: 'atm-vi', name: BANK.name + ' ATM', address: 'Akin Adesola St, Victoria Island, Lagos', lat: 6.4335, lon: 3.4195, kind: 'atm' },
+  { id: 'atm-lekki', name: BANK.name + ' ATM', address: 'Freedom Way, Lekki Phase 1, Lagos', lat: 6.4447, lon: 3.4655, kind: 'atm' },
 ]
 
 // km is the straight-line distance between two points.
@@ -50,7 +52,7 @@ function lagosNow() {
   return { day: d.getUTCDay(), hour: d.getUTCHours() + d.getUTCMinutes() / 60 }
 }
 
-// status says whether a branch is open, using standard Zenith banking hours.
+// status says whether a branch is open, using standard Nigerian banking hours.
 export function status(b: Branch): { open: boolean; label: string } {
   if (b.kind === 'atm') return { open: true, label: 'Open 24 hours' }
   const { day, hour } = lagosNow()
@@ -77,9 +79,9 @@ function fromOsm(e: OsmEl): Branch | null {
   const atm = t.amenity === 'atm'
   const street = [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' ')
   const area = t['addr:suburb'] || t['addr:district'] || t['addr:city'] || ''
-  let name = t.name || (atm ? 'Zenith Bank ATM' : 'Zenith Bank')
-  if (!/zenith/i.test(name)) name = 'Zenith Bank ' + name
-  if (!atm && t.branch && !name.includes(t.branch)) name = 'Zenith Bank ' + t.branch
+  const bank = t.brand || t.operator || (BANK.brand ? BANK.name : 'Bank')
+  let name = t.name || (atm ? bank + ' ATM' : bank)
+  if (!atm && t.branch && !name.includes(t.branch)) name = bank + ' ' + t.branch
   return {
     id: e.type + e.id, name, lat, lon, kind: atm ? 'atm' : 'branch', source: 'osm',
     address: [street, area].filter(Boolean).join(', ') || 'Address on the map',
@@ -87,12 +89,15 @@ function fromOsm(e: OsmEl): Branch | null {
   }
 }
 
-// nearby returns Zenith branches and ATMs around a point, closest first.
+// nearby returns the bank's branches and ATMs (every bank when no brand is set) around a point, closest first.
 export async function nearby(at: [number, number], signal?: AbortSignal): Promise<Branch[]> {
   const list: Branch[] = LIST.map((b) => ({ ...b, source: 'list' }))
   let live: Branch[] = []
   try {
-    const q = `[out:json][timeout:12];(nwr["amenity"~"^(bank|atm)$"]["name"~"zenith",i](around:20000,${at[0]},${at[1]});nwr["amenity"~"^(bank|atm)$"]["brand"~"zenith",i](around:20000,${at[0]},${at[1]});nwr["amenity"~"^(bank|atm)$"]["operator"~"zenith",i](around:20000,${at[0]},${at[1]}););out center 80;`
+    const around = `(around:20000,${at[0]},${at[1]})`
+    const kind = '["amenity"~"^(bank|atm)$"]'
+    const parts = BANK.brand ? ['name', 'brand', 'operator'].map((k) => `nwr${kind}["${k}"~"${BANK.brand}",i]${around};`).join('') : `nwr${kind}${around};`
+    const q = `[out:json][timeout:12];(${parts});out center 80;`
     const ctl = new AbortController()
     const timer = setTimeout(() => ctl.abort(), 9000)
     signal?.addEventListener('abort', () => ctl.abort())
@@ -101,7 +106,7 @@ export async function nearby(at: [number, number], signal?: AbortSignal): Promis
     if (r.ok) live = ((await r.json()).elements as OsmEl[]).map(fromOsm).filter((b): b is Branch => !!b)
   } catch { /* fall back to the list */ }
   const all = [...live]
-  for (const b of list) if (!all.some((x) => km([x.lat, x.lon], [b.lat, b.lon]) < 0.2)) all.push(b)
+  if (!live.length) for (const b of list) if (!all.some((x) => km([x.lat, x.lon], [b.lat, b.lon]) < 0.2)) all.push(b)
   const near = all.map((b) => ({ ...b, km: km(at, [b.lat, b.lon]) })).sort((a, b) => a.km! - b.km!)
   const close = near.filter((b) => b.km! <= 25)
   return close.length >= 3 ? close.slice(0, 40) : near.slice(0, 8)
