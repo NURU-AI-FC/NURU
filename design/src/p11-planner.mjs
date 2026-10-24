@@ -43,7 +43,7 @@ const reminders = mobile('03 Reminders', th, `
   <div class="col g12 px20" style="margin-top:8px">
     <div class="seg"><span class="on">Upcoming</span><span>Repeating</span><span>Done</span></div>
     ${[['home', 'red', 'Rent', 'Mr Adebayo · yearly', naira(350000), '21 Oct', 'amber'],
-       ['landmark', 'blue', 'Loan repayment', 'Zenith personal loan · 5 of 12', naira(45800), '25 Oct', 'gray'],
+       ['landmark', 'blue', 'Loan repayment', 'Personal loan · 5 of 12', naira(45800), '25 Oct', 'gray'],
        ['users', 'green', 'Staff salaries', 'Kemi Foods · 5 staff', naira(590450), '28 Oct', 'gray'],
        ['tv', 'gray', 'DStv Compact', 'Auto-pay on', naira(15700), '2 Nov', 'gray'],
        ['calendar', 'amber', 'Investor meeting', 'Femi O. · Ventures Platform', '2:00 pm', '22 Oct', 'gray'],

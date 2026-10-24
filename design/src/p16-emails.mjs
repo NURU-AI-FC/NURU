@@ -17,12 +17,12 @@ const shell = (name, subject, preview, inner, { promo = false } = {}) => web(nam
     <div class="col" style="background:var(--bg);border-radius:20px;overflow:hidden;border:1px solid var(--border)">
       <div class="row between" style="height:72px;padding:0 32px;border-bottom:1px solid var(--border)">
         <div class="logo"><div class="mark" style="width:32px;height:32px;font-size:18px;border-radius:10px">N</div><span>NURU</span></div>
-        <span class="xs mu">with Zenith Bank</span>
+        <span class="xs mu">with Partner Bank</span>
       </div>
       <div class="col g20" style="padding:32px">${inner}</div>
       <div class="col g10" style="padding:24px 32px;background:var(--surface)">
         <span class="row g6 xs t2">${icon('lock', 12)}NURU will never ask for your PIN, password, OTP or BVN by email, call or chat.</span>
-        <span class="xs mu">Zenith Bank Plc, Plot 84 Ajose Adeogun Street, Victoria Island, Lagos · 0201 278 7000</span>
+        <span class="xs mu">NURU · the AI copilot inside your bank’s app</span>
         <span class="xs mu">${promo ? 'You get this because tips are on. <u>Unsubscribe</u> · ' : ''}<u>Email settings</u> · <u>Privacy</u> · <u>Help</u></span>
       </div>
     </div>
@@ -40,7 +40,7 @@ const emails = [
   shell('02 Sign-in code', 'Your NURU sign-in code is 731 052', 'Requested from Chrome on Mac, Lagos, 7:42pm.', `
     ${H('Your sign-in code')}${code('731052')}
     ${kv([['Device', 'Chrome on Mac'], ['Location', 'Lagos, Nigeria'], ['Time', 'Sun 18 Oct, 7:42pm']])}
-    ${note('Not you? Do not share this code. Change your password and call Zenith on 0201 278 7000.', 'alert', 'var(--red50)')}`),
+    ${note('Not you? Do not share this code. Change your password and contact your bank right away.', 'alert', 'var(--red50)')}`),
   shell('03 Password reset code', 'Reset your NURU password', 'Use 905 118 within 10 minutes.', `
     ${H('Reset your password')}${P('Enter this code on the reset screen, then choose a new password.')}${code('905118')}
     ${note('If you did not ask for this, your account is still safe. You can ignore this email.', 'info')}`),
@@ -53,10 +53,10 @@ const emails = [
     <div class="row g12">${btn('Yes, it was me', true)}${btn('Sign it out')}</div>`),
   shell('06 Transaction PIN and face check set', 'Your transaction PIN and face check are ready', 'Every transfer now needs both.', `
     ${hero('shieldcheck', 'green')}${H('Your transfers are protected')}${P('You created a transaction PIN and enrolled your face on Sun 18 Oct. From now on every transfer needs both, and NURU can never switch them off.')}
-    ${note('We store a face template, not a photo, encrypted on Zenith servers. Your PIN is stored hashed, never as the digits.')}`),
+    ${note('We store a face template, not a photo, encrypted on secure servers. Your PIN is stored hashed, never as the digits.')}`),
   shell('07 Transfers paused after failed checks', 'We paused transfers on your NURU account', '3 failed PIN or face checks. Paused for 30 minutes.', `
     ${hero('lock', 'red')}${H('Transfers paused for 30 minutes')}${P('Someone failed the PIN or face check 3 times while sending ₦400,000 to Musa. Nothing was sent. Transfers unlock at 8:32pm.')}
-    ${btn('Call Zenith support')}${note('If this was you, wait 30 minutes and try again. If not, change your password now.', 'alert', 'var(--red50)')}`),
+    ${btn('Contact bank support')}${note('If this was you, wait 30 minutes and try again. If not, change your password now.', 'alert', 'var(--red50)')}`),
   shell('08 Identity verified', 'You are verified, Adaeze', 'BVN and NIN checks passed. Higher limits are on.', `
     ${hero('check', 'green')}${H('Identity verified')}${P('Your BVN, NIN and selfie match. Your account is now Tier 2.')}
     ${kv([['Daily transfer limit', naira(5000000)], ['Account tier', 'Tier 2'], ['Verified', 'Sun 18 Oct']])}${btn('Open NURU')}`),
@@ -66,12 +66,12 @@ const emails = [
   shell('10 Data export ready', 'Your NURU data download is ready', 'Download it within 7 days.', `
     ${hero('download', 'gray')}${H('Your data is ready')}${P('Your accounts, transactions, chats and settings are in one encrypted file. The link works for 7 days and needs you to sign in.')}${btn('Download my data')}`),
   shell('11 Account deletion scheduled', 'Your NURU account will be deleted on 1 Nov', 'Changed your mind? Cancel before then.', `
-    ${hero('trash', 'red')}${H('Deletion scheduled')}${P('We will delete your NURU profile, chats and linked account data on 1 Nov. Your Zenith bank accounts are not affected.')}${btn('Keep my account', true)}`),
+    ${hero('trash', 'red')}${H('Deletion scheduled')}${P('We will delete your NURU profile, chats and linked account data on 1 Nov. Your bank accounts are not affected.')}${btn('Keep my account', true)}`),
 
   // Money
   shell('12 Transfer sent', 'You sent ₦25,000 to Tunde Bakare', 'Generator repair · Ref NURU-8F2A91C0', `
     ${hero('send', 'gray', naira(25000), 'Sent to Tunde Bakare')}
-    ${kv([['To', 'Tunde Bakare, GTBank •••• 6621'], ['For', 'Generator repair'], ['From', 'Zenith Savings •••• 4417'], ['Date', 'Sun 18 Oct, 7:58pm'], ['Reference', 'NURU-8F2A91C0']])}
+    ${kv([['To', 'Tunde Bakare, GTBank •••• 6621'], ['For', 'Generator repair'], ['From', 'Main Savings •••• 4417'], ['Date', 'Sun 18 Oct, 7:58pm'], ['Reference', 'NURU-8F2A91C0']])}
     ${btn('View receipt', true)}`),
   shell('13 Money received', 'You received ₦150,000', 'From an OPay wallet. Tell NURU what it was for.', `
     ${hero('down', 'green', '+' + naira(150000), 'Into OPay Wallet •••• 2290')}
@@ -92,13 +92,13 @@ const emails = [
     <div class="row g12">${btn('Yes, it was me', true)}${btn('Freeze my card')}</div>`),
   shell('17 Bill payment receipt', 'DStv Compact paid: ₦15,700', 'Smartcard •••• 4471 renewed until 18 Nov.', `
     ${hero('tv', 'gray', naira(15700), 'DStv Compact renewed')}
-    ${kv([['Smartcard', '•••• 4471'], ['Valid until', '18 Nov 2026'], ['From', 'Zenith Savings •••• 4417'], ['Reference', 'NURU-BILL-77D2']])}`),
-  shell('18 Low balance warning', 'Zenith Savings is below ₦20,000', 'DStv renews in 2 days. Top up to avoid a failed payment.', `
-    ${hero('wallet', 'amber', naira(18240), 'Zenith Savings •••• 4417')}
+    ${kv([['Smartcard', '•••• 4471'], ['Valid until', '18 Nov 2026'], ['From', 'Main Savings •••• 4417'], ['Reference', 'NURU-BILL-77D2']])}`),
+  shell('18 Low balance warning', 'Main Savings is below ₦20,000', 'DStv renews in 2 days. Top up to avoid a failed payment.', `
+    ${hero('wallet', 'amber', naira(18240), 'Main Savings •••• 4417')}
     ${P('Your DStv renewal of ₦15,700 is due on 20 Oct, and you usually spend about ₦6,000 a day. NURU suggests moving ₦25,000 from OPay Wallet.')}${btn('Move ₦25,000')}`),
-  shell('19 Dispute update', 'Update on your report NURU-RPT-3391', 'Zenith reversed ₦9,500 to your account.', `
+  shell('19 Dispute update', 'Update on your report NURU-RPT-3391', 'Your bank reversed ₦9,500 to your account.', `
     ${hero('check', 'green')}${H('Your report is resolved')}
-    <div class="col g12">${[['Report received', 'Fri 16 Oct', true], ['Reviewed by Zenith', 'Sat 17 Oct', true], ['₦9,500 reversed', 'Today', true]].map(([t, d, on]) => `<div class="row g12"><div style="width:12px;height:12px;border-radius:6px;background:${on ? 'var(--green)' : 'var(--border)'}"></div><span class="s w6 grow">${t}</span><span class="xs mu">${d}</span></div>`).join('')}</div>
+    <div class="col g12">${[['Report received', 'Fri 16 Oct', true], ['Reviewed by your bank', 'Sat 17 Oct', true], ['₦9,500 reversed', 'Today', true]].map(([t, d, on]) => `<div class="row g12"><div style="width:12px;height:12px;border-radius:6px;background:${on ? 'var(--green)' : 'var(--border)'}"></div><span class="s w6 grow">${t}</span><span class="xs mu">${d}</span></div>`).join('')}</div>
     ${kv([['Payment', 'Charged twice, Bolt'], ['Amount', naira(9500)], ['Reference', 'NURU-RPT-3391']])}`),
 
   // Insights and engagement
@@ -121,16 +121,16 @@ const emails = [
     ${hero('target', 'green', naira(225000), 'of ' + naira(450000) + ' for December rent')}
     <div style="height:12px;border-radius:6px;background:var(--surface2)"><div style="width:50%;height:12px;border-radius:6px;background:var(--green)"></div></div>
     ${P('Three more ₦75,000 moves and you are done by 1 Dec, with ₦25,000 to spare.')}${btn('Add money now')}`),
-  shell('24 Bill and loan reminder', 'Coming up: Carbon loan ₦42,500 on 22 Oct', 'Plus DStv on 20 Oct. You have enough in Zenith Savings.', `
+  shell('24 Bill and loan reminder', 'Coming up: Carbon loan ₦42,500 on 22 Oct', 'Plus DStv on 20 Oct. You have enough in Main Savings.', `
     ${H('Due this week')}
     <div class="col g10">${[['calendar', 'DStv Compact', 'Tue 20 Oct', 15700], ['landmark', 'Carbon loan repayment', 'Thu 22 Oct', 42500], ['zap', 'IKEDC prepaid', 'Sat 24 Oct', 10000]].map(([ic, n, d, a]) => `<div class="row g12" style="padding:12px 14px;border:1px solid var(--border);border-radius:14px"><div class="ic gray" style="width:40px;height:40px;border-radius:12px">${icon(ic, 18)}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${d}</span></div><span class="s w6 num">${naira(a)}</span></div>`).join('')}</div>
-    ${note('Zenith Savings has ₦3.4m, enough for all three.', 'check', 'var(--green50)')}${btn('Open planner', true)}`),
+    ${note('Main Savings has ₦3.4m, enough for all three.', 'check', 'var(--green50)')}${btn('Open planner', true)}`),
   shell('25 Subscription renewal', 'Netflix renews tomorrow: ₦7,000', 'You have not watched in 5 weeks. Cancel?', `
     ${hero('play', 'gray', naira(7000), 'Netflix Standard · renews 19 Oct')}
     ${P('NURU found 4 subscriptions costing ₦31,900 a month. Netflix has not been used in 5 weeks.')}
     <div class="row g12">${btn('Review subscriptions')}${btn('Keep it', true)}</div>`),
-  shell('26 Loan offer', 'You can borrow up to ₦500,000 from Zenith', 'Pre-checked from your income. 2.5% a month.', `
-    ${hero('landmark', 'blue', naira(500000), 'Zenith QuickCredit, pre-checked')}
+  shell('26 Loan offer', 'You can borrow up to ₦500,000 from your bank', 'Pre-checked from your income. 2.5% a month.', `
+    ${hero('landmark', 'blue', naira(500000), 'QuickCredit, pre-checked')}
     ${kv([['Monthly rate', '2.5%'], ['Repay over', 'Up to 12 months'], ['Example', '₦47,800 a month for 12 months'], ['Paid out', 'Within 5 minutes']])}
     ${note('Only borrow what your plan shows you can repay. NURU can show you the effect on next month first.', 'info')}${btn('See my plan with this loan')}`, { promo: true }),
   shell('27 Daily plan', 'Your plan for Monday 19 Oct', '3 tasks, 1 payment, investor call at 2pm.', `

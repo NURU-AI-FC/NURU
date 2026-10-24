@@ -31,7 +31,7 @@ const chart = mobile('02 Answer with chart', th, `
         ${bars([8.2, 12.4, 6.1, 18.9, 22.3, 17.1, 11.4], { w: 236, h: 80, labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], hi: 4, rx: 4 })}
       </div>
       <div class="col g6" style="margin-top:10px"><span class="row between"><span>Food & dining</span><b>${naira(38200)}</b></span><span class="row between"><span>Transport</span><b>${naira(21700)}</b></span><span class="row between"><span>Airtime & data</span><b>${naira(9800)}</b></span></div>`)}
-    <div class="row g6" style="padding-left:36px">${icon('volume', 16, 'var(--muted)')}${icon('copy', 16, 'var(--muted)')}${icon('thumbup', 16, 'var(--muted)')}<span class="xs mu" style="margin-left:6px">Source: Zenith •••• 4821, Kuda •••• 1187</span></div>`)}
+    <div class="row g6" style="padding-left:36px">${icon('volume', 16, 'var(--muted)')}${icon('copy', 16, 'var(--muted)')}${icon('thumbup', 16, 'var(--muted)')}<span class="xs mu" style="margin-left:6px">Source: Main •••• 4821, Kuda •••• 1187</span></div>`)}
   <div class="px20" style="position:absolute;bottom:100px;left:0;right:0">${chips(['Set a food budget', 'Compare with last month', 'Show merchants'])}</div>
   ${composer()}`);
 
@@ -116,7 +116,7 @@ const draft = mobile('09 AI drafted transfer', th, `
       <div class="row between"><span class="s t2">Amount</span><span class="h3 num">${naira(45000)}</span></div>
       <div class="row between"><span class="s t2">Fee</span><span class="s">${naira(10)}</span></div>
       <div class="row between"><span class="s t2">Note</span><span class="s">Generator repair</span></div>
-      <div class="row between"><span class="s t2">From</span><span class="s">Zenith •••• 4821</span></div>
+      <div class="row between"><span class="s t2">From</span><span class="s">Main •••• 4821</span></div>
       <div class="row g8"><div class="btn sec sm grow">Edit</div><div class="btn pri sm grow">${icon('lock', 14, '#fff')} Confirm</div></div>
     </div>
     <div class="row g6" style="padding-left:36px">${icon('shieldcheck', 14, 'var(--green)')}<span class="xs mu">Name matches bank records</span></div>`)}
@@ -130,7 +130,7 @@ const sources = mobile('10 Answer sources', th, `
   <div class="sheet">
     <div class="grab"></div>
     <span class="h3">How NURU got this answer</span>
-    ${[['database', 'Transactions', '412 transactions, 1 Jul to 18 Oct'], ['landmark', 'Accounts', 'Zenith •••• 4821, Kuda •••• 1187'], ['receipt', 'Bills', '12 of 12 paid on time'], ['target', 'Goals', 'Emergency fund at 46%']].map(([i, t, s]) => `<div class="row g12"><div class="ic gray" style="width:36px;height:36px;border-radius:11px">${icon(i, 17)}</div><div class="col g4 grow"><span class="s w6">${t}</span><span class="xs mu">${s}</span></div></div>`).join('')}
+    ${[['database', 'Transactions', '412 transactions, 1 Jul to 18 Oct'], ['landmark', 'Accounts', 'Main •••• 4821, Kuda •••• 1187'], ['receipt', 'Bills', '12 of 12 paid on time'], ['target', 'Goals', 'Emergency fund at 46%']].map(([i, t, s]) => `<div class="row g12"><div class="ic gray" style="width:36px;height:36px;border-radius:11px">${icon(i, 17)}</div><div class="col g4 grow"><span class="s w6">${t}</span><span class="xs mu">${s}</span></div></div>`).join('')}
     <div class="soft row g10">${icon('info', 18, 'var(--muted)')}<span class="xs t2 grow">NURU reads only data you linked. It does not use your chats to train AI models.</span></div>
     <div class="btn sec">Close</div>
   </div>`);

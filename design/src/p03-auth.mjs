@@ -13,7 +13,7 @@ const splash = mobile('01 Splash', th, `
     <div class="mark" style="width:96px;height:96px;border-radius:30px;font-size:54px;background:#fff;color:#E30613;box-shadow:0 20px 50px rgba(0,0,0,.25)">N</div>
     <div class="col center g6"><div style="font-size:40px;font-weight:800;letter-spacing:-1px;color:#fff">NURU</div><div class="b" style="color:rgba(255,255,255,.85)">Understand your money. In your language.</div></div>
   </div>
-  <div class="col center g8" style="padding-bottom:56px"><div class="xs" style="color:rgba(255,255,255,.7)">In partnership with</div><div class="h4" style="color:#fff;letter-spacing:2px">ZENITH BANK · ZECATHON 6.0</div></div>`, { statusLight: true, bg: 'linear-gradient(160deg,#E30613 0%,#A3000D 70%,#6B0008 100%)' });
+  <div class="col center g8" style="padding-bottom:56px"><div class="xs" style="color:rgba(255,255,255,.7)">In partnership with</div><div class="h4" style="color:#fff;letter-spacing:2px">PARTNER BANK</div></div>`, { statusLight: true, bg: 'linear-gradient(160deg,#E30613 0%,#A3000D 70%,#6B0008 100%)' });
 
 const onboard = (n, title, body, art) => mobile(`0${n + 1} Onboarding ${n}`, th, `
   <div class="row between px20" style="height:52px">${logo(28)}<span class="s w6 t2">Skip</span></div>

@@ -86,7 +86,7 @@ const security = mobile('05 Security', th, `
 const privacy = mobile('06 Privacy and data', th, `
   ${topbar('Privacy and data')}
   <div class="col g12 px20" style="margin-top:8px">
-    <div class="soft row g10" style="background:var(--green50)">${icon('lock', 18, 'var(--green)')}<span class="xs t2 grow">Your chats with NURU are encrypted and only you can read them. Zenith staff cannot see them.</span></div>
+    <div class="soft row g10" style="background:var(--green50)">${icon('lock', 18, 'var(--green)')}<span class="xs t2 grow">Your chats with NURU are encrypted and only you can read them. Bank staff cannot see them.</span></div>
     ${label('NURU AI')}
     <div class="card col g12">
       <div class="row g12"><div class="col g4 grow"><span class="s w6">Save chat history</span><span class="xs mu">Kept for 90 days, then deleted</span></div>${sw(1)}</div>
@@ -103,8 +103,8 @@ const privacy = mobile('06 Privacy and data', th, `
 const linked = mobile('07 Linked accounts', th, `
   ${topbar('Linked accounts', { right: `<div class="ib">${icon('plus')}</div>` })}
   <div class="col g12 px20" style="margin-top:8px">
-    ${[['Z', '#E30613', 'Zenith Bank', 'Savings •••• 4417', 'Main', 'green', 'Synced just now'], ['O', '#1DCF9F', 'OPay (sandbox)', 'Wallet •••• 2290', 'Demo', 'blue', 'Synced 4 min ago'], ['K', '#40196D', 'Kuda', 'Current •••• 7781', 'Read only', 'gray', 'Synced 1 hr ago']].map(([l, c, n, a, b, tone, s]) => `<div class="card col g12" style="padding:14px"><div class="row g12"><div class="mark" style="background:${c};width:40px;height:40px;font-size:18px;border-radius:12px">${l}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${a}</span></div><span class="badge ${tone}">${b}</span></div><div class="row between"><span class="xs t2">${icon('refresh', 12, 'var(--muted)')} ${s}</span><span class="xs rd w6">Disconnect</span></div></div>`).join('')}
-    <div class="soft row g10">${icon('info', 18, 'var(--blue)')}<span class="xs t2 grow">Judges can link the OPay sandbox with any phone number and code 123456.</span></div>
+    ${[['P', '#E30613', 'Partner Bank', 'Savings •••• 4417', 'Main', 'green', 'Synced just now'], ['O', '#1DCF9F', 'OPay (sandbox)', 'Wallet •••• 2290', 'Demo', 'blue', 'Synced 4 min ago'], ['K', '#40196D', 'Kuda', 'Current •••• 7781', 'Read only', 'gray', 'Synced 1 hr ago']].map(([l, c, n, a, b, tone, s]) => `<div class="card col g12" style="padding:14px"><div class="row g12"><div class="mark" style="background:${c};width:40px;height:40px;font-size:18px;border-radius:12px">${l}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${a}</span></div><span class="badge ${tone}">${b}</span></div><div class="row between"><span class="xs t2">${icon('refresh', 12, 'var(--muted)')} ${s}</span><span class="xs rd w6">Disconnect</span></div></div>`).join('')}
+    <div class="soft row g10">${icon('info', 18, 'var(--blue)')}<span class="xs t2 grow">You can link the OPay sandbox with any phone number and code 123456.</span></div>
   </div>
   ${bottom('<div class="btn pri grow">' + icon('plus', 18, '#fff') + ' Link another account</div>')}`);
 
@@ -126,7 +126,7 @@ const help = mobile('09 Help and support', th, `
   <div class="col g12 px20" style="margin-top:8px">
     <div class="input" style="background:var(--surface);border-color:transparent">${icon('search', 18, 'var(--muted)')}<span class="mu grow">Search help</span></div>
     <div class="row g12">
-      ${[['message', 'Chat with us', 'Replies in minutes'], ['phone', 'Call 0700 ZENITH', '24 hours']].map(([ic, t, s]) => `<div class="card col g8 grow" style="padding:14px"><div class="ic red" style="width:36px;height:36px;border-radius:11px">${icon(ic, 17)}</div><span class="s w6">${t}</span><span class="xs mu">${s}</span></div>`).join('')}
+      ${[['message', 'Chat with us', 'Replies in minutes'], ['phone', 'Call your bank', '24 hours']].map(([ic, t, s]) => `<div class="card col g8 grow" style="padding:14px"><div class="ic red" style="width:36px;height:36px;border-radius:11px">${icon(ic, 17)}</div><span class="s w6">${t}</span><span class="xs mu">${s}</span></div>`).join('')}
     </div>
     ${label('POPULAR QUESTIONS')}
     ${['A transfer failed but I was debited', 'How do I reset my transaction PIN?', 'Why was my transfer held for a face check?', 'How does NURU keep my chats private?', 'How do I link an OPay account?'].map((t) => `<div class="row g12" style="padding:10px 0;border-bottom:1px solid var(--border)"><span class="s grow">${t}</span>${chev}</div>`).join('')}
@@ -138,7 +138,7 @@ const msg = (who, t, time) => who === 'me'
   ? `<div class="col g4" style="align-items:flex-end"><div class="bubble me">${t}</div><span class="xs mu">${time}</span></div>`
   : `<div class="col g4"><div class="bubble ai">${t}</div><span class="xs mu">${time}</span></div>`;
 const support = mobile('10 Customer service chat', th, `
-  <div class="row g12 px20" style="height:56px;flex:none"><div class="ib">${icon('chevl')}</div><div class="av" style="width:36px;height:36px;font-size:13px;background:#1D4ED8">TB</div><div class="col g4 grow"><span class="s w6">Tunde B. · Zenith support</span><span class="xs gr w6">Online</span></div><div class="ib">${icon('phone')}</div></div>
+  <div class="row g12 px20" style="height:56px;flex:none"><div class="ib">${icon('chevl')}</div><div class="av" style="width:36px;height:36px;font-size:13px;background:#1D4ED8">TB</div><div class="col g4 grow"><span class="s w6">Tunde B. · Customer support</span><span class="xs gr w6">Online</span></div><div class="ib">${icon('phone')}</div></div>
   <div class="col g12 px20" style="margin-top:8px">
     <div class="row center"><span class="badge gray">${icon('sparkles', 11)} NURU passed your chat to a person</span></div>
     ${msg('me', 'I sent ₦25,000 to my brother yesterday. It left my account but he has not received it.', '10:14 am')}

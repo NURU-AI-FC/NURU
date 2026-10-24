@@ -5,7 +5,7 @@ const navItems = [['grid', 'Overview'], ['users', 'Segments'], ['user', 'Custome
 
 // staff console sidebar: same shape as the customer app, with a bank badge instead of chats
 const sidebar = (active) => `<div class="col" style="width:256px;height:900px;flex:none;background:var(--surface);border-right:1px solid var(--border);padding:16px 14px">
-  <div class="row g10" style="padding:0 6px"><div class="mark" style="width:32px;height:32px;font-size:18px">N</div><div class="col g4"><span class="s w7">NURU Console</span><span class="xs mu">Zenith Bank · staff</span></div></div>
+  <div class="row g10" style="padding:0 6px"><div class="mark" style="width:32px;height:32px;font-size:18px">N</div><div class="col g4"><span class="s w7">NURU Console</span><span class="xs mu">Partner Bank · staff</span></div></div>
   <div class="col" style="margin-top:22px;gap:2px">${navItems.map(([ic, t]) => `<div class="row g12" style="height:40px;padding:0 10px;border-radius:10px;font-size:14px;font-weight:${t === active ? 600 : 500};${t === active ? 'background:var(--red50);color:var(--red)' : 'color:var(--text2)'}">${icon(ic, 18)}<span>${t}</span></div>`).join('')}</div>
   <div class="soft col g6" style="margin-top:22px"><div class="row g8">${icon('lock', 15, 'var(--green)')}<span class="xs w6">Privacy mode on</span></div><span class="xs t2">Names and account numbers are masked. Only customers who opted in appear.</span></div>
   <div class="grow"></div>
@@ -69,7 +69,7 @@ const c360Body = `
       <div class="row g12"><div class="av" style="width:48px;height:48px;font-size:16px">A•</div><div class="col g4"><span class="h4">Customer #ZB-48•••17</span><span class="xs mu">Lagos · joined 2019</span></div></div>
       <div class="row g8"><span class="badge green">${icon('check', 11)} Consent given</span><span class="badge gray">Tier 2</span></div>
       <div class="div"></div>
-      ${[['Products', 'Savings, debit card'], ['Linked accounts', 'Zenith, OPay'], ['Uses NURU', '5 times a week'], ['Preferred language', 'Yorùbá, voice']].map(([l, v]) => `<div class="row between"><span class="s t2">${l}</span><span class="s w6">${v}</span></div>`).join('')}
+      ${[['Products', 'Savings, debit card'], ['Linked accounts', 'Partner Bank, OPay'], ['Uses NURU', '5 times a week'], ['Preferred language', 'Yorùbá, voice']].map(([l, v]) => `<div class="row between"><span class="s t2">${l}</span><span class="s w6">${v}</span></div>`).join('')}
       <div class="soft col g6"><div class="row g8">${icon('eyeoff', 15, 'var(--muted)')}<span class="xs w6">What staff cannot see</span></div><span class="xs t2">Chat messages, PIN, face data and full account numbers are never shown here.</span></div>
     </div>
     <div class="col g16 grow">

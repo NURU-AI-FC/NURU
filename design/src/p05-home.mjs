@@ -61,12 +61,12 @@ const accounts = mobile('04 Accounts', th, `
   ${topbar('Connected accounts', { right: `<div class="ib">${icon('plus')}</div>` })}
   <div class="col g16 px20" style="margin-top:8px">
     <div class="card col g6"><span class="xs mu">Net worth</span><span class="h1 num">${naira(2163900)}</span><span class="xs gr w6">+₦184,200 this month</span></div>
-    ${[['#E30613', 'Z', 'Zenith Bank', 'Savings •••• 4821', naira(812450), 'Synced 2 min ago'], ['#40196D', 'K', 'Kuda', 'Spend •••• 1187', naira(96200), 'Synced 1 hr ago'], ['#1DCF9F', 'O', 'Opay wallet', 'Wallet •••• 3302', naira(41250), 'Synced today'], ['#0B3B7A', 'P', 'Stanbic Pension', 'RSA •••• 7710', naira(1214000), 'Updated monthly']].map(([c, l, n, s, v, w]) => `<div class="card row g12" style="padding:14px">${bankTile(c, l)}<div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${s}</span></div><div class="col g4" style="align-items:flex-end"><span class="s w6 num">${v}</span><span class="xs mu">${w}</span></div></div>`).join('')}
+    ${[['#E30613', 'P', 'Partner Bank', 'Savings •••• 4821', naira(812450), 'Synced 2 min ago'], ['#40196D', 'K', 'Kuda', 'Spend •••• 1187', naira(96200), 'Synced 1 hr ago'], ['#1DCF9F', 'O', 'Opay wallet', 'Wallet •••• 3302', naira(41250), 'Synced today'], ['#0B3B7A', 'P', 'Stanbic Pension', 'RSA •••• 7710', naira(1214000), 'Updated monthly']].map(([c, l, n, s, v, w]) => `<div class="card row g12" style="padding:14px">${bankTile(c, l)}<div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${s}</span></div><div class="col g4" style="align-items:flex-end"><span class="s w6 num">${v}</span><span class="xs mu">${w}</span></div></div>`).join('')}
     <div class="btn out">${icon('link', 18)} Link another account</div>
   </div>`);
 
 const accountDetail = mobile('05 Account detail', th, `
-  ${topbar('Zenith Savings', { right: `<div class="ib">${icon('more')}</div>` })}
+  ${topbar('Main Savings', { right: `<div class="ib">${icon('more')}</div>` })}
   <div class="col g16 px20" style="margin-top:8px">
     <div class="card col g10">
       <div class="row g10">${bankTile('#E30613', 'Z', 36)}<div class="col g4"><span class="s w6">Savings •••• 4821</span><span class="xs mu">Adaeze C. Okafor</span></div></div>
@@ -109,7 +109,7 @@ const txnDetail = mobile('07 Transaction detail', th, `
     <span class="badge green">${icon('check', 11)} Successful</span>
   </div>
   <div class="col g12 px20" style="margin-top:18px">
-    <div class="card col g10">${[['Date', 'Fri 18 Oct, 7:42 pm'], ['Account', 'Zenith Savings •••• 4821'], ['Channel', 'POS · Lekki Phase 1'], ['Reference', 'ZEN2410181942XQ']].map(([k, v]) => `<div class="row between"><span class="s t2">${k}</span><span class="s w6">${v}</span></div>`).join('<div class="div"></div>')}</div>
+    <div class="card col g10">${[['Date', 'Fri 18 Oct, 7:42 pm'], ['Account', 'Main Savings •••• 4821'], ['Channel', 'POS · Lekki Phase 1'], ['Reference', 'ZEN2410181942XQ']].map(([k, v]) => `<div class="row between"><span class="s t2">${k}</span><span class="s w6">${v}</span></div>`).join('<div class="div"></div>')}</div>
     <div class="card row g12" style="padding:14px"><div class="col g4 grow"><span class="xs mu">Category</span><span class="s w6">Food & dining</span></div><span class="chip">${icon('edit', 14)} Change</span></div>
     <div class="soft row g10" style="background:var(--red50)">${icon('sparkles', 18, 'var(--red)')}<span class="xs t2">Your 4th fast-food purchase this week. Food is ${naira(4200)} over your weekly budget.</span></div>
     <div class="row g10"><div class="btn sec grow">${icon('receipt', 18)} Receipt</div><div class="btn sec grow">${icon('undo', 18)} Dispute</div></div>
@@ -119,7 +119,7 @@ const notifs = mobile('08 Notifications', th, `
   ${topbar('Notifications', { right: '<span class="s rd w6">Mark all read</span>' })}
   <div class="col px20 g4">
     <div class="row g8" style="margin-bottom:8px">${['All', 'Insights', 'Security', 'Bills'].map((t, i) => `<span class="chip ${i === 0 ? 'on' : ''}">${t}</span>`).join('')}</div>
-    ${[['alert', 'red', 'Unusual spend spotted', '₦85,000 at an electronics store is 4× your normal. Was this you?', '5 min', 1], ['bell', 'amber', 'DStv renews tomorrow', '₦15,700 will be debited from Zenith Savings.', '1 hr', 1], ['sparkles', 'red', 'Your October report is ready', 'You saved 18% of income. See what changed.', '3 hr', 0], ['shieldcheck', 'green', 'New sign-in on MacBook', 'Chrome · Lagos. Not you? Secure your account.', 'Yesterday', 0], ['calendar', 'blue', 'Investor meeting at 10:00', 'Prep pack ready in Business › Investor prep.', 'Yesterday', 0], ['trendup', 'green', 'Goal milestone', 'Rent fund is 75% complete. ₦300,000 to go.', '2 days', 0]].map(([i, tone, t, s, w, unread]) => `<div class="row g12" style="padding:12px 0;align-items:flex-start"><div class="ic ${tone}" style="width:40px;height:40px;border-radius:12px">${icon(i, 19)}</div><div class="col g4 grow"><div class="row between"><span class="s w6">${t}</span><span class="xs mu">${w}</span></div><span class="xs t2">${s}</span></div>${unread ? '<i style="width:8px;height:8px;border-radius:9px;background:var(--red);display:block;margin-top:6px;flex:none"></i>' : ''}</div>`).join('')}
+    ${[['alert', 'red', 'Unusual spend spotted', '₦85,000 at an electronics store is 4× your normal. Was this you?', '5 min', 1], ['bell', 'amber', 'DStv renews tomorrow', '₦15,700 will be debited from your bank Savings.', '1 hr', 1], ['sparkles', 'red', 'Your October report is ready', 'You saved 18% of income. See what changed.', '3 hr', 0], ['shieldcheck', 'green', 'New sign-in on MacBook', 'Chrome · Lagos. Not you? Secure your account.', 'Yesterday', 0], ['calendar', 'blue', 'Investor meeting at 10:00', 'Prep pack ready in Business › Investor prep.', 'Yesterday', 0], ['trendup', 'green', 'Goal milestone', 'Rent fund is 75% complete. ₦300,000 to go.', '2 days', 0]].map(([i, tone, t, s, w, unread]) => `<div class="row g12" style="padding:12px 0;align-items:flex-start"><div class="ic ${tone}" style="width:40px;height:40px;border-radius:12px">${icon(i, 19)}</div><div class="col g4 grow"><div class="row between"><span class="s w6">${t}</span><span class="xs mu">${w}</span></div><span class="xs t2">${s}</span></div>${unread ? '<i style="width:8px;height:8px;border-radius:9px;background:var(--red);display:block;margin-top:6px;flex:none"></i>' : ''}</div>`).join('')}
   </div>`);
 
 const search = mobile('09 Search', th, `

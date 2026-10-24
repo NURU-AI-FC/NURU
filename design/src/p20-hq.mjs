@@ -1,7 +1,7 @@
 import { icon, web, naira, line, bars, donut } from './lib.mjs';
 
 // NURU HQ: the internal dashboard for the CEO and the NURU team, plus the
-// access screens the Zenith console needs (staff sign in, team and roles).
+// access screens the Partner Bank console needs (staff sign in, team and roles).
 const th = 'light';
 
 const hqNav = [['grid', 'Overview'], ['cpu', 'Platform health'], ['headphones', 'Support and reports'], ['mail', 'Emails and nudges'], ['users', 'Team and access']];
@@ -15,7 +15,7 @@ const hqSide = (active) => `<div class="col" style="width:256px;height:900px;fle
 
 const csNav = [['grid', 'Overview'], ['users', 'Segments'], ['user', 'Customer view'], ['megaphone', 'Campaigns'], ['shield', 'Risk and AI safety'], ['database', 'Data and consent'], ['key', 'Team and access']];
 const csSide = (active) => `<div class="col" style="width:256px;height:900px;flex:none;background:var(--surface);border-right:1px solid var(--border);padding:16px 14px">
-  <div class="row g10" style="padding:0 6px"><div class="mark" style="width:32px;height:32px;font-size:18px">N</div><div class="col g4"><span class="s w7">NURU Console</span><span class="xs mu">Zenith Bank · staff</span></div></div>
+  <div class="row g10" style="padding:0 6px"><div class="mark" style="width:32px;height:32px;font-size:18px">N</div><div class="col g4"><span class="s w7">NURU Console</span><span class="xs mu">Partner Bank · staff</span></div></div>
   <div class="col" style="margin-top:22px;gap:2px">${csNav.map(([ic, t]) => `<div class="row g12" style="height:40px;padding:0 10px;border-radius:10px;font-size:14px;font-weight:${t === active ? 600 : 500};${t === active ? 'background:var(--red50);color:var(--red)' : 'color:var(--text2)'}">${icon(ic, 18)}<span>${t}</span></div>`).join('')}</div>
   <div class="grow"></div>
   <div class="row g10" style="padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--bg)"><div class="av" style="width:34px;height:34px;font-size:12px;background:#141416">AO</div><div class="col g4 grow"><span class="s w6">Amaka Obi</span><span class="xs mu">Console admin</span></div>${icon('logout', 18, 'var(--muted)')}</div>
@@ -51,7 +51,7 @@ const overviewBody = `
     <div class="card col g10" style="flex:1"><div class="row between"><span class="h4">Needs your attention</span>${badge('3 open', 'red')}</div>
       ${[['alert', 'red', 'AI fallback used for 4% of replies', 'Claude timed out twice at 14:10', 'Platform health'], ['headphones', 'amber', '6 reports waiting over 24 hours', 'Oldest: charged twice, Bolt', 'Support'], ['mail', 'blue', 'Weekly recap open rate fell to 41%', 'Down from 52% last week', 'Emails']].map(([ic, t, h, s, a]) => `<div class="row g12"><div class="ic ${t}" style="width:36px;height:36px;border-radius:10px">${icon(ic, 17)}</div><div class="col g4 grow"><span class="s w6">${h}</span><span class="xs mu">${s}</span></div><span class="s rd w6">${a}</span></div>`).join('')}
     </div>
-    <div class="card col g10" style="flex:1"><span class="h4">Zenith pilot goals</span>
+    <div class="card col g10" style="flex:1"><span class="h4">Pilot goals</span>
       ${[['Weekly active customers', '806 of 1,000', 81], ['Insights acted on', '37% of 40%', 92], ['Questions in local languages', '38% of 30%', 100], ['Average reply time', '1.8s of 2s', 100]].map(([l, v, p]) => `<div class="col g6"><div class="row between"><span class="s">${l}</span><span class="xs mu">${v}</span></div>${bar(p, p >= 100 ? 'var(--green)' : 'var(--red)')}</div>`).join('')}
     </div>
   </div>`;
@@ -129,35 +129,35 @@ const teamBody = `
   </div>`;
 const teamHq = shell('05 HQ team and access', hqSide('Team and access'), 'Team and access', 'Who can see what inside NURU HQ', teamBody, '');
 
-// 06 Console staff sign in (Zenith)
+// 06 Console staff sign in (Partner Bank)
 const signIn = web('06 Console staff sign in', th, `<div class="row" style="height:900px;align-items:stretch">
   <div class="col g24" style="width:620px;flex:none;padding:56px 72px;background:#141416;color:#fff">
     <div class="row g10"><div class="mark" style="width:36px;height:36px;font-size:20px">N</div><span class="h3" style="color:#fff">NURU Console</span></div>
     <div class="grow"></div>
-    <span style="font-size:40px;line-height:46px;font-weight:800;letter-spacing:-1.4px">Customer insights for Zenith Bank staff</span>
+    <span style="font-size:40px;line-height:46px;font-weight:800;letter-spacing:-1.4px">Customer insights for bank staff</span>
     <span class="b" style="color:#B3B3BD">Anonymised segments, campaigns and risk signals from customers who chose to share. No names, chats or full account numbers.</span>
-    ${[['shieldcheck', 'Zenith work accounts only'], ['key', 'Role based access, approved by a console admin'], ['eye', 'Every view and export is logged']].map(([ic, t]) => `<div class="row g10">${icon(ic, 18, '#4ADE80')}<span class="s" style="color:#E6E6EA">${t}</span></div>`).join('')}
+    ${[['shieldcheck', 'Bank work accounts only'], ['key', 'Role based access, approved by a console admin'], ['eye', 'Every view and export is logged']].map(([ic, t]) => `<div class="row g10">${icon(ic, 18, '#4ADE80')}<span class="s" style="color:#E6E6EA">${t}</span></div>`).join('')}
   </div>
   <div class="col center grow" style="background:var(--bg)">
     <div class="col g16" style="width:400px">
-      <span class="h1">Staff sign in</span><span class="s t2">Use your Zenith Bank work account.</span>
-      <div class="btn pri" style="height:52px">${icon('building', 18, '#fff')} Continue with Zenith SSO</div>
+      <span class="h1">Staff sign in</span><span class="s t2">Use your bank work account.</span>
+      <div class="btn pri" style="height:52px">${icon('building', 18, '#fff')} Continue with bank SSO</div>
       <div class="row g10"><div class="div grow"></div><span class="xs mu">or</span><div class="div grow"></div></div>
-      <div class="col g6"><span class="s w6">Work email</span><div class="input"><span class="s">amaka.obi@zenithbank.com</span></div></div>
+      <div class="col g6"><span class="s w6">Work email</span><div class="input"><span class="s">amaka.obi@bank.example</span></div></div>
       <div class="btn sec" style="height:52px">${icon('fingerprint', 18)} Sign in with passkey</div>
       <div class="soft row g10">${icon('info', 16, 'var(--blue)')}<span class="xs t2 grow">No access yet? Ask your console admin to invite you. Personal emails cannot sign in.</span></div>
-      <span class="xs mu">Demo for judges: staff@nuru.app · Zecathon-2026 · code 000000</span>
+      <span class="xs mu">Demo account: staff@nuru.app · Nuru-Demo-2026 · code 000000</span>
     </div>
   </div>
 </div>`, 'height:900px');
 
-// 07 Console team and access (Zenith admin)
-const staff = [['Amaka Obi', 'amaka.obi@zenithbank.com', 'Console admin', 'Active'], ['Tunde Bakare', 'tunde.bakare@zenithbank.com', 'Insights analyst', 'Active'], ['Ngozi Eze', 'ngozi.eze@zenithbank.com', 'Campaign manager', 'Active'], ['Ibrahim Musa', 'ibrahim.musa@zenithbank.com', 'Risk officer', 'Active'], ['Funke Ade', 'funke.ade@zenithbank.com', 'Viewer', 'Invited']];
+// 07 Console team and access (Partner Bank admin)
+const staff = [['Amaka Obi', 'amaka.obi@bank.example', 'Console admin', 'Active'], ['Tunde Bakare', 'tunde.bakare@bank.example', 'Insights analyst', 'Active'], ['Ngozi Eze', 'ngozi.eze@bank.example', 'Campaign manager', 'Active'], ['Ibrahim Musa', 'ibrahim.musa@bank.example', 'Risk officer', 'Active'], ['Funke Ade', 'funke.ade@bank.example', 'Viewer', 'Invited']];
 const csRoles = [['Viewer', 'Overview and segments'], ['Insights analyst', 'Adds customer view and CSV export'], ['Campaign manager', 'Creates campaigns, sent for approval'], ['Risk officer', 'Risk, AI safety and fraud signals'], ['Console admin', 'Invites staff and approves campaigns']];
 const csTeamBody = `
   <div class="row g16" style="align-items:stretch">
     <div class="card col" style="flex:1.6;padding:0">
-      <div class="row between" style="padding:16px 18px 6px"><div class="col g4"><span class="h4">Zenith staff with access</span><span class="xs mu">Only @zenithbank.com accounts can be invited</span></div><div class="btn pri sm">${icon('plus', 16, '#fff')} Invite staff</div></div>
+      <div class="row between" style="padding:16px 18px 6px"><div class="col g4"><span class="h4">Bank staff with access</span><span class="xs mu">Only @bank.example accounts can be invited</span></div><div class="btn pri sm">${icon('plus', 16, '#fff')} Invite staff</div></div>
       <table class="tbl"><tr><th>Name</th><th>Work email</th><th>Role</th><th>Status</th></tr>
       ${staff.map(([n, e, r, s]) => `<tr><td class="w6">${n}</td><td class="t2">${e}</td><td>${badge(r, 'gray')}</td><td>${badge(s, s === 'Active' ? 'green' : 'amber')}</td></tr>`).join('')}</table>
     </div>
@@ -173,6 +173,6 @@ const csTeamBody = `
       ${[['19:20', 'Tunde Bakare exported segment “Japa savers”'], ['18:02', 'Ngozi Eze sent a campaign for approval'], ['16:45', 'Amaka Obi invited Funke Ade as Viewer'], ['15:10', 'Ibrahim Musa opened the AI safety log']].map(([t, s]) => `<div class="row g12"><span class="xs mu num" style="width:44px">${t}</span><span class="s">${s}</span></div>`).join('')}
     </div>
   </div>`;
-const csTeam = shell('07 Console team and access', csSide('Team and access'), 'Team and access', 'Who at Zenith can use the console', csTeamBody);
+const csTeam = shell('07 Console team and access', csSide('Team and access'), 'Team and access', 'Who at the bank can use the console', csTeamBody);
 
 export default [overview, health, support, email, teamHq, signIn, csTeam];

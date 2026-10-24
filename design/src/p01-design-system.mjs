@@ -4,12 +4,12 @@ const swatch = (name, hex, label) => `<div class="col g8" style="width:150px"><d
 
 const foundations = (th) => {
   const t = tokens[th];
-  const brand = [['Zenith Red', t.red, 'Primary'], ['Red 600', t.red600, 'Pressed'], ['Red 100', t.red100, 'Tint'], ['Red 50', t.red50, 'Soft bg']];
+  const brand = [['NURU Red', t.red, 'Primary'], ['Red 600', t.red600, 'Pressed'], ['Red 100', t.red100, 'Tint'], ['Red 50', t.red50, 'Soft bg']];
   const neutral = [['Background', t.bg, 'bg'], ['Surface', t.surface, 'surface'], ['Surface 2', t.surface2, 'surface2'], ['Border', t.border, 'border'], ['Text', t.text, 'text'], ['Text 2', t.text2, 'text2'], ['Muted', t.muted, 'muted']];
   const status = [['Success', t.green, 'Inflow'], ['Warning', t.amber, 'Due soon'], ['Info', t.blue, 'Tips']];
   return web('DS / Foundations', th, `
   <div class="col g40" style="padding:64px">
-    <div class="row between"><div class="col g8">${logo(44)}<div class="h1" style="font-size:44px;line-height:52px">Design System</div><div class="b t2">Zenith red and white. Light and dark. Inter type. 8-pt spacing. Built for trust, clarity and speed.</div></div><div class="badge red" style="height:30px;font-size:13px;padding:0 14px">${th === 'light' ? 'Light theme' : 'Dark theme'}</div></div>
+    <div class="row between"><div class="col g8">${logo(44)}<div class="h1" style="font-size:44px;line-height:52px">Design System</div><div class="b t2">NURU red and white. Light and dark. Inter type. 8-pt spacing. Built for trust, clarity and speed.</div></div><div class="badge red" style="height:30px;font-size:13px;padding:0 14px">${th === 'light' ? 'Light theme' : 'Dark theme'}</div></div>
     <div class="col g16"><div class="h3">Brand</div><div class="row g20">${brand.map(b => swatch(...b)).join('')}</div></div>
     <div class="col g16"><div class="h3">Neutrals</div><div class="row g20 wrap">${neutral.map(b => swatch(...b)).join('')}</div></div>
     <div class="row g40">

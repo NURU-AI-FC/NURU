@@ -17,7 +17,7 @@ const draftCard = (status = '') => `<div class="card col g12" style="margin-left
   <div class="row between"><span class="xs mu w6">TRANSFER DRAFT</span><span class="badge amber">Sandbox</span></div>
   <div class="row g12"><div class="av" style="width:40px;height:40px;background:#1D4ED8">TB</div><div class="col g4 grow"><span class="s w6">Tunde Bakare</span><span class="xs mu">GTBank •••• 6621 · name checked</span></div></div>
   <div class="row between"><span class="s t2">Amount</span><span class="h3 num">${naira(25000)}</span></div>
-  <div class="row between"><span class="s t2">From</span><span class="s w6">Zenith Savings •••• 4417</span></div>
+  <div class="row between"><span class="s t2">From</span><span class="s w6">Main Savings •••• 4417</span></div>
   <div class="row between"><span class="s t2">Balance after</span><span class="s w6 num">${naira(3485517)}</span></div>
   ${status || `<div class="row g8"><div class="btn pri sm grow">Confirm and send</div><div class="btn sm">Edit</div></div>`}
 </div>`;
@@ -25,7 +25,7 @@ const draftCard = (status = '') => `<div class="card col g12" style="margin-left
 const ask = mobile('01 Ask to send money', th, `
   ${head()}
   ${thread(`${me('Send ₦25,000 to Tunde for the generator repair')}
-    ${ai(`Here is the transfer. Tunde Bakare is in your recent payees. After this you will still have ${naira(3485517)} in Zenith Savings, and your DStv renewal on 20 Oct is covered.`)}
+    ${ai(`Here is the transfer. Tunde Bakare is in your recent payees. After this you will still have ${naira(3485517)} in Main Savings, and your DStv renewal on 20 Oct is covered.`)}
     ${draftCard()}
     <div class="row g6 xs mu" style="padding-left:36px">${icon('shieldcheck', 14)} NURU never sends money without your PIN and face check</div>`)}
   ${composer}`);
@@ -62,7 +62,7 @@ const enrol = mobile('04 Enrol face', th, `
       <div style="position:absolute;left:20px;right:20px;top:140px;height:3px;background:var(--red);box-shadow:0 0 18px var(--red)"></div>
     </div>
     <span class="h3" style="text-align:center">Hold still and look at the camera</span>
-    <span class="s t2" style="text-align:center">We save a face template, not a photo, encrypted on Zenith servers. It is only used to confirm it is you before money moves.</span>
+    <span class="s t2" style="text-align:center">We save a face template, not a photo, encrypted on secure servers. It is only used to confirm it is you before money moves.</span>
     <div class="row g8">${['Look ahead', 'Turn left', 'Blink'].map((t, i) => `<span class="chip ${i === 0 ? 'on' : ''}">${i === 0 ? icon('check', 14) : ''}${t}</span>`).join('')}</div>
   </div>`);
 
@@ -95,6 +95,6 @@ const locked = mobile('07 Face did not match', th, `
     </div>
     <div class="soft col g6"><span class="row between s"><span class="t2">Tries left</span><b>2 of 3</b></span><span class="row between s"><span class="t2">Logged as</span><b>Security event</b></span></div>
     <div class="btn pri" style="height:50px">Try again</div>
-    <div class="btn" style="height:50px">Call Zenith support</div>`, 500)}`);
+    <div class="btn" style="height:50px">Contact bank support</div>`, 500)}`);
 
 export default [ask, createPin, confirmPin, enrol, verify, sent, locked];

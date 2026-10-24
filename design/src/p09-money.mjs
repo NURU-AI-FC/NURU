@@ -15,7 +15,7 @@ const loans = mobile('01 Loans overview', th, `
       <div class="bar" style="height:6px;background:rgba(255,255,255,.25)"><i style="width:38%;background:#fff"></i></div>
       <span class="xs" style="opacity:.85">38% repaid · next payment ${naira(52300)} on 25 Oct</span>
     </div>
-    ${[['Carbon personal loan', 'Carbon', 312400, 52300, '25 Oct', 46, 'amber'], ['Zenith salary advance', 'Zenith', 180000, 60000, '31 Oct', 33, 'red'], ['Equipment lease', 'Lendigo', 120000, 20000, '5 Nov', 25, 'blue']].map(([n, l, b, p, d, pct, t]) => `<div class="card col g10" style="padding:14px"><div class="row g12"><div class="ic ${t}" style="width:40px;height:40px;border-radius:12px">${icon('landmark', 18)}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${l} · ${naira(p)} due ${d}</span></div><span class="s w6 num">${naira(b)}</span></div>${prog(pct, 'var(--green)')}</div>`).join('')}
+    ${[['Carbon personal loan', 'Carbon', 312400, 52300, '25 Oct', 46, 'amber'], ['Salary advance', 'Partner Bank', 180000, 60000, '31 Oct', 33, 'red'], ['Equipment lease', 'Lendigo', 120000, 20000, '5 Nov', 25, 'blue']].map(([n, l, b, p, d, pct, t]) => `<div class="card col g10" style="padding:14px"><div class="row g12"><div class="ic ${t}" style="width:40px;height:40px;border-radius:12px">${icon('landmark', 18)}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${l} · ${naira(p)} due ${d}</span></div><span class="s w6 num">${naira(b)}</span></div>${prog(pct, 'var(--green)')}</div>`).join('')}
     <div class="soft row g10">${icon('sparkles', 18, 'var(--red)')}<span class="xs t2 grow">Paying Carbon first saves ${naira(14200)} in interest because it has the highest rate (4.5% monthly).</span></div>
   </div>`);
 
@@ -42,7 +42,7 @@ const loanOffer = mobile('03 Loan eligibility', th, `
     <div class="card col center g8" style="text-align:center">
       <span class="xs mu">You can borrow up to</span>
       <span class="h1 num">${naira(750000)}</span>
-      <span class="badge green">${icon('check', 11)} Based on 6 months of salary into Zenith</span>
+      <span class="badge green">${icon('check', 11)} Based on 6 months of salary into your account</span>
     </div>
     <div class="field"><span class="label">How much do you need?</span><div class="input focus"><span class="num w6">${naira(300000)}</span></div></div>
     <span class="label">Pay back over</span>
@@ -72,12 +72,12 @@ const invest = mobile('05 Investments', th, `
       <div class="row between"><div class="col g4"><span class="xs mu">Portfolio value</span><span class="h1 num">${naira(2184000)}</span></div><span class="badge green">${icon('up', 11)} 14.2% this year</span></div>
       ${line([1.62, 1.71, 1.78, 1.84, 1.95, 2.04, 2.18], { w: 316, h: 90, labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'], color: 'var(--green)' })}
     </div>
-    ${[['Zenith fixed deposit', '18% a year · matures 12 Jan', 1000000, '+₦61,200', 'landmark', 'red'], ['FGN savings bond', '16.4% · quarterly coupon', 500000, '+₦20,500', 'shield', 'blue'], ['Money market fund', 'Stanbic IBTC · 21.3%', 484000, '+₦44,100', 'trendup', 'green'], ['US stocks', 'Bamboo · $130', 200000, '+₦12,900', 'globe', 'amber']].map(([n, s, v, g, i, t]) => `<div class="row g12"><div class="ic ${t}" style="width:40px;height:40px;border-radius:12px">${icon(i, 18)}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${s}</span></div><div class="col g4" style="align-items:flex-end"><span class="s w6 num">${naira(v)}</span><span class="xs gr w6">${g}</span></div></div>`).join('')}
+    ${[['Fixed deposit', '18% a year · matures 12 Jan', 1000000, '+₦61,200', 'landmark', 'red'], ['FGN savings bond', '16.4% · quarterly coupon', 500000, '+₦20,500', 'shield', 'blue'], ['Money market fund', 'Stanbic IBTC · 21.3%', 484000, '+₦44,100', 'trendup', 'green'], ['US stocks', 'Bamboo · $130', 200000, '+₦12,900', 'globe', 'amber']].map(([n, s, v, g, i, t]) => `<div class="row g12"><div class="ic ${t}" style="width:40px;height:40px;border-radius:12px">${icon(i, 18)}</div><div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${s}</span></div><div class="col g4" style="align-items:flex-end"><span class="s w6 num">${naira(v)}</span><span class="xs gr w6">${g}</span></div></div>`).join('')}
     <div class="btn pri" style="margin-top:4px">${icon('plus', 18, '#fff')} Invest more</div>
   </div>`);
 
 const investDetail = mobile('06 Fixed deposit', th, `
-  ${topbar('Zenith fixed deposit')}
+  ${topbar('Fixed deposit')}
   <div class="col g14 px20" style="margin-top:8px;gap:14px">
     <div class="card col g12">
       <span class="xs mu">You will receive on 12 Jan 2027</span>

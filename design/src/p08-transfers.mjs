@@ -4,12 +4,12 @@ const th = 'light';
 const keypad = (extra = '') => `<div class="col g8" style="padding:0 24px">${[[1, 2, 3], [4, 5, 6], [7, 8, 9]].map(r => `<div class="row">${r.map(k => `<div class="key">${k}</div>`).join('')}</div>`).join('')}<div class="row"><div class="key">${extra}</div><div class="key">0</div><div class="key">${icon('chevl', 24)}</div></div></div>`;
 const av = (t, bg = 'var(--red)') => `<div class="av" style="background:${bg}">${t}</div>`;
 const row = (l, r, strong) => `<div class="row between"><span class="s t2">${l}</span><span class="s ${strong ? 'w6' : ''}">${r}</span></div>`;
-const people = [['TA', 'Tunde Adebayo', 'GTBank •••• 2290', '#141416'], ['MO', 'Mama (Ngozi O.)', 'Zenith •••• 7712', '#E30613'], ['KF', 'Kemi Foods Ltd', 'Zenith •••• 0094', '#1D4ED8'], ['IA', 'Ibrahim Abdullahi', 'Opay •••• 5521', '#15803D']];
+const people = [['TA', 'Tunde Adebayo', 'GTBank •••• 2290', '#141416'], ['MO', 'Mama (Ngozi O.)', 'Main •••• 7712', '#E30613'], ['KF', 'Kemi Foods Ltd', 'Main •••• 0094', '#1D4ED8'], ['IA', 'Ibrahim Abdullahi', 'Opay •••• 5521', '#15803D']];
 
 const hub = mobile('01 Pay hub', th, `
   ${topbar('Pay', { back: false, right: `<div class="ib">${icon('qr')}</div>` })}
   <div class="body" style="gap:18px">
-    <div class="soft row between" style="padding:14px 16px"><div class="col g4"><span class="xs mu">Zenith •••• 4821</span><span class="h3 num">${naira(284650)}</span></div><span class="chip">Change ${icon('chevd', 14)}</span></div>
+    <div class="soft row between" style="padding:14px 16px"><div class="col g4"><span class="xs mu">Main •••• 4821</span><span class="h3 num">${naira(284650)}</span></div><span class="chip">Change ${icon('chevd', 14)}</span></div>
     <div class="row between">${[['send', 'Send money'], ['zap', 'Pay bills'], ['phone', 'Airtime'], ['qr', 'Scan to pay']].map(([i, t]) => `<div class="col center g8" style="width:76px"><div class="ic red" style="width:56px;height:56px;border-radius:18px">${icon(i, 24)}</div><span class="xs w5" style="text-align:center">${t}</span></div>`).join('')}</div>
     <div class="sec-title"><span class="h4">Recent people</span><a>See all</a></div>
     <div class="row between">${people.map(([i, n, , c]) => `<div class="col center g6" style="width:72px">${av(i, c)}<span class="xs" style="text-align:center">${n.split(' ')[0]}</span></div>`).join('')}</div>
@@ -54,7 +54,7 @@ const review = mobile('04 Review transfer', th, `
       ${row('Amount', `<span class="h3 num">${naira(45000)}</span>`)}
       ${row('Fee', naira(10))}
       ${row('Note', 'Generator repair')}
-      ${row('From', 'Zenith •••• 4821')}
+      ${row('From', 'Main •••• 4821')}
       ${row('Arrives', 'Instantly')}
       <div class="div"></div>
       ${row('Total', `<span class="h4 num">${naira(45010)}</span>`, true)}
@@ -144,7 +144,7 @@ const qr = mobile('11 Scan to pay', th, `
     <div style="width:250px;height:250px;border-radius:28px;border:3px solid #fff;position:relative">
       <div style="position:absolute;left:16px;right:16px;top:120px;height:3px;background:var(--red);box-shadow:0 0 14px rgba(227,6,19,.8)"></div>
     </div>
-    <span class="s" style="color:#fff;margin-top:24px">Point at any NQR, Zenith or NURU code</span>
+    <span class="s" style="color:#fff;margin-top:24px">Point at any NQR or NURU code</span>
   </div>
   <div class="sheet" style="gap:12px">
     <div class="grab"></div>
@@ -166,7 +166,7 @@ const blocked = mobile('12 Suspicious transfer blocked', th, `
     <div class="div"></div>
     ${[['New account, created 2 days ago'], ['8× bigger than your usual transfer'], ['You were on a call while sending']].map(([t]) => `<div class="row g8">${icon('alert', 16, 'var(--red)')}<span class="s">${t}</span></div>`).join('')}
   </div>
-  <div class="soft row g10" style="margin:14px 20px 0">${icon('info', 18, 'var(--muted)')}<span class="xs t2 grow">Zenith staff will never ask you to move money to a "safe account".</span></div>
+  <div class="soft row g10" style="margin:14px 20px 0">${icon('info', 18, 'var(--muted)')}<span class="xs t2 grow">Bank staff will never ask you to move money to a "safe account".</span></div>
   <div class="col g10 px20" style="position:absolute;left:0;right:0;bottom:34px"><div class="btn pri">Cancel transfer</div><div class="btn ghost">I know this person, continue</div></div>`);
 
 const beneficiaries = mobile('13 Beneficiaries', th, `
@@ -174,7 +174,7 @@ const beneficiaries = mobile('13 Beneficiaries', th, `
   <div class="col g12 px20" style="margin-top:8px">
     <div class="input" style="height:44px">${icon('search', 18, 'var(--muted)')}<span class="ph">Search name or account</span></div>
     <div class="row g8"><span class="chip on">All</span><span class="chip">Family</span><span class="chip">Business</span><span class="chip">Vendors</span></div>
-    ${[...people, ['CO', 'Chidi Okeke', 'Access •••• 3310', '#7C3AED'], ['FS', 'Femi Solar Ltd', 'Zenith •••• 6620', '#B45309'], ['AO', 'Mr Okafor (Rent)', 'UBA •••• 1123', '#3F3F46']].map(([i, n, b, c], k) => `<div class="row g12" style="padding:4px 0">${av(i, c)}<div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${b}</span></div>${k < 2 ? icon('star', 18, 'var(--amber)') : icon('more', 18, 'var(--muted)')}</div>`).join('')}
+    ${[...people, ['CO', 'Chidi Okeke', 'Access •••• 3310', '#7C3AED'], ['FS', 'Femi Solar Ltd', 'Main •••• 6620', '#B45309'], ['AO', 'Mr Okafor (Rent)', 'UBA •••• 1123', '#3F3F46']].map(([i, n, b, c], k) => `<div class="row g12" style="padding:4px 0">${av(i, c)}<div class="col g4 grow"><span class="s w6">${n}</span><span class="xs mu">${b}</span></div>${k < 2 ? icon('star', 18, 'var(--amber)') : icon('more', 18, 'var(--muted)')}</div>`).join('')}
   </div>`);
 
 export default [hub, recipient, amount, review, pin, face, receipt, billsPay, airtime, scheduled, qr, blocked, beneficiaries];

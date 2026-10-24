@@ -22,7 +22,7 @@ const setup = mobile('01 Business setup', th, `
   <div class="px20" style="position:absolute;left:0;right:0;bottom:34px"><div class="btn pri">Continue</div></div>`);
 
 const dash = mobile('02 Business dashboard', th, `
-  <div class="row between px20" style="height:56px;flex:none"><div class="row g10"><div class="mark" style="background:#1D4ED8">K</div><div class="col g4" style="gap:0"><span class="h4">Kemi Foods Ltd</span><span class="xs mu">Business · Zenith •••• 0094</span></div></div><div class="ib">${icon('chevd')}</div></div>
+  <div class="row between px20" style="height:56px;flex:none"><div class="row g10"><div class="mark" style="background:#1D4ED8">K</div><div class="col g4" style="gap:0"><span class="h4">Kemi Foods Ltd</span><span class="xs mu">Business · Main •••• 0094</span></div></div><div class="ib">${icon('chevd')}</div></div>
   <div class="body" style="gap:14px">
     <div class="card col g10">
       <div class="row between"><div class="col g4"><span class="xs mu">Profit in October</span><span class="h1 num">${naira(684000)}</span></div><span class="badge green">${icon('up', 11)} 9% vs Sep</span></div>
@@ -53,7 +53,7 @@ const runPayroll = mobile('04 Run payroll', th, `
       ${row('Employer pension 10%', naira(49000))}
       ${row('NHF 2.5%', naira(12250))}
       <div class="div"></div>
-      <div class="row between"><span class="s w6">Total from Zenith •••• 0094</span><span class="h4 num">${naira(590450)}</span></div>
+      <div class="row between"><span class="s w6">Total from your bank •••• 0094</span><span class="h4 num">${naira(590450)}</span></div>
     </div>
     <div class="soft row g10" style="background:var(--green50)">${icon('check', 18, 'var(--green)')}<span class="xs t2 grow">You have ${naira(1820000)}. After payroll, ${naira(1229550)} stays in the account.</span></div>
     <div class="soft row g10">${icon('calendar', 18, 'var(--muted)')}<div class="col g4 grow"><span class="s w6">Pay on 28 Oct, 9:00 am</span><span class="xs mu">Staff get an SMS payslip</span></div><span class="rd s w6">Change</span></div>

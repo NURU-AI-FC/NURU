@@ -10,7 +10,7 @@ const flow = (n, title, sub, steps) => `<div class="card col g12" style="padding
 
 const flowsBody = `<div class="col g16" style="padding:24px 40px;height:900px;background:var(--surface)">
   <div class="col g4"><span class="h2" style="font-size:24px">User flows</span><span class="s t2">How customers and bank staff move through NURU</span></div>
-  ${flow(1, 'Sign up and link a bank', 'About 3 minutes', [['user', 'Create account', 'Phone, email and password', 'red'], ['card', 'BVN or NIN', 'Checked with the bank', 'gray'], ['message', 'OTP', 'Sent by SMS', 'gray'], ['scanface', 'Face check', 'Liveness, stored as a template', 'gray'], ['lock', 'Set PIN', '4 digits, hashed', 'gray'], ['link', 'Link accounts', 'Zenith, OPay sandbox', 'gray'], ['home', 'Dashboard', 'First insights ready', 'green']])}
+  ${flow(1, 'Sign up and link a bank', 'About 3 minutes', [['user', 'Create account', 'Phone, email and password', 'red'], ['card', 'BVN or NIN', 'Checked with the bank', 'gray'], ['message', 'OTP', 'Sent by SMS', 'gray'], ['scanface', 'Face check', 'Liveness, stored as a template', 'gray'], ['lock', 'Set PIN', '4 digits, hashed', 'gray'], ['link', 'Link accounts', 'Partner Bank, OPay sandbox', 'gray'], ['home', 'Dashboard', 'First insights ready', 'green']])}
   ${flow(2, 'Ask NURU a money question', 'Text or voice, four languages', [['mic', 'Ask', 'Yorùbá voice or English text', 'red'], ['shield', 'Safety check', 'Blocks off topic and injection', 'gray'], ['database', 'Fetch data', 'Only this user, masked', 'gray'], ['sparkles', 'Answer', 'Plain words plus a chart', 'gray'], ['bulb', 'Suggest', 'One clear next step', 'gray'], ['check', 'Act', 'Tap to save, pay or remind', 'green']])}
   ${flow(3, 'Send money safely', 'Every payment needs two checks', [['send', 'Choose payee', 'Saved or new account', 'red'], ['edit', 'Amount and note', 'Shows live FX if foreign', 'gray'], ['eye', 'Review', 'Name check and fees', 'gray'], ['key', 'PIN', 'Hashed on the server', 'gray'], ['scanface', 'Face or passkey', 'Second factor', 'gray'], ['receipt', 'Receipt', 'Shareable, saved to history', 'green']])}
   ${flow(4, 'Bank turns insight into an offer', 'Staff console, opted in data only', [['lock', 'Consent', 'Customer opts in', 'red'], ['eyeoff', 'Anonymise', 'Names and numbers masked', 'gray'], ['users', 'Segment', 'Grouped by spending pattern', 'gray'], ['megaphone', 'Campaign', 'Offer in 4 languages', 'gray'], ['shieldcheck', 'Approve', 'Compliance sign off', 'gray'], ['trendup', 'Measure', 'Uptake and savings growth', 'green']])}
@@ -21,7 +21,7 @@ const column = (title, items, flex = 1) => `<div class="card col g10" style="fle
 const harrow = `<div class="col center" style="flex:none;color:var(--red)">${icon('chevr', 22)}</div>`;
 
 const archBody = `<div class="col g20" style="padding:28px 40px;height:640px;background:var(--surface)">
-  <div class="col g4"><span class="h2" style="font-size:24px">System architecture</span><span class="s t2">What runs where for the Zecathon demo</span></div>
+  <div class="col g4"><span class="h2" style="font-size:24px">System architecture</span><span class="s t2">What runs where in the demo</span></div>
   <div class="row g12" style="align-items:stretch">
     ${column('CLIENTS', [['laptop', 'Web app', 'React and Vite on Vercel', 'red'], ['phone', 'Mobile app', 'Expo, iOS and Android', 'red'], ['grid', 'Bank console', 'Staff web app', 'red']])}
     ${harrow}
@@ -32,8 +32,8 @@ const archBody = `<div class="col g20" style="padding:28px 40px;height:640px;bac
     ${column('DATA AND PARTNERS', [['database', 'Postgres', 'With pgvector, on Railway', 'blue'], ['layers', 'Redis', 'Sessions and rate limits', 'blue'], ['link', 'Mono sandbox', 'Account linking', 'blue'], ['card', 'Paystack test', 'Payments demo', 'blue']])}
   </div>
   <div class="row g16" style="align-items:stretch">
-    <div class="card col g10 grow" style="padding:16px"><span class="h4">Do judges need Docker, n8n or Hermes?</span><span class="s t2">No. The judges open one web link and sign in with the demo account. Docker is only used by the team to run everything locally with one command. n8n and Hermes are not needed.</span></div>
-    <div class="card col g10 grow" style="padding:16px"><span class="h4">Demo account</span><div class="row g16">${[['Email', 'judge@nuru.app'], ['Password', 'Zecathon-2026'], ['PIN', '1234'], ['OTP', '000000']].map(([l, v]) => `<div class="col g4"><span class="xs mu">${l}</span><span class="s w6">${v}</span></div>`).join('')}</div><span class="xs t2">Uses seeded sandbox data. No real money moves.</span></div>
+    <div class="card col g10 grow" style="padding:16px"><span class="h4">Do visitors need Docker, n8n or Hermes?</span><span class="s t2">No. Visitors open one web link and sign in with the demo account. Docker is only used by the team to run everything locally with one command. n8n and Hermes are not needed.</span></div>
+    <div class="card col g10 grow" style="padding:16px"><span class="h4">Demo account</span><div class="row g16">${[['Email', 'demo@nuru.app'], ['Password', 'Nuru-Demo-2026'], ['PIN', '1234'], ['OTP', '000000']].map(([l, v]) => `<div class="col g4"><span class="xs mu">${l}</span><span class="s w6">${v}</span></div>`).join('')}</div><span class="xs t2">Uses seeded sandbox data. No real money moves.</span></div>
   </div>
 </div>`;
 

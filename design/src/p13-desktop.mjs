@@ -83,7 +83,7 @@ const chatBody = `
         <div class="row g10">${[['food', 'Food', naira(31400)], ['car', 'Transport', naira(18900)], ['zap', 'Data and power', naira(12600)]].map(([ic, l, v]) => `<div class="soft row g10 grow">${icon(ic, 18, 'var(--text2)')}<div class="col g4"><span class="xs mu">${l}</span><span class="s w6 num">${v}</span></div></div>`).join('')}</div>
         <span class="b">Want me to move the ${naira(15000)} you saved into your Japa fund?</span>
         <div class="row g8"><span class="chip on">Yes, move it</span><span class="chip">Show me by day</span><span class="chip">Explain in Yorùbá</span></div>
-        <div class="row g12">${['copy', 'volume', 'thumbup', 'refresh'].map((i) => icon(i, 16, 'var(--muted)')).join('')}<span class="xs mu">Sources: Zenith •••• 4417, OPay sandbox</span></div>
+        <div class="row g12">${['copy', 'volume', 'thumbup', 'refresh'].map((i) => icon(i, 16, 'var(--muted)')).join('')}<span class="xs mu">Sources: Main •••• 4417, OPay sandbox</span></div>
       </div>
     </div>
   </div>
@@ -121,7 +121,7 @@ const bizBody = `
     </div>
     <div class="card col g12" style="flex:1"><span class="h4">Sales and costs</span>${stacked([[2.1, 2.3, 2.2, 2.6, 2.4, 2.7], [1.4, 1.5, 1.5, 1.7, 1.6, 1.8]], { w: 380, h: 170, labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'], colors: ['#15803D', '#E30613'] })}${legend([['Sales', ''], ['Costs', '']], ['#15803D', '#E30613'])}<div class="soft row g10">${icon('sparkles', 18, 'var(--red)')}<span class="xs t2 grow">Move ₦45,000 from flyers to Chowdeck ads. It brings orders at the lowest cost.</span></div></div>
   </div>`;
-const business = shell('05 Business', 'Business', 'Kemi Foods Ltd', 'Business mode · Zenith •••• 0094', bizBody, { right: `<div class="seg" style="width:200px"><span>Personal</span><span class="on">Business</span></div>` });
+const business = shell('05 Business', 'Business', 'Kemi Foods Ltd', 'Business mode · Main •••• 0094', bizBody, { right: `<div class="seg" style="width:200px"><span>Personal</span><span class="on">Business</span></div>` });
 
 const settingsBody = `
   <div class="row g24" style="align-items:flex-start">

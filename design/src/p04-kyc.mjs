@@ -114,13 +114,13 @@ const biometric = mobile('10 Face check for transfers', th, `
   </div>
   ${cta('Turn on face check', '<div class="btn ghost">Not now</div>')}`);
 
-const banks = [['Zenith Bank', '#E30613', 'Z'], ['Access Bank', '#F57C00', 'A'], ['GTBank', '#DD4F05', 'G'], ['First Bank', '#0B3B7A', 'F'], ['UBA', '#C8102E', 'U'], ['Kuda', '#40196D', 'K'], ['Opay', '#1DCF9F', 'O'], ['Moniepoint', '#0357EE', 'M']];
+const banks = [['Partner Bank', '#E30613', 'P'], ['Access Bank', '#F57C00', 'A'], ['GTBank', '#DD4F05', 'G'], ['First Bank', '#0B3B7A', 'F'], ['UBA', '#C8102E', 'U'], ['Kuda', '#40196D', 'K'], ['Opay', '#1DCF9F', 'O'], ['Moniepoint', '#0357EE', 'M']];
 const linkBank = mobile('11 Link account', th, `
   ${topbar('Link an account')}
   <div class="col g16 px20" style="margin-top:8px">
     <div class="col g6"><div class="h2">Choose your bank</div><div class="s t2">NURU reads your transactions to build insights. It can never move money without your PIN and face check.</div></div>
     <div class="input">${icon('search', 18, 'var(--muted)')}<span class="ph">Search 120+ banks and wallets</span></div>
-    <div class="row g12 soft" style="border:1.5px dashed var(--red);background:var(--red50)"><div class="ic red" style="width:40px;height:40px;border-radius:12px;background:var(--bg)">${icon('sparkles', 19)}</div><div class="col g4 grow"><span class="s w6">Use demo bank (for judges)</span><span class="xs t2">Six months of sample transactions, no real login</span></div>${icon('chevr', 18, 'var(--red)')}</div>
+    <div class="row g12 soft" style="border:1.5px dashed var(--red);background:var(--red50)"><div class="ic red" style="width:40px;height:40px;border-radius:12px;background:var(--bg)">${icon('sparkles', 19)}</div><div class="col g4 grow"><span class="s w6">Use the demo bank</span><span class="xs t2">Six months of sample transactions, no real login</span></div>${icon('chevr', 18, 'var(--red)')}</div>
     <div class="row between"><span class="xs mu w6" style="letter-spacing:.6px">POPULAR</span></div>
     <div class="row wrap" style="gap:12px">${banks.map(([n, c, l]) => `<div class="col center g8" style="width:76px"><div style="width:52px;height:52px;border-radius:16px;background:${c};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">${l}</div><span class="xs t2" style="text-align:center">${n}</span></div>`).join('')}</div>
   </div>
@@ -131,7 +131,7 @@ const monoLogin = mobile('12 Bank login (Mono)', th, `
   <div class="scrim"></div>
   <div class="sheet" style="height:620px">
     <div class="grab"></div>
-    <div class="row between"><div class="row g10"><div style="width:40px;height:40px;border-radius:12px;background:#E30613;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">Z</div><div class="col g4"><span class="h4">Zenith Bank</span><span class="xs mu">Internet banking login</span></div></div><div class="ib" style="width:34px;height:34px;border-radius:999px">${icon('x', 16)}</div></div>
+    <div class="row between"><div class="row g10"><div style="width:40px;height:40px;border-radius:12px;background:#E30613;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">P</div><div class="col g4"><span class="h4">Partner Bank</span><span class="xs mu">Internet banking login</span></div></div><div class="ib" style="width:34px;height:34px;border-radius:999px">${icon('x', 16)}</div></div>
     <div class="field"><span class="label">User ID</span><div class="input">${icon('user', 18, 'var(--muted)')}<span>adaeze.okafor</span></div></div>
     <div class="field"><span class="label">Password</span><div class="input focus">${icon('lock', 18, 'var(--muted)')}<span class="grow">••••••••</span>${icon('eye', 18, 'var(--muted)')}</div></div>
     <div class="soft col g8">
@@ -145,7 +145,7 @@ const monoLogin = mobile('12 Bank login (Mono)', th, `
 const consent = mobile('13 Data permissions', th, `
   ${topbar('Link an account')}
   <div class="col g16 px20" style="margin-top:8px">
-    <div class="col g6"><div class="h2">Allow NURU to read</div><div class="s t2">Choose what NURU can see from Zenith Bank •••• 4821. You can change this any time.</div></div>
+    <div class="col g6"><div class="h2">Allow NURU to read</div><div class="s t2">Choose what NURU can see from your bank Bank •••• 4821. You can change this any time.</div></div>
     <div class="card col g12">
       ${[['wallet', 'Balances', 'Current and available balance', 1], ['history', 'Transactions', 'Last 12 months, then ongoing', 1], ['user', 'Account identity', 'Name and account number', 1], ['receipt', 'Statements', 'Monthly PDF statements', 0]].map(([i, t, s, on]) => `<div class="row g12"><div class="ic gray" style="width:40px;height:40px;border-radius:12px">${icon(i, 19)}</div><div class="col g4 grow"><span class="s w6">${t}</span><span class="xs mu">${s}</span></div><div class="toggle ${on ? 'on' : ''}"><i></i></div></div>`).join('<div class="div"></div>')}
     </div>
@@ -157,7 +157,7 @@ const consent = mobile('13 Data permissions', th, `
 const linked = mobile('14 Account linked', th, `
   <div class="col center grow g20" style="padding:0 28px">
     <div style="width:120px;height:120px;border-radius:999px;background:var(--green50);display:flex;align-items:center;justify-content:center"><div style="width:80px;height:80px;border-radius:999px;background:var(--green);display:flex;align-items:center;justify-content:center">${icon('link', 38, '#fff', 2.2)}</div></div>
-    <div class="col center g8"><div class="h1" style="text-align:center">Zenith Bank linked</div><div class="b t2" style="text-align:center">NURU is reading your history. Your first insights will be ready in a moment.</div></div>
+    <div class="col center g8"><div class="h1" style="text-align:center">Partner Bank linked</div><div class="b t2" style="text-align:center">NURU is reading your history. Your first insights will be ready in a moment.</div></div>
     <div class="card col g12" style="width:100%">
       <div class="row g12"><div style="width:40px;height:40px;border-radius:12px;background:#E30613;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">Z</div><div class="col g4 grow"><span class="s w6">Savings •••• 4821</span><span class="xs mu">Adaeze C. Okafor</span></div><span class="h4 num">${naira(812450)}</span></div>
       <div class="div"></div>

@@ -23,17 +23,17 @@ const phone = (w = 300) => {
 
 const nav = `<div class="row between" style="height:76px;padding:0 80px;flex:none;border-bottom:1px solid var(--border)">
   ${logo(34)}
-  <div class="row g32" style="font-size:15px;font-weight:500;color:var(--text2)"><span>Features</span><span>Languages</span><span>Business</span><span>Security</span><span>Branches</span><span>For judges</span></div>
+  <div class="row g32" style="font-size:15px;font-weight:500;color:var(--text2)"><span>Features</span><span>Languages</span><span>Business</span><span>Security</span><span>Branches</span><span>Try it</span></div>
   <div class="row g12"><div class="row" style="height:40px;padding:4px;border-radius:12px;background:var(--surface);gap:2px">${['sun', 'moon', 'monitor'].map((i, k) => `<div class="row center" style="width:32px;height:32px;border-radius:9px;${k === 0 ? 'background:var(--bg);color:var(--red);box-shadow:0 1px 3px rgba(0,0,0,.08)' : 'color:var(--muted)'}">${icon(i, 16)}</div>`).join('')}</div><div class="btn ghost sm" style="font-size:15px">Sign in</div><div class="btn pri sm" style="height:42px;font-size:15px">Get started</div></div>
 </div>`;
 
 const hero = `<div class="row g48" style="padding:72px 80px 56px;align-items:center">
   <div class="col g24 grow">
-    ${pill('sparkles', 'Zecathon 6.0 · Built for Zenith Bank customers')}
+    ${pill('sparkles', 'The AI copilot banks build into their own apps')}
     <div class="col">${big('Your money, explained', 60)}${big('in your language.', 60, 'var(--red)')}</div>
     <span style="font-size:19px;line-height:30px;color:var(--text2);max-width:560px">NURU is an AI copilot that reads your account history and tells you, in English, Yorùbá, Igbo or Hausa, where your money went and what to do next.</span>
     <div class="row g12"><div class="btn pri" style="height:56px;padding:0 28px">Try the live demo ${icon('chevr', 18, '#fff')}</div><div class="btn out" style="height:56px;padding:0 24px">${icon('play', 18)} Watch 60-second tour</div></div>
-    <div class="row g24" style="margin-top:8px">${[['4', 'languages with voice'], ['13', 'kinds of insight'], ['0', 'data shared outside Zenith']].map(([v, l]) => `<div class="col g4"><span style="font-size:28px;font-weight:800;letter-spacing:-1px">${v}</span><span class="s t2">${l}</span></div>`).join('<div style="width:1px;height:44px;background:var(--border)"></div>')}</div>
+    <div class="row g24" style="margin-top:8px">${[['4', 'languages with voice'], ['13', 'kinds of insight'], ['0', 'data shared outside your bank']].map(([v, l]) => `<div class="col g4"><span style="font-size:28px;font-weight:800;letter-spacing:-1px">${v}</span><span class="s t2">${l}</span></div>`).join('<div style="width:1px;height:44px;background:var(--border)"></div>')}</div>
   </div>
   <div class="row" style="width:520px;justify-content:center;position:relative">
     ${phone(300)}
@@ -43,7 +43,7 @@ const hero = `<div class="row g48" style="padding:72px 80px 56px;align-items:cen
 </div>`;
 
 const strip = `<div class="row center g40" style="padding:22px 80px;background:var(--surface);font-size:14px;color:var(--muted);font-weight:600">
-  <span>Works with</span>${['Zenith Bank', 'OPay sandbox', 'Mono', 'Paystack test', 'Azure Speech', 'Spitch'].map((t) => `<span style="color:var(--text2)">${t}</span>`).join('')}
+  <span>Works with</span>${['OPay sandbox', 'Mono', 'Paystack test', 'Azure Speech', 'Spitch'].map((t) => `<span style="color:var(--text2)">${t}</span>`).join('')}
 </div>`;
 
 const feats = [
@@ -89,49 +89,49 @@ const security = `<div class="pane col g40" style="padding:88px 80px;background:
     <div class="col g16" style="width:620px"><div class="row g8" style="height:34px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.1);font-size:13px;font-weight:600;align-self:flex-start">${icon('shield', 15, '#fff')}<span>Security first</span></div>${big('Your money and your chats stay yours', 40, '#FFFFFF')}</div>
     <span class="b" style="width:440px;color:#B3B3BD">NURU never moves money without your PIN and face check, and it cannot be talked into breaking its own rules.</span>
   </div>
-  <div class="row g20">${[['fingerprint', 'Passkeys and PIN', 'Sign in without passwords. Hashed with Argon2id.'], ['scanface', 'Face check', 'Liveness check for large or unusual transfers.'], ['shieldcheck', 'BVN and NIN', 'Identity verified once, at sign up.'], ['lock', 'Private chats', 'Encrypted. Not even Zenith staff can read them.'], ['alert', 'Injection guard', 'Blocks prompts that try to change NURU’s rules.']].map(([ic, t, s]) => `<div class="col g12 grow" style="padding:24px;border-radius:20px;background:#1D1D21;border:1px solid #2B2B31"><div class="row center" style="width:44px;height:44px;border-radius:14px;background:rgba(227,6,19,.18)">${icon(ic, 20, '#FF2E3E')}</div><span class="h4" style="color:#FFFFFF">${t}</span><span class="s" style="color:#B3B3BD">${s}</span></div>`).join('')}</div>
+  <div class="row g20">${[['fingerprint', 'Passkeys and PIN', 'Sign in without passwords. Hashed with Argon2id.'], ['scanface', 'Face check', 'Liveness check for large or unusual transfers.'], ['shieldcheck', 'BVN and NIN', 'Identity verified once, at sign up.'], ['lock', 'Private chats', 'Encrypted. Not even bank staff can read them.'], ['alert', 'Injection guard', 'Blocks prompts that try to change NURU’s rules.']].map(([ic, t, s]) => `<div class="col g12 grow" style="padding:24px;border-radius:20px;background:#1D1D21;border:1px solid #2B2B31"><div class="row center" style="width:44px;height:44px;border-radius:14px;background:rgba(227,6,19,.18)">${icon(ic, 20, '#FF2E3E')}</div><span class="h4" style="color:#FFFFFF">${t}</span><span class="s" style="color:#B3B3BD">${s}</span></div>`).join('')}</div>
 </div>`;
 
 const branchSec = `<div class="row" style="gap:64px;padding:88px 80px;background:var(--surface);align-items:center">
   <div class="col g20" style="width:460px">
     ${pill('pin', 'Branches and ATMs')}
-    ${big('Find a Zenith branch near you', 40)}
-    <span class="b t2">Need to visit in person? NURU shows the closest Zenith branches and ATMs on a live map, with opening hours and one-tap directions.</span>
+    ${big('Find a branch near you', 40)}
+    <span class="b t2">Need to visit in person? NURU shows the closest branches and ATMs on a live map, with opening hours and one-tap directions.</span>
     ${check('Uses your location once, never stored')}${check('Open now, ATM and cash deposit filters')}${check('Directions in Google Maps or Apple Maps')}
   </div>
   <div class="card" style="padding:0;overflow:hidden;position:relative;width:700px;height:420px">${mapArt(700, 420, [[200, 180, true], [380, 140], [470, 290], [150, 320], [580, 360]], [320, 240])}
-    <div class="card col g8" style="position:absolute;left:24px;bottom:24px;width:300px;padding:16px"><div class="row between"><span class="s w6">Zenith Bank Head Office</span><span class="badge green">Open</span></div><span class="xs t2">Plot 84 Ajose Adeogun St · 1.2 km away</span><div class="btn pri sm">${icon('car', 16, '#fff')} Directions</div></div>
+    <div class="card col g8" style="position:absolute;left:24px;bottom:24px;width:300px;padding:16px"><div class="row between"><span class="s w6">Partner Bank Victoria Island</span><span class="badge green">Open</span></div><span class="xs t2">Ajose Adeogun St · 1.2 km away</span><div class="btn pri sm">${icon('car', 16, '#fff')} Directions</div></div>
   </div>
 </div>`;
 
-const judges = `<div class="row g48" style="padding:88px 80px;align-items:center">
+const tryIt = `<div class="row g48" style="padding:88px 80px;align-items:center">
   <div class="col g16 grow">
-    ${pill('flag', 'For Zecathon judges')}
+    ${pill('flag', 'Try it yourself')}
     ${big('Test NURU in two minutes', 40)}
     <span class="b t2">Everything runs on sandbox data. No real money moves and no real bank login is needed.</span>
     ${[['1', 'Tap Try the live demo on any phone or laptop'], ['2', 'Sign in with the demo account below'], ['3', 'Ask NURU in Yorùbá: “Èló ni mo ná lọ́sẹ̀ yìí?”'], ['4', 'Say “send ₦5,000 to Tunde” and set up your PIN and face']].map(([n, t]) => `<div class="row g12"><div class="row center" style="width:32px;height:32px;border-radius:16px;background:var(--red50);color:var(--red);font-weight:700;font-size:14px;flex:none">${n}</div><span class="b">${t}</span></div>`).join('')}
   </div>
   <div class="card col g16" style="width:460px;padding:28px">
     <span class="h3">Demo account</span>
-    ${[['Email', 'judge@nuru.app'], ['Password', 'Zecathon-2026'], ['OTP code', '000000'], ['Transaction PIN', 'You create it on your first transfer']].map(([l, v]) => `<div class="row between" style="padding:12px 14px;border-radius:12px;background:var(--surface)"><span class="s t2">${l}</span><span class="s w6 num">${v}</span></div>`).join('')}
+    ${[['Email', 'demo@nuru.app'], ['Password', 'Nuru-Demo-2026'], ['OTP code', '000000'], ['Transaction PIN', 'You create it on your first transfer']].map(([l, v]) => `<div class="row between" style="padding:12px 14px;border-radius:12px;background:var(--surface)"><span class="s t2">${l}</span><span class="s w6 num">${v}</span></div>`).join('')}
     <div class="btn pri">Open the demo ${icon('chevr', 18, '#fff')}</div>
   </div>
 </div>`;
 
 const footer = `<div class="col g32" style="padding:56px 80px 40px;border-top:1px solid var(--border)">
   <div class="row between" style="align-items:flex-start">
-    <div class="col g12" style="width:340px">${logo(32)}<span class="s t2">An AI financial copilot built for Zenith Bank Zecathon 6.0 by team NURU.</span></div>
+    <div class="col g12" style="width:340px">${logo(32)}<span class="s t2">An AI financial copilot that banks embed in their own apps. Built in Nigeria by team NURU.</span></div>
     ${[['Product', ['Insights', 'Ask NURU', 'Business', 'Security']], ['Company', ['About the team', 'Contact', 'Press kit']], ['Legal', ['Privacy policy', 'Terms', 'NDPA 2023']]].map(([h, ls]) => `<div class="col g12" style="width:180px"><span class="s w6">${h}</span>${ls.map((l) => `<span class="s t2">${l}</span>`).join('')}</div>`).join('')}
   </div>
   <div class="row between"><span class="xs mu">© 2026 NURU. Demo product. Not a licensed bank.</span><div class="row g16">${['sun', 'moon', 'monitor'].map((i, k) => `<div class="ib" style="width:32px;height:32px;${k === 2 ? 'background:var(--red50);color:var(--red)' : ''}">${icon(i, 16)}</div>`).join('')}</div></div>
 </div>`;
 
-const desktop = web('01 Landing desktop', th, nav + hero + strip + features + languages + business + security + branchSec + judges + footer);
+const desktop = web('01 Landing desktop', th, nav + hero + strip + features + languages + business + security + branchSec + tryIt + footer);
 
 const mHero = mobile('02 Landing mobile', th, `
   <div class="row between px20" style="height:56px;flex:none">${logo(28)}<div class="ib">${icon('menu')}</div></div>
   <div class="col g16 px20" style="margin-top:12px">
-    ${pill('sparkles', 'Built for Zenith Bank customers')}
+    ${pill('sparkles', 'Built into your bank’s app')}
     <div class="col">${big('Your money,', 36)}${big('explained in', 36)}${big('your language.', 36, 'var(--red)')}</div>
     <span class="b t2">An AI copilot that reads your account history and tells you, in English, Yorùbá, Igbo or Hausa, where your money went.</span>
     <div class="btn pri">Try the live demo</div>
@@ -149,7 +149,7 @@ const mFeatures = mobile('03 Landing mobile features', th, `
 const mMenu = mobile('04 Landing mobile menu', th, `
   <div class="row between px20" style="height:56px;flex:none">${logo(28)}<div class="ib">${icon('x')}</div></div>
   <div class="col px20" style="margin-top:12px">
-    ${['Features', 'Languages', 'Business', 'Security', 'Branches', 'For judges'].map((t) => `<div class="row between" style="height:60px;border-bottom:1px solid var(--border)"><span class="h3">${t}</span>${icon('chevr', 18, 'var(--muted)')}</div>`).join('')}
+    ${['Features', 'Languages', 'Business', 'Security', 'Branches', 'Try it'].map((t) => `<div class="row between" style="height:60px;border-bottom:1px solid var(--border)"><span class="h3">${t}</span>${icon('chevr', 18, 'var(--muted)')}</div>`).join('')}
     <div class="row g10" style="margin-top:24px"><span class="s t2 grow">Theme</span><div class="seg" style="width:220px"><span>Light</span><span>Dark</span><span class="on">System</span></div></div>
     <div class="row g10" style="margin-top:16px"><span class="s t2 grow">Language</span><span class="chip">English</span><span class="chip on">Yorùbá</span></div>
   </div>

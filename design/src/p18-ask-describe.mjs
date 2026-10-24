@@ -66,7 +66,7 @@ const recipient = mobile('04 New recipient in chat', th, `
 
 const outNoNote = mobile('05 Money went out, no description', th, `
   ${head}
-  ${thread(`${ai(`${naira(18500)} left your Zenith Current account at a POS on Tuesday with no description. What was it for?`)}
+  ${thread(`${ai(`${naira(18500)} left your Main Current account at a POS on Tuesday with no description. What was it for?`)}
     <div class="card col g12" style="margin-left:36px;padding:14px">
       <div class="row between"><span class="xs mu w6">NEEDS A DESCRIPTION</span><span class="badge red">Money out</span></div>
       <div class="row g12"><div class="ic red" style="width:40px;height:40px;border-radius:12px">${icon('up', 18)}</div><div class="col g4 grow"><span class="s w6">POS purchase</span><span class="xs mu">Tue 14 Oct · no narration</span></div><span class="s w6 num">-${naira(18500)}</span></div>
