@@ -158,7 +158,7 @@ insert into campaigns(name, segment, offer, message, language, channels, send_at
 select c.name, c.segment, c.offer, c.message, c.language, c.channels, now() + c.send_in, c.status, c.reach, c.expected, now() - c.made
 from (values
   ('Payday savings nudge', 'salary', 'Target savings plan', 'Your salary just landed. Shall I move 10% into your savings plan every payday? It earns 12% a year.', 'en', '{chat,push}'::text[], interval '6 days', 'pending', 5810, 1970, interval '1 day'),
-  ('Cash gap overdraft', 'business', 'Business overdraft', 'Cash runs low before your sales come in. A Zenith overdraft line covers the gap and you only pay interest on what you use.', 'en', '{chat,email}'::text[], interval '-9 days', 'sent', 1690, 470, interval '14 days'),
+  ('Cash gap overdraft', 'business', 'Business overdraft', 'Cash runs low before your sales come in. An overdraft line covers the gap and you only pay interest on what you use.', 'en', '{chat,email}'::text[], interval '-9 days', 'sent', 1690, 470, interval '14 days'),
   ('Student zero fee account', 'student', 'Zero fee student account', 'Ẹ kú àṣeyọrí! Open a student account with no transfer fees and save your allowance automatically.', 'yo', '{chat,push,sms}'::text[], interval '12 days', 'draft', 3420, 750, interval '3 hours')
 ) as c(name, segment, offer, message, language, channels, send_in, status, reach, expected, made)
 where not exists (select 1 from campaigns);

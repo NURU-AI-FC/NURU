@@ -14,6 +14,7 @@ import (
 	"github.com/NURU-AI-FC/nuru/services/api/internal/auth"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/config"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/db"
+	"github.com/NURU-AI-FC/nuru/services/api/internal/email"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/httpapi"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/monitor"
 	"github.com/NURU-AI-FC/nuru/services/api/internal/secure"
@@ -22,6 +23,8 @@ import (
 
 func main() {
 	cfg := config.Load()
+	seed.BankName, email.BankName = cfg.BankName, cfg.BankName
+	httpapi.SetStaffDomain(cfg.StaffDomain)
 	ctx := context.Background()
 	_, flush := monitor.InitSentry("api")
 	defer flush()
@@ -59,17 +62,20 @@ func main() {
 	srv.Shutdown(shutdown)
 }
 
-// ensureDemoUsers creates the judge, bank staff and NURU team accounts shown
-// in the designs, so judges can sign in without registering.
+// ensureDemoUsers creates the demo customer, bank staff and NURU team accounts
+// shown in the designs, so visitors can sign in without registering.
+// demoPassword is shared by every seeded demo account.
+const demoPassword = "Nuru-Demo-2026"
+
 func ensureDemoUsers(ctx context.Context, pool *pgxpool.Pool) {
 	demo := []struct {
 		name, email, password, pin, role, sub string
 		business                              bool
 	}{
-		{"Adaeze Okafor", "judge@nuru.app", "Zecathon-2026", "", "customer", "", true},
-		{"Tunde Bakare", "staff@nuru.app", "Zecathon-2026", "1234", "staff", "admin", false},
-		{"Bolaji Jimoh", "ceo@nuru.app", "Zecathon-2026", "", "hq", "owner", false},
-		{"Zainab Wahab", "ops@nuru.app", "Zecathon-2026", "", "hq", "ops", false},
+		{"Adaeze Okafor", "demo@nuru.app", demoPassword, "", "customer", "", true},
+		{"Tunde Bakare", "staff@nuru.app", demoPassword, "1234", "staff", "admin", false},
+		{"Bolaji Jimoh", "ceo@nuru.app", demoPassword, "", "hq", "owner", false},
+		{"Zainab Wahab", "ops@nuru.app", demoPassword, "", "hq", "ops", false},
 	}
 	for _, d := range demo {
 		pw, _ := auth.Hash(d.password)
@@ -93,7 +99,9 @@ func ensureDemoUsers(ctx context.Context, pool *pgxpool.Pool) {
 			values($1,$2,$3,$4,$5,$6,$7,true,true,'4417',$8,$9) on conflict (email) do nothing returning id`,
 			d.name, d.email, pw, pin, d.role, biz, kind, hqRole, consoleRole).Scan(&id)
 		if err != nil {
-			continue // already there
+			// already there: keep the shared demo password current
+			pool.Exec(ctx, `update users set password_hash=$1 where email=$2`, pw, d.email)
+			continue
 		}
 		if d.role == "customer" {
 			if err := seed.User(ctx, pool, id, d.business); err != nil {

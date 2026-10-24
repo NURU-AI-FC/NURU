@@ -12,7 +12,9 @@ type Config struct {
 	DataKey     string // 32 byte hex key for encrypting chats and personal data
 	AIURL       string
 	WebOrigins  []string
-	DemoMode    bool // fixed OTP 000000 and seeded judge account
+	DemoMode    bool   // fixed OTP 000000 and seeded demo account
+	BankName    string // the partner bank NURU runs inside
+	StaffDomain string // work email domain allowed into the bank console
 }
 
 func env(k, def string) string {
@@ -31,5 +33,7 @@ func Load() Config {
 		AIURL:       env("AI_URL", "http://localhost:8000"),
 		WebOrigins:  strings.Split(env("WEB_ORIGINS", "http://localhost:5173"), ","),
 		DemoMode:    env("DEMO_MODE", "true") == "true",
+		BankName:    env("BANK_NAME", "Partner Bank"),
+		StaffDomain: env("BANK_STAFF_DOMAIN", "@bank.example"),
 	}
 }

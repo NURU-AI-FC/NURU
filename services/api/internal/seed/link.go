@@ -16,7 +16,6 @@ type Bank struct {
 }
 
 var Banks = map[string]Bank{
-	"Zenith Bank": {"Zenith Bank", "savings", "Savings"},
 	"Access Bank": {"Access Bank", "savings", "Savings"},
 	"GTBank":      {"GTBank", "current", "Current"},
 	"First Bank":  {"First Bank", "savings", "Savings"},

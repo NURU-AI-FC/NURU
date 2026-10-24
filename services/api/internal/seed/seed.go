@@ -1,5 +1,5 @@
 // Package seed fills a new account with twelve months of realistic sandbox
-// data, so every judge who signs up sees a working dashboard straight away.
+// data, so everyone who signs up sees a working dashboard straight away.
 package seed
 
 import (
@@ -19,6 +19,9 @@ type spend struct {
 	perMonth  int     // how many times a month
 	min, max  float64 // naira per transaction
 }
+
+// BankName is the partner bank whose accounts NURU shows first, set from BANK_NAME.
+var BankName = "Partner Bank"
 
 var monthly = []spend{
 	{"Food", []string{"Shoprite Lekki", "Chowdeck", "Mile 12 Market", "Chicken Republic", "Glovo"}, 14, 2500, 18000},
@@ -56,12 +59,12 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, -11, 0)
 
 	accts := []struct{ bank, name, num, kind, via string }{
-		{"Zenith Bank", "Zenith Savings", "•••• 4417", "savings", "sandbox"},
+		{BankName, "Savings account", "•••• 4417", "savings", "sandbox"},
 		{"OPay", "OPay Wallet", "•••• 2290", "wallet", "mono-sandbox"},
 		{"Kuda", "Kuda Spend", "•••• 8053", "current", "mono-sandbox"},
 	}
 	if business {
-		accts = append(accts, struct{ bank, name, num, kind, via string }{"Zenith Bank", "Kemi Foods Ltd", "•••• 0094", "business", "sandbox"})
+		accts = append(accts, struct{ bank, name, num, kind, via string }{BankName, "Kemi Foods Ltd", "•••• 0094", "business", "sandbox"})
 	}
 
 	var txns []txn
@@ -165,13 +168,13 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 
 	day := func(d int) time.Time { return now.AddDate(0, 0, d).Truncate(time.Hour) }
 	if _, err := tx.Exec(ctx, `insert into loans(user_id,lender,principal,rate_pct,months,disbursed_at,next_due_at,monthly,balance) values
-		($1,'Zenith Personal Loan',1500000,22,12,$2,$3,140400,987000)`, userID, now.AddDate(0, -4, 0), day(9)); err != nil {
+		($1,'Personal Loan',1500000,22,12,$2,$3,140400,987000)`, userID, now.AddDate(0, -4, 0), day(9)); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `insert into investments(user_id,kind,name,value,contributed,monthly) values
 		($1,'pension','Stanbic IBTC Pension',2840000,2410000,48000),
 		($1,'tbills','FGN Treasury Bills, 364 day',1000000,920000,0),
-		($1,'fund','Zenith Money Market Fund',465000,430000,20000)`, userID); err != nil {
+		($1,'fund','Money Market Fund',465000,430000,20000)`, userID); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `insert into payees(user_id,name,bank,account) values
@@ -180,7 +183,7 @@ func User(ctx context.Context, pool *pgxpool.Pool, userID string, business bool)
 		return err
 	}
 	if _, err := tx.Exec(ctx, `insert into reminders(user_id,title,kind,amount,due_at) values
-		($1,'Loan repayment, Zenith','loan',140400,$2),
+		($1,'Loan repayment','loan',140400,$2),
 		($1,'DStv renewal','bill',25000,$3),
 		($1,'Rent, half year','bill',350000,$4),
 		($1,'Investor call, Tola Capital','meeting',0,$5)`, userID, day(9), day(2), day(40), day(4)); err != nil {

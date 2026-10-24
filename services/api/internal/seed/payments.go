@@ -15,7 +15,7 @@ func payments(ctx context.Context, tx pgx.Tx, userID string, now time.Time) erro
 		return err
 	}
 	if _, err := tx.Exec(ctx, `insert into payees(user_id,name,bank,account,tag) values
-		($1,'Kemi Foods Ltd','Zenith Bank','1010940094','Business'),($1,'Chidi Okeke','Access Bank','0693313310','Family') on conflict do nothing`, userID); err != nil {
+		($1,'Kemi Foods Ltd','Access Bank','1010940094','Business'),($1,'Chidi Okeke','Access Bank','0693313310','Family') on conflict do nothing`, userID); err != nil {
 		return err
 	}
 	due := time.Date(now.Year(), now.Month(), 28, 9, 0, 0, 0, now.Location())

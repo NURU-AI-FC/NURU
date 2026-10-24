@@ -20,7 +20,7 @@ update payees set starred = true where name = 'Tunde Bakare' and tag = '' and no
 
 insert into payees(user_id, name, bank, account, tag)
 select u.id, p.name, p.bank, p.account, p.tag from users u
-cross join (values ('Kemi Foods Ltd', 'Zenith Bank', '1010940094', 'Business'),
+cross join (values ('Kemi Foods Ltd', 'Access Bank', '1010940094', 'Business'),
                    ('Chidi Okeke', 'Access Bank', '0693313310', 'Family')) as p(name, bank, account, tag)
 where u.role = 'customer'
 on conflict do nothing;

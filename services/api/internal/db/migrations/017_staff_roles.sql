@@ -1,5 +1,5 @@
 -- Who can see what: the NURU team signs in to HQ (role 'hq') with an hq_role,
--- Zenith staff sign in to the console (role 'staff') with a console_role.
+-- Bank staff sign in to the console (role 'staff') with a console_role.
 -- Invites and deactivation keep the person's row so the audit log still
 -- names who did what.
 alter table users add column if not exists hq_role text not null default '';
