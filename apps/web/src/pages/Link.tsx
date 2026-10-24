@@ -63,7 +63,7 @@ export default function LinkAccount() {
         </div>
         <button className="k-opt" style={{ border: '1.5px dashed var(--red)', background: 'var(--red50)' }} onClick={() => pick('Demo Bank')}>
           <span className="k-ic red" style={{ background: 'var(--bg)' }}><Icon name="sparkles" /></span>
-          <span className="col g4 grow"><span className="s w6">Use demo bank (for judges)</span><span className="xs t2">Six months of sample transactions, no real login</span></span>
+          <span className="col g4 grow"><span className="s w6">Use the demo bank</span><span className="xs t2">Six months of sample transactions, no real login</span></span>
           <Icon name="chevr" color="var(--red)" />
         </button>
         <span className="k-label">Popular</span>
@@ -105,7 +105,7 @@ export default function LinkAccount() {
       <>
         <Done icon="link" title={acct.bank + ' linked'} body={pct < 100 ? 'NURU is reading your history. Your first insights will be ready in a moment.' : 'Your history is in. Insights and charts now include this account.'}>
           <div className="card col g12" style={{ width: '100%', textAlign: 'left' }}>
-            <div className="row g12"><BankLogo bank={acct.bank === 'Demo Bank' ? 'Zenith Bank' : acct.bank} sm /><span className="col g4 grow"><span className="s w6">{acct.name} {acct.number}</span><span className="xs mu">{user.name}</span></span><span className="h3 num">{money(acct.balance)}</span></div>
+            <div className="row g12"><BankLogo bank={acct.bank} sm /><span className="col g4 grow"><span className="s w6">{acct.name} {acct.number}</span><span className="xs mu">{user.name}</span></span><span className="h3 num">{money(acct.balance)}</span></div>
             <div className="div" />
             <div className="col g8"><div className="row between"><span className="xs t2">Importing transactions</span><span className="xs w6 num">{shown.toLocaleString()} of {acct.imported.toLocaleString()}</span></div><div className="bar"><i style={{ width: pct + '%', transition: 'width .1s' }} /></div></div>
           </div>
@@ -125,7 +125,7 @@ export default function LinkAccount() {
         <Modal onClose={() => setLogin(false)}>
           <form className="col g16" onSubmit={signIn}>
             <div className="row between">
-              <div className="row g10"><BankLogo bank={bank === 'Demo Bank' ? 'Zenith Bank' : bank} sm /><span className="col g4"><span className="h3">{bank}</span><span className="xs mu">Internet banking login</span></span></div>
+              <div className="row g10"><BankLogo bank={bank} sm /><span className="col g4"><span className="h3">{bank}</span><span className="xs mu">Internet banking login</span></span></div>
               <button type="button" className="ib" style={{ width: 34, height: 34, borderRadius: 99 }} onClick={() => setLogin(false)} aria-label="Close"><Icon name="x" size={16} /></button>
             </div>
             <div className="field"><label htmlFor="uid">User ID</label><input id="uid" className="input" value={creds.id} onChange={(e) => setCreds({ ...creds, id: e.target.value })} autoComplete="off" required autoFocus /></div>

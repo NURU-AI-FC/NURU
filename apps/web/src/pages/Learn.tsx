@@ -30,7 +30,7 @@ const LESSONS: Lesson[] = [
     'NURU’s business view shows sales, costs and runway, so you know what you can safely take.'] },
   { id: 'scams', icon: 'shield', tone: 'amber', title: 'Spot fake alerts and scam calls', topic: 'Safety', mins: 3, cards: [
     'A credit SMS is not proof of payment. Always check your balance in the app before releasing goods.',
-    'Zenith and NURU will never ask for your PIN, password or one time code by phone, SMS or chat.',
+    'Your bank and NURU will never ask for your PIN, password or one time code by phone, SMS or chat.',
     'If someone pressures you to act fast, stop. Hang up and call the official number yourself.'] },
   { id: 'inflation', icon: 'trendup', tone: 'green', title: 'Beat inflation with your savings', topic: 'Investing', mins: 4, cards: [
     'Inflation means ₦100,000 buys less next year than it does today.',

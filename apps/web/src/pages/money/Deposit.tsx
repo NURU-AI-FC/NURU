@@ -31,7 +31,7 @@ export default function Deposit() {
     try {
       if (confirm === 'create') await api('/deposits', { body: { amount: p, days: Number(days) } })
       else await api(`/deposits/${confirm}/withdraw`, { method: 'POST' })
-      toast(confirm === 'create' ? 'Deposit started' : 'Money is back in your Zenith account')
+      toast(confirm === 'create' ? 'Deposit started' : 'Money is back in your main account')
       setConfirm('')
       reload()
     } catch (e) { toast((e as Error).message) } finally { setBusy(false) }
@@ -92,7 +92,7 @@ export default function Deposit() {
           </div>
           <button className="btn pri" disabled={p < 10000} onClick={() => setConfirm('create')}>Start deposit</button>
           {p > 0 && p < 10000 && <span className="err">The smallest deposit is ₦10,000.</span>}
-          <Sandbox>Sandbox deposit. Money moves from your Zenith account inside NURU only.</Sandbox>
+          <Sandbox>Sandbox deposit. Money moves from your main account inside NURU only.</Sandbox>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function Deposit() {
           <div className="col g16">
             <span className="h2">{confirm === 'create' ? 'Start this deposit?' : 'Withdraw early?'}</span>
             {confirm === 'create'
-              ? <span className="t2 s">{money(p)} leaves your Zenith account today and comes back with {money(interest - wht)} interest on {date(end, true)}.</span>
+              ? <span className="t2 s">{money(p)} leaves your main account today and comes back with {money(interest - wht)} interest on {date(end, true)}.</span>
               : leaving && <span className="t2 s">You get {money(leaving.principal + Math.round((leaving.interest_so_far - leaving.break_cost) * 0.9))} now instead of {money(leaving.receive)} on {date(leaving.matures_at)}.</span>}
             <div className="kit-actions"><button className="btn" onClick={() => setConfirm('')}>Cancel</button><button className="btn pri" disabled={busy} onClick={act}>{confirm === 'create' ? 'Start' : 'Withdraw'}</button></div>
           </div>

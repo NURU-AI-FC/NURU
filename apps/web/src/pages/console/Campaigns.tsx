@@ -17,8 +17,8 @@ const TEMPLATES: Record<string, Partial<Record<Lang, string>>> = {
   },
   trader: { en: 'Good sales today! Shall I put aside 5% of your POS takings each evening, so restocking money is ready when you need it?' },
   student: { en: 'Your allowance just arrived. Open a zero fee student account and I will save a small part of every allowance for you.' },
-  business: { en: 'Cash runs low before your sales settle. A Zenith overdraft line covers the gap, and you only pay interest on what you use.' },
-  high: { en: 'You spend a lot on travel and dining. A Zenith premium card gives 5% cashback on both, with no extra fee for the first year.' },
+  business: { en: 'Cash runs low before your sales settle. An overdraft line covers the gap, and you only pay interest on what you use.' },
+  high: { en: 'You spend a lot on travel and dining. A premium card gives 5% cashback on both, with no extra fee for the first year.' },
 }
 const STATUS: Record<string, [string, string]> = { draft: ['Draft', ''], pending: ['Waiting for approval', 'amber'], approved: ['Approved', 'blue'], sent: ['Sent', 'green'], stopped: ['Stopped', 'red'] }
 const NEXT: Record<string, [string, string]> = { draft: ['pending', 'Send for approval'], pending: ['approved', 'Approve'], approved: ['sent', 'Mark sent'] }

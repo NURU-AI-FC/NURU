@@ -11,7 +11,7 @@ const tools: [string, string, string][] = [
 ]
 
 const funding = [
-  ['Zenith SME loan', 'Working capital up to ₦50m for registered businesses with 6 months of statements.'],
+  ['SME loan', 'Working capital up to ₦50m for registered businesses with 6 months of statements.'],
   ['Bank of Industry', 'Lower interest funding for food processing and manufacturing.'],
   ['Business insurance', 'Fire, burglary and goods in transit cover for your kitchen and stock.'],
 ]

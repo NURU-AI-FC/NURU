@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { Account } from '../../api'
+import { BANK } from '../../bank'
 import type { Receipt } from '../../Guard'
 import { Shell } from '../../Shell'
 import { useApp, useMoney } from '../../store'
 import { Icon, Skeleton } from '../../ui'
 import './Pay.css'
 
-export const BANKS = ['Zenith Bank', 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'OPay', 'Kuda', 'Moniepoint', 'PalmPay', 'Wema Bank']
+export const BANKS = [BANK.name, 'GTBank', 'Access Bank', 'First Bank', 'UBA', 'OPay', 'Kuda', 'Moniepoint', 'PalmPay', 'Wema Bank']
 const TONES = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--amber)', 'var(--c7)', 'var(--c2)']
 
 export const initials = (n: string) => n.split(/[\s,()]+/).filter((w) => /^\p{L}/u.test(w)).map((w) => w[0]).slice(0, 2).join('').toUpperCase()

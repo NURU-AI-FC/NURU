@@ -29,25 +29,25 @@ export default function Accounts() {
           return (
             <div key={a.id} className="card col g12" style={{ padding: 14 }}>
               <div className="row g12">
-                <BankLogo bank={a.bank === 'Demo Bank' ? 'Zenith Bank' : a.bank} sm />
+                <BankLogo bank={a.bank} sm />
                 <span className="col g4 grow"><span className="s w6">{a.bank}{a.linked_via === 'mono-sandbox' ? ' (sandbox)' : ''}</span><span className="xs mu">{a.name} {a.number}</span></span>
                 <span className="col g4" style={{ alignItems: 'flex-end' }}><span className={'chip ' + tone}>{b}</span><span className="xs w6 num">{money(a.balance)}</span></span>
               </div>
               <div className="row between">
-                <span className="xs t2 row g4"><Icon name="refresh" size={12} color="var(--muted)" /> {a.linked_via === 'sandbox' ? 'Zenith account, always in sync' : 'Synced through Mono'}</span>
+                <span className="xs t2 row g4"><Icon name="refresh" size={12} color="var(--muted)" /> {a.linked_via === 'sandbox' ? 'Bank account, always in sync' : 'Synced through Mono'}</span>
                 {data.accounts.length > 1 && <button className="btn ghost sm red" style={{ height: 28, padding: '0 4px' }} onClick={() => setDrop(a)}>Disconnect</button>}
               </div>
             </div>
           )
         })}
-        <div className="soft row g10"><Icon name="info" color="var(--blue)" /><span className="xs t2 grow">Judges can link any sandbox bank or the demo bank with any user ID and password.</span></div>
+        <div className="soft row g10"><Icon name="info" color="var(--blue)" /><span className="xs t2 grow">You can link any sandbox bank or the demo bank with any user ID and password.</span></div>
         <div className="k-flow-cta"><Link className="btn pri block" to="/link"><Icon name="plus" color="#fff" /> Link another account</Link></div>
       </div>
       {drop && (
         <Modal onClose={() => setDrop(null)}>
           <div className="col g16">
             <div className="col center g8" style={{ textAlign: 'center' }}>
-              <BankLogo bank={drop.bank === 'Demo Bank' ? 'Zenith Bank' : drop.bank} />
+              <BankLogo bank={drop.bank} />
               <span className="h3">Disconnect {drop.bank}?</span>
               <span className="s t2">NURU stops reading {drop.name} {drop.number} and removes its transactions from your insights. You can link it again any time.</span>
             </div>

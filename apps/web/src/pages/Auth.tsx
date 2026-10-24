@@ -15,7 +15,7 @@ function SignIn({ mode }: { mode: 'login' | 'signup' }) {
   const nav = useNavigate()
   const [params] = useSearchParams()
   const demo = params.get('demo') === '1'
-  const [form, setForm] = useState({ name: '', email: demo ? 'judge@nuru.app' : '', phone: '', password: demo ? 'Zecathon-2026' : '', business: false })
+  const [form, setForm] = useState({ name: '', email: demo ? 'demo@nuru.app' : '', phone: '', password: demo ? 'Nuru-Demo-2026' : '', business: false })
   const [step, setStep] = useState<'form' | 'otp'>('form')
   const [code, setCode] = useState('')
   const [hint, setHint] = useState('')
@@ -56,9 +56,9 @@ function SignIn({ mode }: { mode: 'login' | 'signup' }) {
               </div>
               {mode === 'login' && (
                 <button type="button" className="soft row g10" style={{ border: '1px dashed var(--red)', textAlign: 'left', cursor: 'pointer' }}
-                  onClick={() => setForm({ ...form, email: 'judge@nuru.app', password: 'Zecathon-2026' })}>
+                  onClick={() => setForm({ ...form, email: 'demo@nuru.app', password: 'Nuru-Demo-2026' })}>
                   <Icon name="sparkles" color="var(--red)" />
-                  <span className="col"><span className="s w6">{t('demo')}</span><span className="xs t2">judge@nuru.app · Zecathon-2026 · code 000000</span></span>
+                  <span className="col"><span className="s w6">{t('demo')}</span><span className="xs t2">demo@nuru.app · Nuru-Demo-2026 · code 000000</span></span>
                 </button>
               )}
               {mode === 'signup' && <div className="field"><label htmlFor="name">{t('fullName')}</label><input id="name" className="input" value={form.name} onChange={set('name')} autoComplete="name" required /></div>}

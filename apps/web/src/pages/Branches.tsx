@@ -15,7 +15,7 @@ const fmtKm = (k?: number) => k == null ? '' : k < 1 ? `${Math.round(k * 1000)} 
 
 function Frame({ children }: { children: ReactNode }) {
   const { user } = useApp()
-  if (user) return <Shell title="Branches" sub="Zenith branches and ATMs near you">{children}</Shell>
+  if (user) return <Shell title="Branches" sub="Branches and ATMs near you">{children}</Shell>
   return (
     <div className="bguest">
       <header className="row between"><Link to="/"><Logo size={30} /></Link><div className="row g8"><ThemePicker /><Link to="/login" className="btn sm">Sign in</Link></div></header>
@@ -137,7 +137,7 @@ export default function Branches() {
       <div className="col g4"><h2 className="h2">{cur.name}</h2><span className="s t2">{cur.address}</span></div>
       <div className="row g8 wrap">
         <a className="btn pri grow" href={directions(cur)} target="_blank" rel="noreferrer"><Icon name="car" color="#fff" />Directions</a>
-        <a className="btn" href={'tel:' + (cur.phone || CONTACT).replace(/\s/g, '')}><Icon name="phone" />Call</a>
+        {(cur.phone || CONTACT) && <a className="btn" href={'tel:' + (cur.phone || CONTACT).replace(/\s/g, '')}><Icon name="phone" />Call</a>}
         <button className="btn" onClick={() => share(cur)}><Icon name="send" />Share</button>
       </div>
       <div className="row g10">
@@ -187,7 +187,7 @@ export default function Branches() {
             <div className="bask">
               <div className="card col g16 center" style={{ maxWidth: 360, padding: 28, textAlign: 'center' }}>
                 <span className="bic big"><Icon name="pin" size={30} color="var(--red)" /></span>
-                <span className="h2">Find Zenith near you</span>
+                <span className="h2">Find a branch near you</span>
                 <span className="s t2">NURU uses your location once to show the closest branches and ATMs. It is never stored or shared.</span>
                 <button className="btn pri block" onClick={locate}>Use my location</button>
                 <button className="btn ghost block" style={{ color: 'var(--red)' }} onClick={() => setAsk('done')}>Search by area instead</button>

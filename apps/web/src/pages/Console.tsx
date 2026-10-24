@@ -32,7 +32,7 @@ export default function Console() {
       {o?.modelled && (
         <div className="soft row g10 wrap">
           <Icon name="info" size={16} color="var(--blue)" />
-          <span className="xs t2 grow">Figures combine <b>{fmt(o.live_customers)} live NURU customer{o.live_customers === 1 ? '' : 's'}</b> with a modelled pilot cohort sized to Zenith's retail base. Switch to Live only to see measured numbers alone.</span>
+          <span className="xs t2 grow">Figures combine <b>{fmt(o.live_customers)} live NURU customer{o.live_customers === 1 ? '' : 's'}</b> with a modelled pilot cohort sized to a large retail bank's customer base. Switch to Live only to see measured numbers alone.</span>
           <span className="row g6"><BasisTag b="live" /><BasisTag b="mixed" /><BasisTag b="estimated" /></span>
         </div>
       )}

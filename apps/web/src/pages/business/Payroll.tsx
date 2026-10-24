@@ -50,7 +50,7 @@ export default function Payroll() {
               <Row l="Employer pension 10%" r={money(t.pension_employer)} />
               <Row l="NHF 2.5%" r={money(t.nhf)} />
               <div className="div" />
-              <Row strong l={`Total from Zenith ${p.account}`} r={money(t.total)} />
+              <Row strong l={`Total from account ${p.account}`} r={money(t.total)} />
             </div>
           ) : <Skeleton h={260} />}
           {p && !p.paid_at && (p.after >= 0
@@ -62,7 +62,7 @@ export default function Payroll() {
           <button className="btn pri block" disabled={!t || !!p?.paid_at || busy} onClick={() => { setErr(''); setPin(true) }}>
             <Icon name="lock" size={16} color="#fff" />{p?.paid_at ? 'Paid this month' : `Approve ${t ? money(t.total) : ''}`}
           </button>
-          <Sandbox>Sandbox payroll. One debit is recorded on your business account; no money leaves Zenith.</Sandbox>
+          <Sandbox>Sandbox payroll. One debit is recorded on your business account; no money leaves the bank.</Sandbox>
         </div>
         <div className="card col g10">
           <span className="h3">Staff</span>

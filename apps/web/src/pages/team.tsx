@@ -3,7 +3,7 @@ import { api } from '../api'
 import { Icon, Modal } from '../ui'
 
 // Shared pieces of the two Team and access pages: HQ for the NURU team and
-// the console for Zenith staff.
+// the console for bank staff.
 
 export type Person = {
   id: string; name: string; email: string; role: string; role_label: string; status: 'Active' | 'Invited' | 'Deactivated'

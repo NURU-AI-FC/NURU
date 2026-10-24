@@ -27,7 +27,7 @@ const yo: Partial<Dict> = {
   passkey: 'Kọ́kọ́rọ́ ìwọlé', face: 'Àyẹ̀wò ojú', save: 'Fipamọ́', saved: 'A ti fi pamọ́',
   login: 'Wọlé', signup: 'Ṣí àkáǹtì', email: 'Ímeèlì', password: 'Ọ̀rọ̀ aṣínà', fullName: 'Orúkọ rẹ ní kíkún', phone: 'Fóònù',
   haveBiz: 'Mo tún ní iṣẹ́ òwò', otpTitle: 'Tẹ kóòdù náà', otpSent: 'A ti fi kóòdù oní-nọ́mbà mẹ́fà ránṣẹ́ sí', verify: 'Jẹ́rìí',
-  demo: 'Adájọ́: ẹ lo àkáǹtì àyẹ̀wò', noAccount: 'Ṣé o jẹ́ tuntun sí NURU?', haveAccount: 'Ṣé o ti ní àkáǹtì?',
+  demo: 'Ẹ lo àkáǹtì àyẹ̀wò', noAccount: 'Ṣé o jẹ́ tuntun sí NURU?', haveAccount: 'Ṣé o ti ní àkáǹtì?',
   overview: 'Àkópọ̀', bills: 'Owó ìsanwó', whereSpend: 'Ibi tí o ti ń náwó', healthScore: 'Ìlera owó rẹ', budgets: 'Ìṣúná', goals: 'Àfojúsùn', report: 'Ìròyìn oṣù',
   calendar: 'Kàlẹ́ńdà', budget: 'Ìṣúná', savingsGoal: 'Àfojúsùn ìfowópamọ́', monthlyPlan: 'Ètò oṣù', weeklyRecap: 'Àkópọ̀ ọ̀sẹ̀', newGoal: 'Àfojúsùn tuntun', newBudget: 'Ìṣúná tuntun',
   connectedAccounts: 'Àkáǹtì tí a so pọ̀', historyTitle: 'Ìtàn ìṣòwò', txTitle: 'Ìṣòwò', notificationsTitle: 'Ìfitónilétí',

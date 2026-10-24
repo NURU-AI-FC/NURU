@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { Account, Payee } from '../../api'
+import { BANK } from '../../bank'
 import { TransferGuard, type Receipt } from '../../Guard'
 import { useApp, useMoney } from '../../store'
 import { Icon, Skeleton, useLoad } from '../../ui'
@@ -20,7 +21,7 @@ export default function Send() {
   const payees = useLoad<Payee[]>('/payees').data
   const [step, setStep] = useState<Step>(save ? 'amount' : 'recipient')
   const [payee, setPayee] = useState<Payee | null>(null)
-  const [f, setF] = useState({ from: '', toName: save ? 'NURU Japa fund' : '', toBank: save ? 'Zenith Bank' : 'GTBank', toAccount: save ? '1012345678' : '', amount: save || '', note: save ? 'Savings' : '' })
+  const [f, setF] = useState({ from: '', toName: save ? 'NURU Japa fund' : '', toBank: save ? BANK.name : 'GTBank', toAccount: save ? '1012345678' : '', amount: save || '', note: save ? 'Savings' : '' })
   const [err, setErr] = useState('')
   const [guard, setGuard] = useState(false)
   const [receipt, setReceipt] = useState<Receipt | null>(null)

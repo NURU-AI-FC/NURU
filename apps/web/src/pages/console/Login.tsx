@@ -2,16 +2,17 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { homeFor } from '../../access'
 import { api, type User } from '../../api'
+import { BANK } from '../../bank'
 import { useApp } from '../../store'
 import { Icon } from '../../ui'
 import './console.css'
 
 const COPY = {
   console: {
-    brand: 'NURU Console', title: 'Customer insights for Zenith Bank staff',
+    brand: 'NURU Console', title: 'Customer insights for bank staff',
     body: 'Anonymised segments, campaigns and risk signals from customers who chose to share. No names, chats or full account numbers.',
-    points: [['shieldcheck', 'Zenith work accounts only'], ['key', 'Role based access, approved by a console admin'], ['eye', 'Every view and export is logged']],
-    sub: 'Use your Zenith Bank work account.', placeholder: 'amaka.obi@zenithbank.com',
+    points: [['shieldcheck', 'Bank work accounts only'], ['key', 'Role based access, approved by a console admin'], ['eye', 'Every view and export is logged']],
+    sub: 'Use your bank work account.', placeholder: 'amaka.obi' + BANK.staffDomain,
     help: 'No access yet? Ask your console admin to invite you. Personal emails cannot sign in.', demo: 'staff@nuru.app',
   },
   hq: {
@@ -24,7 +25,7 @@ const COPY = {
 }
 
 // Login is the staff sign in: a work email and a one time code, no password.
-// Zenith SSO switches on when Zenith connects its identity provider.
+// Bank SSO switches on when the bank connects its identity provider.
 export default function Login({ area }: { area: 'console' | 'hq' }) {
   const { user, ready, signIn } = useApp()
   const nav = useNavigate()
@@ -74,15 +75,15 @@ export default function Login({ area }: { area: 'console' | 'hq' }) {
             <form className="col g16" onSubmit={start}>
               <div className="col g6"><h1 className="h1" style={{ fontSize: 34 }}>Staff sign in</h1><span className="s t2">{c.sub}</span></div>
               {area === 'console' && <>
-                <button type="button" className="btn pri" style={{ height: 52 }} disabled aria-describedby="sso-note"><Icon name="building" size={18} color="#fff" />Continue with Zenith SSO</button>
-                <span id="sso-note" className="xs mu" style={{ marginTop: -8 }}>Switches on when Zenith connects its identity provider.</span>
+                <button type="button" className="btn pri" style={{ height: 52 }} disabled aria-describedby="sso-note"><Icon name="building" size={18} color="#fff" />Continue with bank SSO</button>
+                <span id="sso-note" className="xs mu" style={{ marginTop: -8 }}>Switches on when the bank connects its identity provider.</span>
                 <div className="row g10"><div className="div grow" /><span className="xs mu">or</span><div className="div grow" /></div>
               </>}
               <div className="field"><label htmlFor="wemail">Work email</label><input id="wemail" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={c.placeholder} autoComplete="email" required /></div>
               {err && <span className="err" role="alert">{err}</span>}
               <button className="btn" style={{ height: 52 }} disabled={busy}><Icon name="mail" size={18} />{busy ? 'Sending…' : 'Email me a sign in code'}</button>
               <div className="soft row g10"><Icon name="info" size={16} color="var(--blue)" /><span className="xs t2 grow">{c.help}</span></div>
-              <button type="button" className="xs mu" style={{ background: 'none', border: 0, textAlign: 'left', padding: 0 }} onClick={() => setEmail(c.demo)}>Demo for judges: {c.demo} · code 000000</button>
+              <button type="button" className="xs mu" style={{ background: 'none', border: 0, textAlign: 'left', padding: 0 }} onClick={() => setEmail(c.demo)}>Demo account: {c.demo} · code 000000</button>
             </form>
           ) : (
             <form className="col g16" onSubmit={verify}>

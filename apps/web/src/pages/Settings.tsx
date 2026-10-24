@@ -14,7 +14,7 @@ export default function Settings() {
   const { data: accts } = useLoad<{ accounts: Account[] }>(staff ? null : '/accounts')
   if (!user) return null
   const initials = user.name.split(' ').map((p) => p[0]).slice(0, 2).join('')
-  const tier = staff ? 'Zenith staff' : (user.kyc_verified ? 'Tier 2 verified' : 'Not verified yet') + ' · ' + (user.business_name ? 'Personal and business' : 'Personal')
+  const tier = staff ? 'Bank staff' : (user.kyc_verified ? 'Tier 2 verified' : 'Not verified yet') + ' · ' + (user.business_name ? 'Personal and business' : 'Personal')
 
   return (
     <Shell title={t('settings')} sub={user.email}>

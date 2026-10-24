@@ -107,7 +107,7 @@ const HQTeam = page(() => import('./pages/hq/Team'))
 
 initSentry()
 
-// Private keeps each kind of account in its own app: customers, Zenith staff
+// Private keeps each kind of account in its own app: customers, bank staff
 // in the console and the NURU team in HQ.
 function Private({ children, staff = false, hq = false, any = false }: { children: ReactNode; staff?: boolean; hq?: boolean; any?: boolean }) {
   const { user, ready } = useApp()

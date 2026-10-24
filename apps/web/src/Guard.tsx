@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
+import { SUPPORT_HREF } from './bank'
 import { useApp, useMoney } from './store'
 import { Icon, Modal, PinInput } from './ui'
 
@@ -17,7 +18,7 @@ type Sec = { has_pin: boolean; face_enrolled: boolean; tries_left: number; locke
 type Step = 'load' | 'create' | 'confirm' | 'enrol' | 'verify' | 'pin' | 'sending' | 'locked' | 'error' | 'risk' | 'stopped'
 type Risk = { risk: string[]; to: string; bank?: string; amount: number }
 
-export const SUPPORT_TEL = 'tel:+23412787000'
+export const SUPPORT_TEL = SUPPORT_HREF
 
 const DEMO_FACE = Array.from({ length: 128 }, (_, i) => Math.round(Math.sin(i * 1.7) * 1000) / 10000)
 
@@ -161,7 +162,7 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
             <span className="row between s"><span className="t2">Logged as</span><b>Security event</b></span>
           </div>
           <button className="btn pri block" onClick={retry}>Try again</button>
-          <a className="btn block" href={SUPPORT_TEL}><Icon name="phone" size={16} />Call Zenith support</a>
+          <a className="btn block" href={SUPPORT_TEL}><Icon name="phone" size={16} />Contact bank support</a>
         </>}
         {step === 'risk' && risk && <>
           <span className="tile" style={{ width: 72, height: 72, borderRadius: 22, background: 'var(--red50)', color: 'var(--red)' }}><Icon name="shield" size={34} /></span>
@@ -173,7 +174,7 @@ export function TransferGuard({ draft, onDone, onClose, path = '/transfers' }: {
             <div className="div" />
             {risk.risk.map((r) => <div key={r} className="row g8"><Icon name="alert" size={16} color="var(--red)" /><span className="s">{r}</span></div>)}
           </div>
-          <div className="soft row g10 start" style={{ alignSelf: 'stretch', textAlign: 'left' }}><Icon name="info" size={18} color="var(--muted)" /><span className="xs t2 grow">Zenith staff will never ask you to move money to a "safe account".</span></div>
+          <div className="soft row g10 start" style={{ alignSelf: 'stretch', textAlign: 'left' }}><Icon name="info" size={18} color="var(--muted)" /><span className="xs t2 grow">Bank staff will never ask you to move money to a "safe account".</span></div>
           <button className="btn pri block" onClick={onClose}>Cancel transfer</button>
           <button className="btn ghost block" onClick={confirmAgain}>I know this person. Confirm with my face and PIN</button>
         </>}

@@ -73,7 +73,7 @@ export default function Overview() {
           )) : <span className="s t2">Nothing needs you right now. Services answer, no report has waited a day and replies come from Claude.</span> : <Skeleton h={150} />}
         </div>
         <div className="card col g12">
-          <span className="h3">Zenith pilot goals</span>
+          <span className="h3">Pilot goals</span>
           {o ? o.goals.map((g) => (
             <div key={g.label} className="cbars">
               <div className="row between"><span className="s">{g.label}</span><span className="xs mu num">{g.measured ? `${n(g.value, 1)}${g.unit} of ${n(g.target)}${g.unit}` : `Not measured yet · target ${g.target}${g.unit}`}</span></div>

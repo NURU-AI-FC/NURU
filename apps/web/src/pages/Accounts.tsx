@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, type Account, type Summary } from '../api'
+import { BANK as PARTNER } from '../bank'
 import { Shell } from '../Shell'
 import { useApp, useMoney } from '../store'
 import { Icon, Lines, Modal, Skeleton, useLoad } from '../ui'
 import { TxGroups, type TxFull } from './History'
 import './Home.css'
 
-const BANK: Record<string, string> = { 'Zenith Bank': 'var(--red)', Kuda: 'var(--c7)', OPay: 'var(--c6)', GTBank: 'var(--c4)', 'Access Bank': 'var(--c2)', 'First Bank': 'var(--blue)', UBA: 'var(--red600)', Moniepoint: 'var(--blue)' }
+const BANK: Record<string, string> = { [PARTNER.name]: 'var(--red)', Kuda: 'var(--c7)', OPay: 'var(--c6)', GTBank: 'var(--c4)', 'Access Bank': 'var(--c2)', 'First Bank': 'var(--blue)', UBA: 'var(--red600)', Moniepoint: 'var(--blue)' }
 export const LINKABLE = ['GTBank', 'Access Bank', 'First Bank', 'UBA', 'Moniepoint', 'Kuda', 'OPay']
 
 export function BankTile({ bank, size = 40 }: { bank: string; size?: number }) {

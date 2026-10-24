@@ -67,7 +67,7 @@ export default function Scan() {
   if (receipt && m) return <Sub title="Paid"><ReceiptView r={receipt} title="Paid" detail={m.place} onDone={() => nav('/pay')} /></Sub>
 
   return (
-    <Sub title="Scan to pay" sub="Point at any NQR, Zenith or NURU code">
+    <Sub title="Scan to pay" sub="Point at any NQR or NURU code">
       <div className="grid g-2" style={{ alignItems: 'start' }}>
         <div className="payscan">
           {cam === 'none' ? <span className="col center g8" style={{ color: '#fff', padding: 24, textAlign: 'center' }}><Icon name="camera" size={40} color="#fff" /><span className="s">No camera found or permission was denied.</span></span>

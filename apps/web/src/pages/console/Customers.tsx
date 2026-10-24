@@ -120,7 +120,7 @@ export function CustomerDetail() {
             {c.events.length ? c.events.map((e, i) => (
               <div key={i} className="row between g8"><div className="row g8"><Icon name="alert" size={16} color="var(--red)" /><span className="s">{EVENT[e.kind] || e.kind}</span></div><span className="xs mu">{e.count}x · {when(e.at)}</span></div>
             )) : <span className="s t2">No failed PINs, face mismatches or locked transfers in 90 days.</span>}
-            {c.quick_loans && <div className="soft xs t2">Pays quick loan apps most months. A savings plan or small Zenith loan may help.</div>}
+            {c.quick_loans && <div className="soft xs t2">Pays quick loan apps most months. A savings plan or small loan may help.</div>}
           </div>
         </div>
       </>}

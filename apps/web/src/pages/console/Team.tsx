@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api'
+import { BANK } from '../../bank'
 import { useApp } from '../../store'
 import { Icon, Skeleton, useLoad } from '../../ui'
 import { AuditLog, InviteModal, type Person, type TeamData } from '../team'
@@ -11,7 +12,7 @@ const ROLE_INFO: [string, string][] = [
 ]
 const RULES = ['Segments under 50 customers are hidden', 'Customer view needs the customer’s consent', 'Exports are masked and expire after 7 days', 'Access ends automatically after 90 days unused']
 
-// Team is where a console admin decides who at Zenith can use the console.
+// Team is where a console admin decides who at the bank can use the console.
 export default function Team() {
   const { toast } = useApp()
   const { data: loaded, error } = useLoad<TeamData>('/console/team')
@@ -24,12 +25,12 @@ export default function Team() {
   }
 
   return (
-    <ConsoleShell title="Team and access" sub="Who at Zenith can use the console">
+    <ConsoleShell title="Team and access" sub="Who at the bank can use the console">
       <Err msg={error} />
       <div className="grid g-21">
         <div className="card col" style={{ padding: 0 }}>
           <div className="row between wrap g8" style={{ padding: '16px 18px 6px' }}>
-            <div className="col g4"><span className="h3">Zenith staff with access</span><span className="xs mu">Only @zenithbank.com accounts can be invited</span></div>
+            <div className="col g4"><span className="h3">Bank staff with access</span><span className="xs mu">Only {BANK.staffDomain} accounts can be invited</span></div>
             <button className="btn pri sm" onClick={() => setInvite(true)}><Icon name="plus" size={16} color="#fff" />Invite staff</button>
           </div>
           <div className="cscroll">
@@ -70,7 +71,7 @@ export default function Team() {
         </div>
         {data ? <AuditLog rows={data.audit} file="nuru-console-audit.csv" /> : <Skeleton h={220} />}
       </div>
-      {invite && data && <InviteModal roles={data.roles} path="/console/team" domain="@zenithbank.com" onClose={() => setInvite(false)} onDone={(d) => { setData(d); setInvite(false); toast('Invite sent') }} />}
+      {invite && data && <InviteModal roles={data.roles} path="/console/team" domain={BANK.staffDomain} onClose={() => setInvite(false)} onDone={(d) => { setData(d); setInvite(false); toast('Invite sent') }} />}
     </ConsoleShell>
   )
 }

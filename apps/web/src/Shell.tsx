@@ -80,7 +80,7 @@ export function Shell({ title, sub, children, right }: { title: string; sub?: st
         ) : (
           <Link to="/settings" className="row g10" style={{ padding: 10, borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg)' }}>
             <span className="av" style={{ width: 34, height: 34, fontSize: 12 }}>{initials}</span>
-            <span className="col grow"><span className="s w6">{user?.name}</span><span className="xs mu">{user?.role === 'staff' ? CONSOLE_ROLES[user.console_role || ''] || 'Zenith staff' : user?.business_name ? 'Personal and business' : 'Personal'}{user?.kyc_verified ? ' · Tier 2' : ''}</span></span>
+            <span className="col grow"><span className="s w6">{user?.name}</span><span className="xs mu">{user?.role === 'staff' ? CONSOLE_ROLES[user.console_role || ''] || 'Bank staff' : user?.business_name ? 'Personal and business' : 'Personal'}{user?.kyc_verified ? ' · Tier 2' : ''}</span></span>
             <Icon name="settings" color="var(--muted)" />
           </Link>
         )}

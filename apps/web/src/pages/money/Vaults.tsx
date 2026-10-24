@@ -53,7 +53,7 @@ export default function Vaults() {
         </div>
         <div className="col g12">
           {d && d.auto_save > 0 && <Tip icon="refresh" tone="green">Auto-save on: {money(d.auto_save)} every payday.</Tip>}
-          <Tip icon="info" tone="gray">Moving money in or out is an internal transfer with your Zenith account. Locked vaults pay more but can only be opened on their unlock date.</Tip>
+          <Tip icon="info" tone="gray">Moving money in or out is an internal transfer with your main account. Locked vaults pay more but can only be opened on their unlock date.</Tip>
           <button className="btn pri" onClick={() => setCreate(true)}><Icon name="plus" size={16} color="#fff" />New vault</button>
         </div>
       </div>
@@ -62,7 +62,7 @@ export default function Vaults() {
         <Modal onClose={() => setMove(null)}>
           <div className="col g16">
             <span className="h2">{move.dir === 'in' ? `Add to ${move.v.name}` : `Withdraw from ${move.v.name}`}</span>
-            <span className="s t2">{move.dir === 'in' ? 'From your Zenith account.' : `Back to your Zenith account. ${money(move.v.balance)} available.`}</span>
+            <span className="s t2">{move.dir === 'in' ? 'From your main account.' : `Back to your main account. ${money(move.v.balance)} available.`}</span>
             <input className="input num w6" autoFocus inputMode="numeric" value={num(amt) ? num(amt).toLocaleString('en-NG') : ''} onChange={(e) => setAmt(e.target.value)} placeholder="₦0" aria-label="Amount" />
             <div className="kit-actions"><button className="btn" onClick={() => setMove(null)}>Cancel</button>
               <button className="btn pri" disabled={busy || !num(amt)} onClick={() => run(() => api(`/vaults/${move.v.id}/move`, { body: { amount: num(amt), direction: move.dir } }), 'Done')}>{move.dir === 'in' ? 'Add' : 'Withdraw'}</button>

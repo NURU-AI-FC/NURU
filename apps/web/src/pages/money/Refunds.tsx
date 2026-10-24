@@ -28,7 +28,7 @@ export default function Refunds() {
     setBusy(true)
     try {
       await api('/disputes', { body: { transaction_id: pick.id, reason, detail } })
-      toast('Claim opened. Zenith will update you here.')
+      toast('Claim opened. Your bank will update you here.')
       close()
       reload()
     } catch (e) { toast((e as Error).message) } finally { setBusy(false) }

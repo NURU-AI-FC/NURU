@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Account, Payee } from '../../api'
+import { BANK } from '../../bank'
 import { Shell } from '../../Shell'
 import { useApp, useMoney } from '../../store'
 import { Icon, Skeleton, useLoad } from '../../ui'
@@ -81,11 +82,11 @@ export default function Hub() {
             {rates[fx.to] && <span className="xs mu">1 {fx.to} = ₦{(1 / rates[fx.to]).toLocaleString('en', { maximumFractionDigits: 2 })}</span>}
           </div>
           <div className="card col g12">
-            <div className="row between"><span className="h3">Linked accounts</span><button className="btn sm" onClick={() => toast('Mono sandbox: OPay, Kuda and Zenith are linked for the demo')}><Icon name="plus" size={16} />Link</button></div>
+            <div className="row between"><span className="h3">Linked accounts</span><button className="btn sm" onClick={() => toast('Mono sandbox: OPay and Kuda are linked for the demo')}><Icon name="plus" size={16} />Link</button></div>
             {accts?.map((a) => (
               <div key={a.id} className="row g10">
                 <span className="tile"><Icon name={a.kind === 'business' ? 'briefcase' : a.kind === 'wallet' ? 'wallet' : 'landmark'} size={16} /></span>
-                <span className="col grow"><span className="s w6">{a.name}</span><span className="xs mu">{a.bank} {a.number} · {a.linked_via === 'mono-sandbox' ? 'via Mono' : 'Zenith'}</span></span>
+                <span className="col grow"><span className="s w6">{a.name}</span><span className="xs mu">{a.bank} {a.number} · {a.linked_via === 'mono-sandbox' ? 'via Mono' : BANK.name}</span></span>
                 <span className="w6 num s">{money(a.balance)}</span>
               </div>
             )) || <Skeleton h={160} />}

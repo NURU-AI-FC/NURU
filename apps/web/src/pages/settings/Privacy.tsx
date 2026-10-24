@@ -43,7 +43,7 @@ export default function Privacy() {
     <Shell title={t('privacy')} sub="What NURU keeps and who can see it">
       <div className="k-flow">
         <Top back="/settings" />
-        <div className="soft row g10" style={{ background: 'var(--green50)' }}><Icon name="lock" color="var(--green)" /><span className="xs t2 grow">Your chats with NURU are encrypted and only you can read them. Zenith staff cannot see them.</span></div>
+        <div className="soft row g10" style={{ background: 'var(--green50)' }}><Icon name="lock" color="var(--green)" /><span className="xs t2 grow">Your chats with NURU are encrypted and only you can read them. Bank staff cannot see them.</span></div>
         <span className="k-label">NURU AI</span>
         <div className="card col g16">
           {!p ? <div className="skeleton" style={{ height: 130 }} /> : ([

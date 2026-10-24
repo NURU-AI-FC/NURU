@@ -16,7 +16,7 @@ const copy: Record<Lang, { a: string; b: string; p: string; cta: string }> = {
   ha: { a: 'Kuɗinka, an bayyana', b: 'cikin harshenka.', p: 'NURU na karanta tarihin asusunka ya gaya maka inda kuɗinka ke tafiya, abin da ke zuwa da yadda za ka ƙara ajiya.', cta: 'Gwada demo' },
 }
 
-const SECTIONS: [string, string][] = [['features', 'Features'], ['languages', 'Languages'], ['business', 'Business'], ['security', 'Security'], ['branches', 'Branches'], ['judges', 'For judges']]
+const SECTIONS: [string, string][] = [['features', 'Features'], ['languages', 'Languages'], ['business', 'Business'], ['security', 'Security'], ['branches', 'Branches'], ['demo', 'Try it']]
 
 const FEATS: [string, string, string, string][] = [
   ['chart', 'red', 'Daily to yearly insights', 'Power BI-style charts for every account, with a 3-month comparison and a forecast of next month.'],
@@ -38,22 +38,22 @@ const SECURITY: [string, string, string][] = [
   ['fingerprint', 'Passkeys and PIN', 'Sign in without passwords. Hashed with Argon2id.'],
   ['scanface', 'Face check', 'Liveness check for large or unusual transfers.'],
   ['shieldcheck', 'BVN and NIN', 'Identity verified once, at sign up.'],
-  ['lock', 'Private chats', 'Encrypted. Not even Zenith staff can read them.'],
+  ['lock', 'Private chats', 'Encrypted. Not even bank staff can read them.'],
   ['alert', 'Injection guard', 'Blocks prompts that try to change NURU’s rules.'],
 ]
 
 const TOUR: [string, string, string][] = [
-  ['chart', 'See where your money went', 'Your Zenith, OPay and Kuda accounts in one view, with daily to yearly charts and a forecast for next month.'],
+  ['chart', 'See where your money went', 'All your bank and wallet accounts in one view, with daily to yearly charts and a forecast for next month.'],
   ['mic', 'Ask in your own language', 'Hold the mic and ask “Èló ni mo ná lọ́sẹ̀ yìí?”. NURU answers from your own numbers, out loud.'],
   ['send', 'Send money from the chat', 'Say “send ₦5,000 to Tunde”. NURU checks your PIN and your face before anything moves.'],
   ['briefcase', 'Run your business', 'Payroll with PAYE and pension, invoices, runway and a Decision Room for big choices.'],
-  ['pin', 'Find a branch', 'When you need a person, NURU shows the closest Zenith branch with one-tap directions.'],
+  ['pin', 'Find a branch', 'When you need a person, NURU shows the closest branch with one-tap directions.'],
 ]
 
 const MAP_CENTER: [number, number] = [6.437, 3.435]
 const MAP_FIT = { tl: [40, 50] as [number, number], br: [40, 170] as [number, number] }
 
-const DEMO: [string, string][] = [['Email', 'judge@nuru.app'], ['Password', 'Zecathon-2026'], ['OTP code', '000000'], ['Transaction PIN', 'You create it on your first transfer']]
+const DEMO: [string, string][] = [['Email', 'demo@nuru.app'], ['Password', 'Nuru-Demo-2026'], ['OTP code', '000000'], ['Transaction PIN', 'You create it on your first transfer']]
 
 const Check = ({ children }: { children: string }) => <div className="row g10"><Icon name="check" color="var(--green)" /><span className="t2">{children}</span></div>
 const Pill = ({ ic, children }: { ic: string; children: string }) => <span className="lp-pill"><Icon name={ic} size={15} />{children}</span>
@@ -153,7 +153,7 @@ export default function Landing() {
 
       <section className="lp-hero lp-pad">
         <div className="col g24 lp-hero-copy">
-          <Pill ic="sparkles">Zecathon 6.0 · Built for Zenith Bank customers</Pill>
+          <Pill ic="sparkles">The AI copilot banks build into their own apps</Pill>
           <h1 className="lp-big xl">{c.a}<br /><span style={{ color: 'var(--red)' }}>{c.b}</span></h1>
           <p className="lp-lead">{c.p}</p>
           <div className="row g12 wrap">
@@ -161,7 +161,7 @@ export default function Landing() {
             <button className="btn lp-btn-lg lp-out" onClick={() => setTour(true)}><Icon name="play" />Watch 60-second tour</button>
           </div>
           <div className="row g24 lp-stats">
-            {[['4', 'languages with voice'], ['13', 'kinds of insight'], ['0', 'data shared outside Zenith']].map(([v, l], i) => (
+            {[['4', 'languages with voice'], ['13', 'kinds of insight'], ['0', 'data shared outside your bank']].map(([v, l], i) => (
               <div key={l} className="row g24">{i > 0 && <span className="lp-vr" />}<div className="col g4"><span className="lp-stat">{v}</span><span className="s t2">{l}</span></div></div>
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function Landing() {
 
       <div className="lp-strip lp-pad">
         <span>Works with</span>
-        {['Zenith Bank', 'OPay sandbox', 'Mono', 'Paystack test', 'Azure Speech', 'Spitch'].map((t) => <span key={t} className="t2">{t}</span>)}
+        {['OPay sandbox', 'Mono', 'Paystack test', 'Azure Speech', 'Spitch'].map((t) => <span key={t} className="t2">{t}</span>)}
       </div>
 
       <section id="features" className="lp-sec lp-pad lp-reveal">
@@ -242,8 +242,8 @@ export default function Landing() {
       <section id="branches" className="lp-sec lp-split lp-pad lp-alt lp-reveal">
         <div className="col g20 lp-side">
           <Pill ic="pin">Branches and ATMs</Pill>
-          <h2 className="lp-big md">Find a Zenith branch near you</h2>
-          <p className="t2">Need to visit in person? NURU shows the closest Zenith branches and ATMs on a live map, with opening hours and one-tap directions.</p>
+          <h2 className="lp-big md">Find a branch near you</h2>
+          <p className="t2">Need to visit in person? NURU shows the closest branches and ATMs on a live map, with opening hours and one-tap directions.</p>
           <Check>Uses your location once, never stored</Check>
           <Check>Open now, ATM and cash deposit filters</Check>
           <Check>Directions in Google Maps or Apple Maps</Check>
@@ -253,15 +253,15 @@ export default function Landing() {
           <MapView center={MAP_CENTER} branches={near} selected="ho" interactive={false} fit={MAP_FIT} />
           <div className="card col g8 lp-mappop">
             <div className="row between"><span className="s w6">{ho.name}</span><span className="chip green">Open</span></div>
-            <span className="xs t2">Plot 84 Ajose Adeogun St · Victoria Island</span>
+            <span className="xs t2">Ajose Adeogun St · Victoria Island</span>
             <a className="btn pri sm" href={directions(ho)} target="_blank" rel="noreferrer"><Icon name="car" size={16} color="#fff" />Directions</a>
           </div>
         </div>
       </section>
 
-      <section id="judges" className="lp-sec lp-split lp-pad lp-reveal">
+      <section id="demo" className="lp-sec lp-split lp-pad lp-reveal">
         <div className="col g16 grow">
-          <Pill ic="flag">For Zecathon judges</Pill>
+          <Pill ic="flag">Try it yourself</Pill>
           <h2 className="lp-big md">Test NURU in two minutes</h2>
           <p className="t2">Everything runs on sandbox data. No real money moves and no real bank login is needed.</p>
           {['Tap Try the live demo on any phone or laptop', 'Sign in with the demo account', 'Ask NURU in Yorùbá: “Èló ni mo ná lọ́sẹ̀ yìí?”', 'Say “send ₦5,000 to Tunde” and set up your PIN and face'].map((t, i) => (
@@ -277,7 +277,7 @@ export default function Landing() {
 
       <footer className="lp-foot lp-pad">
         <div className="lp-foot-top">
-          <div className="col g12" style={{ maxWidth: 340 }}><Logo size={32} /><span className="s t2">An AI financial copilot built for Zenith Bank Zecathon 6.0 by team NURU.</span></div>
+          <div className="col g12" style={{ maxWidth: 340 }}><Logo size={32} /><span className="s t2">An AI financial copilot that banks embed in their own apps. Built in Nigeria by team NURU.</span></div>
           <div className="lp-foot-cols">
             <div className="col g12"><span className="s w6">Product</span>{[['features', 'Insights'], ['languages', 'Ask NURU'], ['business', 'Business'], ['security', 'Security']].map(([id, l]) => <button key={l} className="lp-flink" onClick={() => go(id)}>{l}</button>)}<Link className="lp-flink" to="/branches">Branches</Link></div>
             <div className="col g12"><span className="s w6">Company</span><span className="s t2">About the team</span><span className="s t2">Contact</span><span className="s t2">Press kit</span></div>

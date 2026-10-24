@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { User } from '../../api'
+import { BANK } from '../../bank'
 import { Icon } from '../../ui'
 import './kit.css'
 
@@ -55,7 +56,7 @@ export function Done({ icon = 'check', title, body, children }: { icon?: string;
 }
 
 export const BANKS: [string, string, string][] = [
-  ['Zenith Bank', '#E30613', 'Z'], ['Access Bank', '#F57C00', 'A'], ['GTBank', '#DD4F05', 'G'], ['First Bank', '#0B3B7A', 'F'],
+  [BANK.name, '#E30613', BANK.name[0]], ['Access Bank', '#F57C00', 'A'], ['GTBank', '#DD4F05', 'G'], ['First Bank', '#0B3B7A', 'F'],
   ['UBA', '#C8102E', 'U'], ['Kuda', '#40196D', 'K'], ['OPay', '#1DCF9F', 'O'], ['Moniepoint', '#0357EE', 'M'],
 ]
 export function bankLook(name: string): [string, string] {
